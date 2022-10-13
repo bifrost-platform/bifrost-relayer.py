@@ -1,0 +1,300 @@
+{
+    "oracle_config": {
+        "bitcoin_block_hash": {
+            "name": "bitcoinblockhash",
+            "url": "",
+            "auth_id": "",
+            "auth_password": "",
+            "collection_period_sec": 300
+        },
+        "asset_prices": {
+            "names": [
+                "ETH",
+                "BFC",
+                "MATIC",
+                "BNB",
+                "USDC",
+                "USDT",
+                "BUSD",
+                "BIFI"
+            ],
+            "source_names": [
+                "Coingecko",
+                "Upbit",
+                "Chainlink"
+            ],
+            "collection_period_sec": 120,
+            "urls": {
+                "Coingecko": "",
+                "Upbit": "",
+                "Chainlink": ""
+            }
+        }
+    },
+    "bifrost": {
+        "chain_name": "BIFROST",
+        "block_period_sec": 3,
+        "url_with_access_key": "",
+        "bootstrap_latest_height": 2883,
+        "block_aging_period": 2,
+        "transaction_commit_multiplier": 5,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "tx_fee_type": {
+            "type": 2,
+            "max_gas_price": 2000000000000,
+            "max_priority_price": 2500000000
+        },
+        "abi_base_path": "configs/",
+        "contracts": [
+            {
+                "name": "authority",
+                "address": "0x0000000000000000000000000000000000000400",
+                "abi_file": "abi.authority.bifrost.json",
+                "deploy_height": 0
+            },
+            {
+                "name": "relayer_authority",
+                "address": "0x0000000000000000000000000000000000002000",
+                "abi_file": "abi.relayer.bifrost.json",
+                "deploy_height": 0
+            },
+            {
+                "name": "vault",
+                "address": "0x4dA6f4C7B997215A1e6FA76EabE051bAAc018E0e",
+                "abi_file": "abi.vault.bifrost.json",
+                "deploy_height": 2881
+            },
+            {
+                "name": "socket",
+                "address": "0x7aBD332cF88cA31725fFfb21795F905837445352",
+                "abi_file": "abi.socket.bifrost.json",
+                "deploy_height": 2883
+            },
+            {
+                "name": "oracle",
+                "address": "0xa8eE82DF51299e219C588af3E7Efe2298A237944",
+                "abi_file": "abi.oracle.bifrost.json",
+                "deploy_height": 2879
+            },
+            {
+                "name": "ETH_ETHEREUM",
+                "address": "0xDE23135c958536eE291019B405921EAE84fFa759",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BIFI_ETHEREUM",
+                "address": "0x619d50242bCA4141aEEE35822F751D768e63397a",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BNB_BINANCE",
+                "address": "0xd1E060FD930B75DA9A709c91E6Ad03B330Fb2950",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "MATIC_POLYGON",
+                "address": "0xb3f5C3a2237Df09F94dDAC32F63E5D962Ae66a42",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "KLAY_KLAYTN",
+                "address": "0x02B0891CC3f3865E52bB0F9c4DF2Dc3d172ff9a3",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDC_ETHEREUM",
+                "address": "0x6EeE91b7c69e3576C13cE7a9C7C0E305dF6996F9",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDT_ETHEREUM",
+                "address": "0xF2419ceE93d19F6BcC19220007DCFc418A2AaCcf",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BUSD_BINANCE",
+                "address": "0x9c8B701961C20d006cb7c4B5B91c6cb93EdB44Ac",
+                "abi_file": "abi.erc20.json"
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            },
+            {
+                "contract_name": "socket",
+                "event_name": "RoundUp"
+            }
+        ]
+    },
+    "ethereum": {
+        "chain_name": "ETHEREUM",
+        "block_period_sec": 13,
+        "url_with_access_key": "",
+        "bootstrap_latest_height": 7749286,
+        "block_aging_period": 2,
+        "transaction_commit_multiplier": 3,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "tx_fee_type": {
+            "type": 2,
+            "max_gas_price": 200000000000,
+            "max_priority_price": 100000000000
+        },
+        "abi_base_path": "configs/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0x38c5986981D27Ae0620668228DbbE431c4c803C0",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 7749276
+            },
+            {
+                "name": "vault",
+                "address": "0xddF460130b18a24bec7df77E328d78A9E99EB16d",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 7749282
+            },
+            {
+                "name": "socket",
+                "address": "0x6B2896f915122660163e3a17f54BC244312212FD",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 7749286
+            },
+            {
+                "name": "BFC_BIFROST",
+                "address": "0x3A815eBa66EaBE966a6Ae7e5Df9652eca24e9c54",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BIFI_ETHEREUM",
+                "address": "0x055ED934c426855caB467FdF8441D4FD6a7D2659",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDC_ETHEREUM",
+                "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDT_ETHEREUM",
+                "address": "0xF26d15E6484e00Af2772b840eb4F2B36F0BD569C",
+                "abi_file": "abi.erc20.json"
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
+    },
+    "binance": {
+        "chain_name": "BINANCE",
+        "block_period_sec": 3,
+        "url_with_access_key": "",
+        "bootstrap_latest_height": 23601374,
+        "block_aging_period": 5,
+        "transaction_commit_multiplier": 2,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "tx_fee_type": {
+            "type": 0,
+            "gas_price": 200000000000
+        },
+        "abi_base_path": "configs/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0x8F13f446b72172dAE1e3b9907C90DecC9e9464CD",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 23601366
+            },
+            {
+                "name": "vault",
+                "address": "0x0252390B62C7E8b35fCa7263F01412D1E312A10e",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 23601370
+            },
+            {
+                "name": "socket",
+                "address": "0xaA8cC380e9D113Dd75DDbe369F28B6A200f335aC",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 23601374
+            },
+            {
+                "name": "BUSD_BINANCE",
+                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
+                "abi_file": "abi.erc20.json"
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
+    },
+    "polygon": {
+        "chain_name": "POLYGON",
+        "block_period_sec": 5,
+        "url_with_access_key": "",
+        "bootstrap_latest_height": 28557743,
+        "block_aging_period": 5,
+        "transaction_commit_multiplier": 2,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "tx_fee_type": {
+            "type": 2,
+            "max_gas_price": 200000000000,
+            "max_priority_price": 100000000000
+        },
+        "abi_base_path": "configs/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0x7CB80Fdf702C9Cf7106AFE0167cdd0a7fC5C3b31",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 28557735
+            },
+            {
+                "name": "vault",
+                "address": "0x081071B93704BC91F81C0519eDcc1844395FF5dD",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 28557739
+            },
+            {
+                "name": "socket",
+                "address": "0x5f1D79d557f302e17a45DC06000B485ceE926709",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 28557743
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
+    },
+    "entity": {
+        "role": "Relayer",
+        "account_name": "default",
+        "secret_hex": "",
+        "supporting_chains": [
+            "BIFROST",
+            "ETHEREUM",
+            "BINANCE",
+            "POLYGON"
+        ]
+    },
+    "multichain_config": {
+        "chain_monitor_period_sec": 20
+    }
+}
