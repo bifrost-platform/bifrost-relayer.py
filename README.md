@@ -86,7 +86,7 @@ And the configuration file containing 4 properties: [_entity, multichain_config,
           "Coingecko": "",
           "Upbit": "",
           "Chainlink": ""
-        }w
+        }
     }
 }
 ```
