@@ -41,6 +41,41 @@ RELAYER_AUTHORITY_CONTRACT_NAME = "relayer_authority"
 GET_ROUND_FUNCTION_NAME = "latest_round"
 
 
+def sorting_by_status(arr: List["RbcEvent"]) -> List["RbcEvent"]:
+    ret_arr = list()
+    for element in arr:
+        ret_arr.append((element.status.value, element))
+    return [item_tuple[1] for item_tuple in sorted(ret_arr)]
+
+
+def extract_latest_status(arr: List["RbcEvent"]):
+    sorted_list = sorting_by_status(arr)
+    status_list = [element.status for element in sorted_list]
+
+    inbound = sorted_list[0].is_inbound()
+    if inbound:
+        return sorted_list[-1]
+    else:
+        if ChainEventStatus.COMMITTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.COMMITTED)]
+        elif ChainEventStatus.ROLLBACKED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.ROLLBACKED)]
+        elif ChainEventStatus.EXECUTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.EXECUTED)]
+        elif ChainEventStatus.REVERTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REVERTED)]
+        elif ChainEventStatus.ACCEPTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.ACCEPTED)]
+        elif ChainEventStatus.REJECTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REJECTED)]
+        elif ChainEventStatus.REQUESTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REQUESTED)]
+        elif ChainEventStatus.FAILED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REQUESTED)]
+        else:
+            raise Exception("Invalid event status")
+
+
 class RbcEvent(ChainEventABC):
     """
     Data class for event from socket contract.
@@ -50,6 +85,9 @@ class RbcEvent(ChainEventABC):
 
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
         super().__init__(detected_event, time_lock, manager)
+
+    def __cmp__(self, other):
+        return self.status.value < other.status.value
 
     @classmethod
     def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: "Relayer"):
@@ -277,27 +315,20 @@ class RbcEvent(ChainEventABC):
         event_with_last_status_of_each_rid = dict()
         for event_obj in event_objs:
             request_id_str = event_obj.req_id_str
-
             # store new event object with the rid
             if request_id_str not in event_with_last_status_of_each_rid:
-                event_with_last_status_of_each_rid[request_id_str] = event_obj
+                event_with_last_status_of_each_rid[request_id_str] = [event_obj]
                 continue
+            else:
+                event_with_last_status_of_each_rid[request_id_str].append(event_obj)
 
-            # update event object with new status
-            if event_with_last_status_of_each_rid[request_id_str].status.value < event_obj.status.value:
-                event_with_last_status_of_each_rid[request_id_str] = event_obj
-
-        # remove finalized event object (has COMMITTED or ROLLBACKED status)
-        finalized_rids = list()
-        status_to_remove = [ChainEventStatus.COMMITTED, ChainEventStatus.ROLLBACKED]
-        for request_id, event_obj in event_with_last_status_of_each_rid.items():
-            if event_obj.status in status_to_remove:
-                finalized_rids.append(request_id)
-
-        for finalized_rid in finalized_rids:
-            del event_with_last_status_of_each_rid[finalized_rid]
-
-        return list(event_with_last_status_of_each_rid.values())
+        not_finalized_latest_event_objs = list()
+        for rid_str, status_event_list in event_with_last_status_of_each_rid.items():
+            latest_status_obj = extract_latest_status(status_event_list)
+            if latest_status_obj.status in [ChainEventStatus.COMMITTED, ChainEventStatus.ROLLBACKED]:
+                continue
+            not_finalized_latest_event_objs.append(latest_status_obj)
+        return not_finalized_latest_event_objs
 
     @staticmethod
     def change_status_of_data(detected_event: DetectedEvent, event_status: ChainEventStatus):
@@ -455,6 +486,12 @@ class ChainExecutedEvent(RbcEvent):
             return NoneParams
         return self.build_transaction_param_with_sig()
 
+    def gas_limit_multiplier(self) -> float:
+        if self.is_outbound():
+            return 2.0
+        else:
+            return 1.2
+
 
 class ChainRevertedEvent(RbcEvent):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
@@ -466,6 +503,12 @@ class ChainRevertedEvent(RbcEvent):
         if not self.check_my_event():
             return NoneParams
         return self.build_transaction_param_with_sig()
+
+    def gas_limit_multiplier(self) -> float:
+        if self.is_outbound():
+            return 2.0
+        else:
+            return 1.2
 
 
 class ChainAcceptedEvent(RbcEvent):

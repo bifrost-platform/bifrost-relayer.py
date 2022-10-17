@@ -44,7 +44,7 @@
         "tx_fee_type": {
             "type": 2,
             "max_gas_price": 2000000000000,
-            "max_priority_price": 2500000000
+            "max_priority_price": 1000000000000
         },
         "abi_base_path": "configs/",
         "contracts": [
@@ -142,8 +142,8 @@
         "rpc_server_downtime_allow_sec": 180,
         "tx_fee_type": {
             "type": 2,
-            "max_gas_price": 200000000000,
-            "max_priority_price": 100000000000
+            "max_gas_price": 2000000000000,
+            "max_priority_price": 1000000000000
         },
         "abi_base_path": "configs/",
         "contracts": [
@@ -205,7 +205,7 @@
         "rpc_server_downtime_allow_sec": 180,
         "tx_fee_type": {
             "type": 0,
-            "gas_price": 200000000000
+            "gas_price": 2000000000000
         },
         "abi_base_path": "configs/",
         "contracts": [
@@ -252,8 +252,8 @@
         "rpc_server_downtime_allow_sec": 180,
         "tx_fee_type": {
             "type": 2,
-            "max_gas_price": 200000000000,
-            "max_priority_price": 100000000000
+            "max_gas_price": 2000000000000,
+            "max_priority_price": 1000000000000
         },
         "abi_base_path": "configs/",
         "contracts": [
