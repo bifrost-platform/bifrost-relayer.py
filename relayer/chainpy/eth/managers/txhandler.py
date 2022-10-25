@@ -136,14 +136,13 @@ class EthTxHandler(EthRpcClient):
                 raise EthFeeCapError(msg)
 
             if code == -32603 and msg.startswith("submit transaction to pool failed: Pool(TooLowPriority { old"):
+                print(">>> {}|| nonce_from_net: {}, issued_by_myself: {}\nerror: {}".format(
+                    account.address.hex()[:10], self.eth_get_user_nonce(account.address), tx.nonce, e))
                 raise EthTooLowPriority(msg)
-
-            print(">>> {}|| nonce_from_net: {}, issued_by_myself: {}\nerror: {}".format(
-                account.address.hex()[:10], self.eth_get_user_nonce(account.address), tx.nonce, e))
 
             formatted_log(
                 rpc_logger,
-                relayer_addr=None,
+                relayer_addr=EthAddress.zero(),
                 log_id="SendTxError",
                 related_chain=self.chain_index,
                 log_data=msg

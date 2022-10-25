@@ -8,7 +8,14 @@ class RpcExceededTimeout(Exception):
         super().__init__("[{}] {}".format(self.__class__.__name__, msg))
 
 
+class RpcAlreadyImported(Exception):
+    def __init__(self, msg: str):
+        super().__init__("[{}] {}".format(self.__class__.__name__, msg))
+
+
 class RpcEVMError(Exception):
     def __init__(self, msg: str):
-        msg = msg.replace("VM Exception while processing transaction: ", "")
-        super().__init__("[{}] {}".format(self.__class__.__name__, msg))
+        parsed_msg = msg.replace("VM Exception while processing transaction: ", "")
+        parsed_msg = parsed_msg.replace("execution reverted: ", "")
+
+        super().__init__("[{}] {}".format(self.__class__.__name__, parsed_msg))

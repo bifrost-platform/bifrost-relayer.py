@@ -1,7 +1,10 @@
+import os
+import sys
 import threading
 from typing import Optional, Union
 
 from ..ethtype.consts import ChainIndex
+from ..ethtype.exceptions import EthUnderPriced
 from ..ethtype.hexbytes import EthHashBytes, EthAddress, EthHexBytes
 from ..ethtype.amount import EthAmount
 from ..ethtype.account import EthAccount
@@ -111,10 +114,8 @@ class EthChainManager(EthTxHandler, EthEventHandler):
 
         if is_sendable:
             tx_with_fee.nonce = self.issue_nonce
-            try:
-                tx_hash = self.send_tx(tx_with_fee, self.__account)
-            except Exception as e:
-                print(str(e))
+            tx_hash = self.send_tx(tx_with_fee, self.__account)
+            if tx_hash is None:
                 tx_hash = EthHashBytes.zero()
         else:
             tx_hash = EthHashBytes.zero()

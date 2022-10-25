@@ -4,8 +4,10 @@ import requests
 import time
 from typing import List, Optional, Union, Callable
 
+from urllib3 import HTTPSConnectionPool
+
 from .configs import EntityRootConfig
-from .exceptions import RpcEVMError
+from .exceptions import RpcEVMError, RpcAlreadyImported
 from ..ethtype.amount import EthAmount
 from ..ethtype.consts import ChainIndex
 from ..ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
@@ -98,32 +100,34 @@ class EthRpcClient:
             "id": 1
         }
         headers = {'Content-type': 'application/json'}
-        response_json = None
 
         try:
             response_json = requests.post(self.url, json=body, headers=headers).json()
-            return response_json["result"]
 
-        except KeyError as e:
-            error_dict = response_json["error"]
-
-            if error_dict["code"] == -32603:
-                error_msg = error_dict["message"]
-                if error_msg == "query timeout of 10 seconds exceeded":
-                    return self.resend_request(method, params, response_json["error"])
-                elif str(error_msg).startswith("VM Exception while processing transaction: "):
-                    raise RpcEVMError(error_msg)
-                else:
-                    raise Exception("Not handled error: {}".format(str(e)))
+        except HTTPSConnectionPool as e:
+            return self.resend_request(method, params, str(e))
 
         except Exception as e:
+            print(e)
             """ expected error: HttpsConnection """
             return self.resend_request(method, params, str(e))
 
-        if response_json is not None:
-            return response_json["result"]
+        error = response_json.get("error")
+        if error is not None:
+            error_dict = response_json["error"]
+            error_msg = error_dict["message"]
+            if error_msg == "query timeout of 10 seconds exceeded":
+                return self.resend_request(method, params, response_json["error"])
+            elif str(error_msg).startswith("VM Exception while processing transaction: "):
+                raise RpcEVMError(error_msg)
+            elif str(error_msg).startswith("execution reverted: "):
+                raise RpcEVMError(error_msg)
+            elif str(error_msg).startswith("submit transaction to pool failed: Pool(AlreadyImported("):
+                raise RpcAlreadyImported(error_msg)
+            else:
+                raise Exception("Not handled error: {}".format(error_msg))
         else:
-            raise Exception("rpc_error: requests.post returns None without any exceptions")
+            return response_json["result"]
 
     @property
     def chain_index(self) -> ChainIndex:

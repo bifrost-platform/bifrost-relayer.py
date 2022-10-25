@@ -3,17 +3,17 @@ from typing import Any
 
 class EthTooLowPriority(Exception):
     def __init__(self, msg: str):
-        super().__init__(msg)
+        super().__init__("[{}] {}".format(self.__class__.__name__, msg))
 
 
 class EthFeeCapError(Exception):
     def __init__(self, msg: str):
-        super().__init__(msg)
+        super().__init__("[{}] {}".format(self.__class__.__name__, msg))
 
 
 class EthUnderPriced(Exception):
     def __init__(self, msg: str):
-        super().__init__(msg)
+        super().__init__("[{}] {}".format(self.__class__.__name__, msg))
 
 
 class EthNotHex(Exception):

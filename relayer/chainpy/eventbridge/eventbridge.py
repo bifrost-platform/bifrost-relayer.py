@@ -7,7 +7,8 @@ from typing import Optional, Union, Any, Type
 
 from .multichainmonitor import MultiChainMonitor
 from ..eth.ethtype.consts import ChainIndex
-from ..eth.ethtype.exceptions import EthFeeCapError, EthUnderPriced
+from ..eth.ethtype.exceptions import EthFeeCapError, EthUnderPriced, EthTooLowPriority
+from ..eth.ethtype.hexbytes import EthHashBytes
 from ..eth.managers.exceptions import EstimateGasError, RpcEVMError
 from ..eth.managers.multichainmanager import EntityRootConfig
 from ..logger import Logger, formatted_log
@@ -21,6 +22,7 @@ consumer_logger = Logger("Consumer", logging.INFO)
 receipt_checker_logger = Logger("Receipt", logging.INFO)
 evm_logger = Logger("Evm", logging.DEBUG)
 unexpected_logger = Logger("Unexpected", logging.INFO)
+tx_sender_logger = Logger("FailToSendTx", logging.INFO)
 
 
 SendEventABC = Union[ChainEventABC, PeriodicEventABC]
@@ -128,10 +130,21 @@ class EventBridge(MultiChainMonitor):
                 log_data="txHash({}):nonce({})".format(tx_hash.hex(), tx.nonce)
             )
 
-            # set receipt params to the event
-            receipt_time_lock = timestamp_msec() + self.__tx_commit_time_sec[dst_chain] * 1000
-            event.switch_to_check_receipt(dst_chain, tx_hash, receipt_time_lock)
-            self.queue.enqueue(event)
+            if tx_hash == EthHashBytes.zero():
+                formatted_log(
+                    tx_sender_logger,
+                    relayer_addr=self.active_account.address,
+                    log_id=event.summary(),
+                    related_chain=dst_chain,
+                    log_data="Zero txHash"
+                )
+                event.time_lock = timestamp_msec() + 3000
+                self.queue.enqueue(event)
+            else:
+                # set receipt params to the event
+                receipt_time_lock = timestamp_msec() + self.__tx_commit_time_sec[dst_chain] * 1000
+                event.switch_to_check_receipt(dst_chain, tx_hash, receipt_time_lock)
+                self.queue.enqueue(event)
 
         except RpcEVMError as e:
             # not-consume user nonce.
@@ -145,7 +158,7 @@ class EventBridge(MultiChainMonitor):
             updated_event = event.handle_tx_result_fail()
             self.queue.enqueue(updated_event)
 
-        except EthUnderPriced or EthFeeCapError as e:
+        except EthUnderPriced or EthFeeCapError or EthTooLowPriority as e:
             # not-consume user nonce.
             formatted_log(
                 evm_logger,
