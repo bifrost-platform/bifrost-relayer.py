@@ -1,15 +1,11 @@
-import os
-import sys
 import threading
 from typing import Optional, Union
 
 from ..ethtype.consts import ChainIndex
-from ..ethtype.exceptions import EthUnderPriced
 from ..ethtype.hexbytes import EthHashBytes, EthAddress, EthHexBytes
 from ..ethtype.amount import EthAmount
 from ..ethtype.account import EthAccount
 from ..ethtype.contract import Abi, EthContract
-from ..ethtype.transaction import TransactionType0, TransactionType2
 from ..managers.configs import EntityRootConfig
 from ..managers.txhandler import EthTxHandler, SendTxUnion
 from ..managers.eventhandler import EthEventHandler

@@ -9,7 +9,7 @@ from .multichainmonitor import MultiChainMonitor
 from ..eth.ethtype.consts import ChainIndex
 from ..eth.ethtype.exceptions import EthFeeCapError, EthUnderPriced, EthTooLowPriority
 from ..eth.ethtype.hexbytes import EthHashBytes
-from ..eth.managers.exceptions import EstimateGasError, RpcEVMError
+from ..eth.managers.exceptions import RpcEVMError
 from ..eth.managers.multichainmanager import EntityRootConfig
 from ..logger import Logger, formatted_log
 
@@ -116,7 +116,6 @@ class EventBridge(MultiChainMonitor):
         if dst_chain == ChainIndex.NONE or dst_chain is None:
             return None
 
-        tx = None
         try:
             # send transaction
             tx = self.world_build_transaction(dst_chain, contract_name, method_name, params)
