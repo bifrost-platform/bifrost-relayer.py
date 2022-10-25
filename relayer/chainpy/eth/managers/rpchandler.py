@@ -5,6 +5,7 @@ import time
 from typing import List, Optional, Union, Callable
 
 from .configs import EntityRootConfig
+from .exceptions import RpcEVMError
 from ..ethtype.amount import EthAmount
 from ..ethtype.consts import ChainIndex
 from ..ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
@@ -81,7 +82,15 @@ class EthRpcClient:
     def url(self) -> str:
         return self.__url_with_access_key
 
-    def send_request(self, method: str, params: list, endure: bool = True) -> Optional[Union[dict, str]]:
+    def resend_request(self, method: str, params: list, e: str):
+        # sleep and re-request
+        formatted_log(rpc_logger, log_data=e)
+        print("request will be re-tried after {} secs".format(self.__rpc_server_downtime_allow_sec))
+        time.sleep(self.__rpc_server_downtime_allow_sec)
+        print("let's try it again!")
+        return self.send_request(method, params)
+
+    def send_request(self, method: str, params: list) -> Optional[Union[dict, str]]:
         body = {
             "jsonrpc": "2.0",
             "method": method,
@@ -93,21 +102,26 @@ class EthRpcClient:
 
         try:
             response_json = requests.post(self.url, json=body, headers=headers).json()
+            return response_json["result"]
+
+        except KeyError as e:
+            error_dict = response_json["error"]
+
+            if error_dict["code"] == -32603:
+                error_msg = error_dict["message"]
+                if error_msg == "query timeout of 10 seconds exceeded":
+                    return self.resend_request(method, params, response_json["error"])
+                elif str(error_msg).startswith("VM Exception while processing transaction: "):
+                    raise RpcEVMError(error_msg)
+                else:
+                    raise Exception("Not handled error: {}".format(str(e)))
+
         except Exception as e:
             """ expected error: HttpsConnection """
-            if endure:
-                # sleep and re-request
-                formatted_log(rpc_logger, log_data=str(e))
-                print("request will be re-tried after {} secs".format(self.__rpc_server_downtime_allow_sec))
-                time.sleep(self.__rpc_server_downtime_allow_sec)
-                print("let's try it again!")
-                return self.send_request(method, params, False)
+            return self.resend_request(method, params, str(e))
 
         if response_json is not None:
-            try:
-                return response_json["result"]
-            except KeyError as e:
-                raise KeyError(response_json["error"])
+            return response_json["result"]
         else:
             raise Exception("rpc_error: requests.post returns None without any exceptions")
 

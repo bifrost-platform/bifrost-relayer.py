@@ -8,7 +8,7 @@ from typing import Optional, Union, Any, Type
 from .multichainmonitor import MultiChainMonitor
 from ..eth.ethtype.consts import ChainIndex
 from ..eth.ethtype.exceptions import EthFeeCapError, EthUnderPriced
-from ..eth.managers.exceptions import EstimateGasError
+from ..eth.managers.exceptions import EstimateGasError, RpcEVMError
 from ..eth.managers.multichainmanager import EntityRootConfig
 from ..logger import Logger, formatted_log
 
@@ -133,7 +133,7 @@ class EventBridge(MultiChainMonitor):
             event.switch_to_check_receipt(dst_chain, tx_hash, receipt_time_lock)
             self.queue.enqueue(event)
 
-        except EstimateGasError as e:
+        except RpcEVMError as e:
             # not-consume user nonce.
             formatted_log(
                 evm_logger,

@@ -3,7 +3,7 @@ from typing import Union, Optional
 
 from web3 import Web3  # TODO remove this dependency
 
-from .exceptions import EstimateGasError
+from .exceptions import EstimateGasError, RpcEVMError
 from ..ethtype.account import EthAccount
 from ..ethtype.exceptions import EthUnderPriced, EthFeeCapError, EthTooLowPriority
 from ..ethtype.hexbytes import EthHexBytes, EthHashBytes
@@ -93,11 +93,8 @@ class EthTxHandler(EthRpcClient):
                               resend: bool = False,
                               gas_limit_multiplier: float = 1.0) -> (bool, SendTxUnion):
         # estimate, if necessary
-        try:
-            gas_limit = self.estimate_tx(tx, account.address)
-            tx.gas_limit = int(gas_limit * gas_limit_multiplier)
-        except Exception as e:
-            raise EstimateGasError("evm error {}".format(e))
+        gas_limit = self.estimate_tx(tx, account.address)
+        tx.gas_limit = int(gas_limit * gas_limit_multiplier)
 
         # fetch fee from network
         gas_price, base_fee_price, priority_fee_price = self.get_network_fee_parameters()
