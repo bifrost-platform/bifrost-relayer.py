@@ -80,7 +80,7 @@ class RbcEvent(ChainEventABC):
     """
     Data class for event from socket contract.
     """
-    CALL_DELAY_SEC = 200
+    CALL_DELAY_SEC = 600
     EVENT_NAME = "Socket"
 
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):

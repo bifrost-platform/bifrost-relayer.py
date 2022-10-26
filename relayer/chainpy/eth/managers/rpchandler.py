@@ -108,9 +108,9 @@ class EthRpcClient:
             return self.resend_request(method, params, str(e))
 
         except Exception as e:
-            print(e)
             """ expected error: HttpsConnection """
-            return self.resend_request(method, params, str(e))
+            formatted_log(rpc_logger, log_id="NotHandledException", related_chain=self.chain_index, log_data=str(e))
+            return self.send_request(method, params)
 
         error = response_json.get("error")
         if error is not None:

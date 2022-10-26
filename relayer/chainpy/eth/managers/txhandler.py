@@ -1,4 +1,7 @@
+import os
+import sys
 import unittest
+from time import sleep
 from typing import Union, Optional
 
 from web3 import Web3  # TODO remove this dependency
@@ -147,3 +150,7 @@ class EthTxHandler(EthRpcClient):
                 related_chain=self.chain_index,
                 log_data=msg
             )
+        except Exception as e:
+            formatted_log(rpc_logger, log_id="NotHandledException", related_chain=self.chain_index, log_data=str(e))
+            sleep(60)
+            os.execl(sys.executable, sys.executable, *sys.argv)
