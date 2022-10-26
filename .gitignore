@@ -53,3 +53,6 @@ relayer/tools/admin.key.json
 # log file
 eventbridge.log*
 protocol.log*
+
+# venv files:
+venv/
