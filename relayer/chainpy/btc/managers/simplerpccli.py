@@ -1,3 +1,6 @@
+import json
+from time import sleep
+
 import requests
 from requests.auth import HTTPBasicAuth
 from typing import Union, Optional
@@ -40,7 +43,13 @@ class SimpleBtcClient:
         }
 
         resp = requests.post(self.url, json=body, auth=self.__rpc_auth)
-        resp_json = resp.json()
+        try:
+            resp_json = resp.json()
+        except json.decoder.JSONDecodeError as e:
+            sleep(60)
+            print("re-run after sleeping 60 secs")
+            return self._send_request(method, params)
+
         if resp.status_code == 200:
             return resp_json["result"]
         else:
