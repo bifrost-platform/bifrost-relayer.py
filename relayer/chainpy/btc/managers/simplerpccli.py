@@ -1,12 +1,13 @@
 import json
+import unittest
 from time import sleep
 
 import requests
 from requests.auth import HTTPBasicAuth
 from typing import Union, Optional
 
-from relayer.chainpy.btc.managers.header import BtcHeader
-from relayer.chainpy.eth.ethtype.hexbytes import EthHexBytes, EthHashBytes
+
+BITCOIN_CONFIRMATION_HEIGHT = 6
 
 
 class SimpleBtcClient:
@@ -33,7 +34,7 @@ class SimpleBtcClient:
     def url(self) -> str:
         return self.__url
 
-    def _send_request(self, method: str, params: list) -> Optional[Union[dict, str]]:
+    def _send_request(self, method: str, params: list) -> Union[dict, str, int]:
         """ Send rpc request to bitcoin-core without sending-wallet option. """
         body = {
             "jsonrpc": "1.0",
@@ -50,52 +51,77 @@ class SimpleBtcClient:
             print("re-run after sleeping 60 secs")
             return self._send_request(method, params)
 
-        if resp.status_code == 200:
-            return resp_json["result"]
-        else:
+        if resp_json.get("result") is None:
+            raise Exception("None result")
+        elif resp.status_code != 200:
             raise Exception("rpc fails: {}".format(resp_json["error"]))
-
-    # get block
-    def get_block_by_hash(self, block_hash: str, verbose: int = 1) -> dict:
-        return self._send_request("getblock", [block_hash, verbose])
+        else:
+            return resp_json["result"]
 
     # get block hash
     def get_block_hash_by_height(self, height: int) -> str:
-        return self._send_request("getblockhash", [height])
+        result = self._send_request("getblockhash", [height])
+        if not isinstance(result, str):
+            raise Exception("Not allowed type of result: {}".format(type(result)))
+        return result
 
     # get block
+    def get_block_by_hash(self, block_hash: str, verbose: int = 1) -> Union[dict, str]:
+        if not isinstance(verbose, int):
+            raise Exception("Only allowed integer verbosity: serializedHex(0), blockWithTxHashes(1), blockWithTx(2)")
+        result = self._send_request("getblock", [block_hash, verbose])
+        if not isinstance(result, str) and not isinstance(result, dict):
+            raise Exception("Not allowed type of result: {}".format(type(result)))
+        return result
+
     def get_block_by_height(self, height: int, verbose: int = 1) -> dict:
         block_hash = self.get_block_hash_by_height(height)
         return self.get_block_by_hash(block_hash, verbose)
 
     # get block header
-    def get_block_header_by_hash(self, block_hash: str, verbose: bool = False) -> Union[BtcHeader, EthHexBytes]:
+    def get_header_by_hash(self, block_hash: str, verbose: bool = False) -> Union[dict, str]:
         result = self._send_request("getblockheader", [block_hash, verbose])
-        if verbose:
-            return BtcHeader.from_dict(result)
-        else:
-            return EthHexBytes(result)
+        if not isinstance(result, str) and not isinstance(result, dict):
+            raise Exception("Not allowed type of result: {}".format(type(result)))
+        return result
 
-    def get_block_header_by_height(self, height: int, verbose: bool = False) -> Union[BtcHeader, EthHexBytes]:
+    def get_header_by_height(self, height: int, verbose: bool = False) -> Union[dict, str]:
         block_hash = self.get_block_hash_by_height(height)
-        return self.get_block_header_by_hash(block_hash, verbose)
+        return self.get_header_by_hash(block_hash, verbose)
 
-    # get block hash
-    def get_latest_block_hash(self) -> EthHashBytes:
-        result = self._send_request("getbestblockhash", list())
-        return EthHashBytes(result)
+    # get best block height
+    def get_best_height(self) -> int:
+        result = self._send_request("getblockcount", [])
+        if not isinstance(result, int):
+            raise Exception("Not allowed type of result: {}".format(type(result)))
+        return result
 
-    def get_latest_block(self, verbose: int = 1):
-        block_hash = self.get_latest_block_hash()
-        return self.get_block_by_hash(block_hash.hex_without_0x(), verbose)
+    def get_best_block_hash(self) -> str:
+        result = self._send_request("getbestblockhash", [])
+        if not isinstance(result, str):
+            raise Exception("Not allowed type of result: {}".format(type(result)))
+        return result
 
-    def get_latest_block_header(self, verbose: bool = False) -> Union[BtcHeader, EthHexBytes]:
-        latest_block_hash = self.get_latest_block_hash()
-        return self.get_block_header_by_hash(latest_block_hash.hex_without_0x(), verbose)
+    def get_best_block(self, verbose: int = 1) -> dict:
+        block_hash = self.get_best_block_hash()
+        return self.get_block_by_hash(block_hash, verbose)
 
-    def get_matured_block_header(self, verbose: bool = False):
-        latest_block_hash = self.get_latest_block_hash()
-        latest_header = self.get_block_header_by_hash(latest_block_hash.hex_without_0x(), True)
+    def get_best_header(self) -> Union[dict, str]:
+        block_hash = self.get_best_block_hash()
+        return self.get_header_by_hash(block_hash)
 
-        matured_height = latest_header.height - self.__block_aging_period
-        return self.get_block_header_by_height(matured_height, verbose)
+    def get_latest_confirmed_height(self) -> int:
+        best_height = self.get_best_height()
+        return best_height - BITCOIN_CONFIRMATION_HEIGHT
+
+    def get_latest_confirmed_block_hash(self) -> str:
+        confirmed_height = self.get_latest_confirmed_height()
+        return self.get_block_hash_by_height(confirmed_height)
+
+    def get_latest_confirmed_block(self, verbose: int = 1) -> dict:
+        confirmed_height = self.get_latest_confirmed_height()
+        return self.get_block_by_height(confirmed_height, verbose)
+
+    def get_latest_confirmed_block_header(self, verbose: bool = False) -> dict:
+        confirmed_height = self.get_latest_confirmed_height()
+        return self.get_header_by_height(confirmed_height, verbose)

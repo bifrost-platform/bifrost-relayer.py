@@ -175,20 +175,21 @@ class BtcHashUpOracle(PeriodicEventABC):
 
         latest_height_from_socket = self.relayer.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
 
-        btc_header = self.__cli.get_matured_block_header(True)
-        if btc_header.height > latest_height_from_socket:
-            block_hash = EthHashBytes(btc_header.hash)
+        btc_header = self.__cli.get_latest_confirmed_block_header(True)
+        height, _hash = btc_header["height"], btc_header["hash"]
+        if height > latest_height_from_socket:
+            block_hash = EthHashBytes(_hash)
 
             formatted_log(
                 btc_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=ChainIndex.BIFROST,
-                log_data="btcHash({}):height({})".format(block_hash.hex(), btc_header.height)
+                log_data="btcHash({}):height({})".format(block_hash.hex(), height)
             )
             return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
                 [ConsensusOracleId.BTC_HASH.formatted_bytes()],
-                [btc_header.height],
+                [height],
                 [block_hash.bytes()]
             ]
 
