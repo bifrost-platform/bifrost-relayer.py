@@ -1,10 +1,8 @@
-FROM python:3.8.9-slim
+FROM python:3.10-slim
 
 ENV PRIVATE_KEY=
 
-RUN apt-get update \
-    && apt-get install -y gcc \
-    && apt-get clean
+RUN apt update && apt install -y build-essential gcc
 
 WORKDIR /app
 COPY . .
