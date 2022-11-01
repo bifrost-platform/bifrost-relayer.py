@@ -118,6 +118,9 @@ class Relayer(EventBridge):
         if front_height < 1:
             front_height, front_time = chain_manager.latest_height, chain_manager.eth_get_block_by_height(chain_manager.latest_height).timestamp
 
+        if front_time >= target_time:
+            return front_height
+
         if chain_index != ChainIndex.BIFROST:
             target_time -= 30000
         return self._binary_search(chain_index, front_height, front_time, current_height, current_time, target_time)
@@ -132,7 +135,6 @@ class Relayer(EventBridge):
 
         medium_height = (front_height + rear_height) // 2
         medium_block = self.get_chain_manager_of(chain_index).eth_get_block_by_height(medium_height)
-
         if abs(target_time - medium_block.timestamp) < 30000:  # 30 secs
             return medium_height
         elif target_time > medium_block.timestamp:
