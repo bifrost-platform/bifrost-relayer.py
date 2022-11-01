@@ -117,9 +117,8 @@ class EventBridge(MultiChainMonitor):
             return None
 
         try:
-            # send transaction
+            # build and send transaction
             tx = self.world_build_transaction(dst_chain, contract_name, method_name, params)
-
             _, tx_hash = self.world_send_transaction(dst_chain, tx, event.gas_limit_multiplier())
             formatted_log(
                 consumer_logger,
@@ -130,6 +129,7 @@ class EventBridge(MultiChainMonitor):
             )
 
             if tx_hash == EthHashBytes.zero():
+                """ expected fee issue """
                 formatted_log(
                     tx_sender_logger,
                     relayer_addr=self.active_account.address,
@@ -140,7 +140,7 @@ class EventBridge(MultiChainMonitor):
                 event.time_lock = timestamp_msec() + 3000
                 self.queue.enqueue(event)
             else:
-                # set receipt params to the event
+                """ set receipt params to the event """
                 receipt_time_lock = timestamp_msec() + self.__tx_commit_time_sec[dst_chain] * 1000
                 event.switch_to_check_receipt(dst_chain, tx_hash, receipt_time_lock)
                 self.queue.enqueue(event)
@@ -154,22 +154,9 @@ class EventBridge(MultiChainMonitor):
                 related_chain=dst_chain,
                 log_data="evm-error:" + str(e)
             )
+            # TODO does not update event when reverted poll filtered error occurs
             updated_event = event.handle_tx_result_fail()
             self.queue.enqueue(updated_event)
-
-        except EthUnderPriced or EthFeeCapError or EthTooLowPriority as e:
-            # not-consume user nonce.
-            formatted_log(
-                evm_logger,
-                relayer_addr=self.active_account.address,
-                log_id=event.summary(),
-                related_chain=dst_chain,
-                log_data="fee-error:" + str(e)
-            )
-
-            # relayer restart after 60 secs
-            sleep(60)
-            os.execl(sys.executable, sys.executable, *sys.argv)
 
     def _handle_receipt_event(self, event: SendEventABC):
         receipt_params: ReceiptParams = event.get_receipt_params()
