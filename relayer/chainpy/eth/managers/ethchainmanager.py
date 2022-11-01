@@ -6,8 +6,9 @@ from ..ethtype.hexbytes import EthHashBytes, EthAddress, EthHexBytes
 from ..ethtype.amount import EthAmount
 from ..ethtype.account import EthAccount
 from ..ethtype.contract import Abi, EthContract
+from ..ethtype.transaction import EthTransaction
 from ..managers.configs import EntityRootConfig
-from ..managers.txhandler import EthTxHandler, SendTxUnion
+from ..managers.txhandler import EthTxHandler
 from ..managers.eventhandler import EthEventHandler
 
 
@@ -61,7 +62,9 @@ class EthChainManager(EthTxHandler, EthEventHandler):
         data = contract.abi.get_method(method_name).encode_input_data(method_params)
         return contract_addr, data
 
-    def call_transaction(self, contract_name: str, method_name: str, method_params: list, sender_addr: EthAddress = None) -> Union[EthHexBytes, tuple]:
+    def call_transaction(
+            self, contract_name: str, method_name: str,
+            method_params: list, sender_addr: EthAddress = None) -> Union[EthHexBytes, tuple]:
         contract_addr, data = self._get_contract_addr_and_build_tx_data(
             contract_name,
             method_name,
@@ -71,7 +74,7 @@ class EthChainManager(EthTxHandler, EthEventHandler):
         if sender_addr is None:
             sender_addr = self.__account.address
 
-        call_tx = self.build_call_tx(
+        call_tx = self.build_tx(
             contract_addr,
             data,
             value=None,
@@ -82,34 +85,29 @@ class EthChainManager(EthTxHandler, EthEventHandler):
         contract = self.get_contract_by_name(contract_name)
         return contract.abi.get_method(method_name).decode_output_data(result)
 
-    def build_transaction(self, contract_name: str, method_name: str, method_params: list, value: EthAmount = None) -> Optional[SendTxUnion]:
+    def build_transaction(
+            self, contract_name: str, method_name: str, method_params: list, value: EthAmount = None) -> EthTransaction:
         contract_addr, data = self._get_contract_addr_and_build_tx_data(
             contract_name,
             method_name,
             method_params
         )
-        return self.build_tx_including_fee_upper_bound(
-            contract_addr,
-            data,
-            EthAmount(0) if value is None else value
-        )
+        return self.build_tx(contract_addr, data, EthAmount(0) if value is None else value)
 
     def send_transaction(self,
-                         tx_with_fee: SendTxUnion,
+                         tx_with_fee: EthTransaction,
                          boost: bool = False,
-                         resend: bool = False,
-                         gas_limit_multiplier: float = 1.0) -> (SendTxUnion, EthHashBytes):
+                         gas_limit_multiplier: float = 1.0) -> (EthTransaction, EthHashBytes):
         # estimate tx and setting gas parameter
         is_sendable, pre_processed_tx = self.set_gas_limit_and_fee(
             tx_with_fee,
             self.__account,
             boost=boost,
-            resend=resend,
             gas_limit_multiplier=gas_limit_multiplier
         )
 
         if is_sendable:
-            tx_with_fee.nonce = self.issue_nonce
+            tx_with_fee.set_nonce(self.issue_nonce)
             tx_hash = self.send_tx(tx_with_fee, self.__account)
             if tx_hash is None:
                 tx_hash = EthHashBytes.zero()
@@ -118,18 +116,12 @@ class EthChainManager(EthTxHandler, EthEventHandler):
 
         return pre_processed_tx, tx_hash
 
-    def resend_transaction(self, tx: SendTxUnion):
-        tx.boost_upper_bound()
-        tx_hash = self.send_tx(tx, self.__account)
-        return tx, tx_hash
-
     def transfer_native_coin(self,
                              receiver: EthAddress,
                              value: EthAmount,
-                             boost: bool = False,
-                             resend: bool = False) -> (SendTxUnion, EthHashBytes):
-        raw_tx = self.build_tx_including_fee_upper_bound(receiver, EthHexBytes.zero(), value)
-        return self.send_transaction(raw_tx, boost=boost, resend=resend)
+                             boost: bool = False) -> (EthTransaction, EthHashBytes):
+        raw_tx = self.build_tx(receiver, EthHexBytes.zero(), value)
+        return self.send_transaction(raw_tx, boost=boost)
 
     def native_balance(self, addr: EthAddress = None) -> EthAmount:
         if addr is None:

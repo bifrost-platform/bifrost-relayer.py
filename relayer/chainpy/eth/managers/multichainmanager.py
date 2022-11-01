@@ -6,8 +6,8 @@ from ..ethtype.chaindata import EthReceipt
 from ..ethtype.consts import ChainIndex
 from ..ethtype.contract import EthContract
 from ..ethtype.hexbytes import EthHashBytes, EthAddress, EthHexBytes
+from ..ethtype.transaction import EthTransaction
 from ..managers.eventhandler import DetectedEvent
-from ..managers.txhandler import SendTxUnion
 from ..managers.ethchainmanager import EthChainManager
 from ..managers.configs import EntityRootConfig, MultiChainConfig
 
@@ -61,18 +61,19 @@ class MultiChainManager:
                                 chain_index: ChainIndex,
                                 contract_name: str,
                                 method_name: str,
-                                method_params: list, value: EthAmount = None) -> SendTxUnion:
+                                method_params: list, value: EthAmount = None) -> EthTransaction:
         chain_manager = self.get_chain_manager_of(chain_index)
         return chain_manager.build_transaction(contract_name, method_name, method_params, value)
 
     def world_send_transaction(self,
                                chain_index: ChainIndex,
-                               tx_with_fee: SendTxUnion,
-                               gas_limit_multiplier: float = 1.0) -> (SendTxUnion, EthHashBytes):
+                               tx_with_fee: EthTransaction,
+                               gas_limit_multiplier: float = 1.0) -> (EthTransaction, EthHashBytes):
         chain_manager = self.get_chain_manager_of(chain_index)
         return chain_manager.send_transaction(tx_with_fee, gas_limit_multiplier=gas_limit_multiplier)
 
-    def world_receipt_with_wait(self, chain_index: ChainIndex, tx_hash: EthHashBytes, matured: bool = True) -> EthReceipt:
+    def world_receipt_with_wait(
+            self, chain_index: ChainIndex, tx_hash: EthHashBytes, matured: bool = True) -> EthReceipt:
         chain_manager = self.get_chain_manager_of(chain_index)
         return chain_manager.eth_receipt_with_wait(tx_hash, matured)
 
@@ -106,7 +107,8 @@ class MultiChainManager:
             addr = self.active_account.address
         return chain_manager.native_balance(addr)
 
-    def world_transfer_coin(self, chain_index: ChainIndex, to_addr: EthAddress, value: EthAmount) -> (SendTxUnion, EthHashBytes):
+    def world_transfer_coin(
+            self, chain_index: ChainIndex, to_addr: EthAddress, value: EthAmount) -> (EthTransaction, EthHashBytes):
         chain_manager = self.get_chain_manager_of(chain_index)
-        tx = chain_manager.build_tx_including_fee_upper_bound(to_addr, EthHexBytes(0x00), value)
+        tx = chain_manager.build_tx(to_addr, EthHexBytes(0x00), value)
         return chain_manager.send_transaction(tx)

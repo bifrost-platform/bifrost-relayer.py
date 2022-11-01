@@ -1,296 +1,280 @@
-import copy
-from abc import ABCMeta, abstractmethod
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any, Union
 
-from .utils import *
-from .hexbytes import EthAddress, EthHashBytes, EthHexBytes
-from .amount import EthAmount
-from .consts import ChainIndex
-from ..managers.configs import FeeConfig
+from dataclasses_json import LetterCase, dataclass_json, config
+from eth_account import Account
+from eth_account._utils.transaction_utils import transaction_rpc_to_rlp_structure
+from eth_account._utils.typed_transactions import access_list_sede_type
+from eth_rlp import HashableRLP
 
-PRIORITY_FEE_MULTIPLIER = 4
-GAS_MULTIPLIER = 1.5
+import rlp
+from rlp.sedes import (
+    big_endian_int, binary, Binary
+)
+
+from relayer.chainpy.eth.ethtype.account import EthAccount
+from relayer.chainpy.eth.ethtype.amount import EthAmount
+from relayer.chainpy.eth.ethtype.dataclassmeta import EthHashBytesMeta, IntegerMeta, EthHexBytesMeta, EthAddrMeta
+from relayer.chainpy.eth.ethtype.exceptions import EthTypeError
+from relayer.chainpy.eth.ethtype.hexbytes import EthHashBytes, EthAddress, EthHexBytes
+from relayer.chainpy.eth.ethtype.utils import is_hex, ETH_HASH
+
+dynamic_unsigned_transaction_fields = (
+    ('chainId', big_endian_int),
+    ('nonce', big_endian_int),
+    ('maxPriorityFeePerGas', big_endian_int),
+    ('maxFeePerGas', big_endian_int),
+    ('gas', big_endian_int),
+    ('to', Binary.fixed_length(20, allow_empty=True)),
+    ('value', big_endian_int),
+    ('data', binary),
+    ('accessList', access_list_sede_type),
+)
+
+dynamic_unsigned_transaction_serializer = type(
+    "_unsigned_transaction_serializer", (HashableRLP,), {
+        "fields": dynamic_unsigned_transaction_fields,
+    },
+)
+
+access_list_unsigned_transaction_fields = (
+    ('chainId', big_endian_int),
+    ('nonce', big_endian_int),
+    ('gasPrice', big_endian_int),
+    ('gas', big_endian_int),
+    ('to', Binary.fixed_length(20, allow_empty=True)),
+    ('value', big_endian_int),
+    ('data', binary),
+    ('accessList', access_list_sede_type),
+)
+
+access_list_unsigned_transaction_serializer = type(
+    "_unsigned_transaction_serializer", (HashableRLP,), {
+        "fields": access_list_unsigned_transaction_fields,
+    },
+)
 
 
-class FeeParams(metaclass=ABCMeta):
-    def __init__(self, chain_index: ChainIndex, count: int = -1):
-        self.__chain_index = chain_index
-        self.__count = count
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class EthTransaction:
+    hash: Optional[EthHashBytes] = field(metadata=EthHashBytesMeta, default_factory=str)
 
-    @property
-    def count(self) -> int:
-        return self.__count
+    block_hash: Optional[EthHashBytes] = field(metadata=EthHashBytesMeta, default_factory=str)
+    block_number: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
+    sender: Optional[EthAddress] = field(
+        metadata=config(
+            field_name="from",
+            encoder=lambda value: value.hex(),
+            decoder=lambda value: EthAddress(value)
+        ),
+        default_factory=str
+    )
+    gas: int = field(metadata=IntegerMeta, default_factory=int)
+    gas_price: int = field(metadata=IntegerMeta, default_factory=int)
 
-    @count.setter
-    def count(self, count: int):
-        self.__count = count
+    input: EthHexBytes = field(metadata=EthHexBytesMeta, default_factory=str)
+    nonce: int = field(metadata=IntegerMeta, default_factory=int)
+    r: int = field(metadata=IntegerMeta, default_factory=int)
+    s: int = field(metadata=IntegerMeta, default_factory=int)
+    v: int = field(metadata=IntegerMeta, default_factory=int)
+    transaction_index: int = field(metadata=IntegerMeta, default_factory=int)
+    value: int = field(metadata=IntegerMeta, default_factory=int)
+    to: EthAddress = field(metadata=EthAddrMeta, default_factory=str)
 
-    @property
-    def chain_index(self) -> ChainIndex:
-        return self.__chain_index
+    # optional depends on rpc versions
+    type: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
 
-    @property
-    @abstractmethod
-    def type(self) -> int:
-        pass
+    # type 2 only
+    chain_id: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
+    access_list: Optional[List[Dict[str, Any]]] = field(default_factory=list)
 
-    @abstractmethod
-    def increase_gas_fee_config(self):
-        pass
+    max_fee_per_gas: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
+    max_priority_fee_per_gas: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
 
-    @abstractmethod
-    def check_fee_upper_bound_and_commit_fee(self, gas_price: int = None, base_fee_price: int = None, priority_fee_price: int = None):
-        pass
+    def __post_init__(self):
+        if self.block_hash == EthHashBytes.zero():
+            self.type = -1
+        elif self.access_list is None:
+            self.type = 0
+        elif self.max_fee_per_gas is None:
+            self.type = 1
+        else:
+            self.type = 2
 
-    @abstractmethod
-    def dict(self) -> dict:
-        pass
+    @classmethod
+    def init(cls,
+             chain_id: int,
+             to: EthAddress,
+             value: EthAmount = EthAmount.zero(),
+             data: EthHexBytes = None,
+             sender: EthAddress = None) -> "EthTransaction":
+        tx_dict = {
+            "chainId": hex(chain_id),
+            "to": to.hex().lower(),
+            "value": value.int() if value is not None else 0
+        }
+        if data is not None:
+            tx_dict["input"] = data.hex().lower()
+        if sender is not None:
+            tx_dict["sender"] = sender.hex().lower()
+        return EthTransaction.from_dict(tx_dict)
 
-    @abstractmethod
-    def boost_fee(self, rate: float = 1.1):
-        pass
-
-
-class FeeParamsType0(FeeParams):
-    def __init__(self, chain_index: ChainIndex, fee_config: FeeConfig):
-        super().__init__(chain_index)
-        self.__fee_upper_bound = copy.deepcopy(fee_config)
-        self.__committed_gas_price = None
-
-    @property
-    def type(self) -> int:
-        return 0
-
-    def increase_gas_fee_config(self):
-        update_rates = self.__fee_upper_bound.fee_update_rates
-        if update_rates is None:
-            return self
-
-        if isinstance(update_rates, list) and len(update_rates) > 0:
-            self.count += 1
-            count = min(self.count, len(update_rates) - 1)
-            update_rate = update_rates[count]
-            self.__fee_upper_bound.gas_price = int(self.__fee_upper_bound.gas_price * update_rate)
+    def set_nonce(self, nonce: int):
+        self.nonce = nonce
         return self
 
-    def check_fee_upper_bound_and_commit_fee(self,
-                                             network_gas_price: int = None,
-                                             network_base_fee_price: int = None,
-                                             network_priority_fee_price: int = None):
-        # type check
-        if network_gas_price is None:
-            raise Exception("Fee type error")
-
-        # check limit
-        if self.__fee_upper_bound.gas_price < network_gas_price:
-            # TODO logging?
-            print("fee parameter issue: config({}) < network({})".format(
-                self.__fee_upper_bound.gas_price, network_gas_price))
-            return False
-
-        self.__committed_gas_price = int(network_gas_price * GAS_MULTIPLIER)
-        return True
-
-    def boost_fee(self, rate: float = 1.1):
-        if self.__committed_gas_price is not None:
-            self.__committed_gas_price = int(self.__committed_gas_price * rate)
-
-    def dict(self) -> dict:
-        if self.__committed_gas_price is not None:
-            return {"gasPrice": hex(self.__committed_gas_price)}
-        return {}
-
-
-class FeeParamsType2(FeeParams):
-    def __init__(self, chain_index: ChainIndex, fee_config: FeeConfig):
-        super().__init__(chain_index)
-        self.__fee_config = copy.deepcopy(fee_config)
-        self.__committed_max_fee_price_cache = None
-        self.__committed_max_priority_price_cache = None
-
-    @property
-    def type(self) -> int:
-        return 2
-
-    def increase_gas_fee_config(self):
-        update_rates = self.__fee_config.fee_update_rates
-        if update_rates is None:
-            return self
-        if isinstance(update_rates, list) and len(update_rates) > 0:
-            self.count += 1
-            count = self.count if self.count >= len(update_rates) else len(update_rates) - 1
-            update_rate = update_rates[count]
-            self.__fee_config.max_priority_price = int(self.__fee_config.max_priority_price * update_rate)
-            self.__fee_config.max_gas_price = int(self.__fee_config.max_gas_price * update_rate)
+    def set_gas_limit(self, gas_limit: Union[int, str]):
+        self.gas = gas_limit if isinstance(gas_limit, int) else hex(gas_limit)
         return self
 
-    def check_fee_upper_bound_and_commit_fee(self,
-                                             network_gas_price: int = None,
-                                             network_base_fee_price: int = None,
-                                             network_priority_fee_price: int = None):
-        if network_base_fee_price is None:
-            print("none base fee price")
-            return False
+    def set_gas_price(self, gas_price: int):
+        """ set fee parameters for type0 or type1 transaction """
+        self.type = 0
+        self.gas_price = gas_price
+        return self
 
-        if network_priority_fee_price is None:
-            print("none priority fee price")
-            return False
+    def set_gas_prices(self, max_fee_per_gas: int, max_priority_fee_per_gas: int):
+        """ set fee parameters for type2 """
+        self.type = 2
+        self.max_fee_per_gas = max_fee_per_gas
+        self.max_priority_fee_per_gas = max_priority_fee_per_gas
+        return self
 
-        # some chain is not allowed zero priority fee
-        network_priority_fee_price = network_priority_fee_price * PRIORITY_FEE_MULTIPLIER if network_priority_fee_price > 0 else 1
-        net_max_gas_price = network_priority_fee_price + network_base_fee_price
-        if self.__fee_config.max_priority_price < network_priority_fee_price:
-            print("fee priority fee price issue: config({}) < network({})".format(
-                self.__fee_config.max_priority_price, network_priority_fee_price
-            ))
-            return False
-        if self.__fee_config.max_gas_price < net_max_gas_price:
-            print("fee max gas price issue: config({}) < network({})".format(
-                self.__fee_config.max_gas_price, net_max_gas_price
-            ))
-            print("fee parameter issue: config({}) < network({})".format(self.__fee_config, network_gas_price))
-            return False
+    def set_access_list(self, access_list: list):
+        self.type = 1
+        self.access_list = access_list
+        return self
 
-        self.__committed_max_priority_price_cache = network_priority_fee_price
-        self.__committed_max_fee_price_cache = int(net_max_gas_price * GAS_MULTIPLIER)
-        return True
+    def set_chain_id(self, chain_id: int):
+        if self.type == -1:
+            raise Exception("can not set chain id")
 
-    def boost_fee(self, rate: float = 1.1):
-        self.__committed_max_fee_price_cache = int(self.__committed_max_fee_price_cache * rate)
+        if self.type is None or self.type == 0:
+            self.type = 1
+        self.chain_id = chain_id
+        return self
 
-    def dict(self) -> dict:
-        if self.__committed_max_priority_price_cache is not None and self.__committed_max_fee_price_cache is not None:
-            return {
-                "maxFeePerGas": hex(self.__committed_max_fee_price_cache),
-                "maxPriorityFeePerGas": hex(self.__committed_max_priority_price_cache)
-            }
-        return {}
+    def sign_transaction(self, account: EthAccount) -> EthHexBytes:
+        transaction = self.send_dict(encoded=True)
+        signed_tx = Account.sign_transaction(transaction, hex(account.priv))
+        return EthHexBytes(signed_tx.rawTransaction)
 
+    def serialize(self) -> EthHexBytes:
+        transaction = self.send_dict(encoded=True)
 
-class SendTransaction(metaclass=ABCMeta):
-    def __init__(self, chain_id: int, to_addr: EthAddress, data: EthHexBytes, value: EthAmount):
-        self.__chain_id = chain_id
-        self.__to_addr = to_addr
-        self.__data = data
-        self.__value = value
+        # RPC-structured transaction to rlp-structured transaction
+        rlp_structured_txn_without_sig_fields = transaction_rpc_to_rlp_structure(transaction)
+        rlp_serializer = access_list_unsigned_transaction_serializer \
+            if self.type == 1 else dynamic_unsigned_transaction_serializer
 
-        self.__nonce = None
-        self.__fee_param = None
-        self.__gas_limit = None
-
-    @property
-    def nonce(self) -> Optional[int]:
-        return self.__nonce
-
-    @nonce.setter
-    def nonce(self, nonce: int):
-        self.__nonce = nonce
-
-    @property
-    def fee_upper_bound(self) -> Optional[FeeParams]:
-        return self.__fee_param
-
-    @fee_upper_bound.setter
-    def fee_upper_bound(self, fee_params: FeeParams):
-        if self.type == 0 and isinstance(fee_params, FeeParamsType2):
-            raise Exception("Not matches types of Transaction and FeeParams.")
-        if self.type == 2 and isinstance(fee_params, FeeParamsType0):
-            raise Exception("Not matches types of Transaction and FeeParams.")
-        self.__fee_param = fee_params
-
-    @property
-    def gas_limit(self) -> Optional[int]:
-        return self.__gas_limit
-
-    @gas_limit.setter
-    def gas_limit(self, gas_limit: int):
-        self.__gas_limit = gas_limit
+        serializable_obj = rlp_serializer.from_dict(rlp_structured_txn_without_sig_fields),  # type: ignore
+        rlp_encoded = rlp.encode(serializable_obj)
+        return EthHexBytes(rlp_encoded)
 
     def tx_hash(self) -> EthHashBytes:
-        encoded: EthHexBytes = self.serialize()
-        hash_ = ETH_HASH(encoded).digest()
-        return EthHashBytes(hash_)
-
-    def boost_upper_bound(self, rate: float = 1.1):
-        if self.fee_upper_bound is not None:
-            self.fee_upper_bound.boost_fee(rate)
-
-    @abstractmethod
-    def serialize(self):
-        # TODO implementation
-        pass
-
-    def dict(self) -> dict:
-        basic_dict = {
-            "to": self.__to_addr.with_checksum(),
-            "value": self.__value.hex(),
-            "chainId": self.__chain_id,
-            "data": self.__data.hex(),
-        }
-        if self.__fee_param is not None:
-            basic_dict.update(self.fee_upper_bound.dict())
-        if self.__nonce is not None:
-            basic_dict["nonce"] = self.__nonce
-        if self.__gas_limit is not None:
-            basic_dict["gas"] = self.__gas_limit
-        return basic_dict
+        if self.hash is None:
+            serialized_tx = self.serialize()
+            hash_raw = ETH_HASH(serialized_tx).digest()
+            return EthHashBytes(hash_raw)
+        return self.hash
 
     def is_sendable(self) -> bool:
-        return self.__nonce is not None and self.fee_upper_bound is not None and self.__gas_limit is not None
+        if self.nonce is None or self.gas is None:
+            return False
 
-    @property
-    @abstractmethod
-    def type(self) -> int:
-        pass
+        if self.type < 2 and self.gas_price is None:
+            return False
 
+        if self.type == 2 and (self.max_fee_per_gas is None or self.max_priority_fee_per_gas is None):
+            return False
 
-class TransactionType0(SendTransaction):
-    def __init__(self, chain_id: int, to_addr: EthAddress, data: EthHexBytes, value: EthAmount):
-        super().__init__(chain_id, to_addr, data, value)
+        return True
 
-    def serialize(self):
-        # TODO implementation
-        pass
+    def call_dict(self, from_addr: EthAddress = None, encoded: bool = False):
+        ret_dict = {"to": self.to.hex().lower() if not encoded else self.to.bytes()}
 
-    @property
-    def type(self) -> int:
-        return 0
+        if self.input is not None:
+            ret_dict["data"] = self.input.hex().lower() if not encoded else self.input.bytes()
 
+        sender = from_addr if self.sender is None else self.sender
+        if sender is not None:
+            ret_dict["from"] = sender.hex().lower() if not encoded else sender.bytes()
 
-class TransactionType2(SendTransaction):
-    def __init__(self, chain_id: int, to_addr: EthAddress, data: EthHexBytes, value: EthAmount):
-        super().__init__(chain_id, to_addr, data, value)
+        if self.value is not None:
+            ret_dict["value"] = hex(self.value) if not encoded else self.value
 
-    def serialize(self):
-        # TODO implementation
-        pass
+        if ret_dict.get("input") is None and ret_dict.get("value") is None:
+            raise Exception("Wrong call dict")
 
-    @property
-    def type(self) -> int:
-        return 2
-
-
-class CallTransaction:
-    def __init__(self,
-                 chain_index: ChainIndex,
-                 to_addr: EthAddress,
-                 data: EthHexBytes,
-                 value: EthAmount = None,
-                 from_addr: EthAddress = None):
-        self.__chain_index = chain_index
-        self.__from = from_addr
-        self.__to = to_addr
-        self.__data = data
-        self.__value = value
-
-    def dict(self) -> dict:
-        ret_dict = {"to": self.__to.with_checksum(), "data": self.__data.hex()}
-        if self.__from is not None:
-            ret_dict["from"] = self.__from.with_checksum()
-        if self.__value is not None:
-            ret_dict["value"] = self.__value.int()
         return ret_dict
 
-    @property
-    def chain_index(self) -> ChainIndex:
-        return self.__chain_index
+    def send_dict(self, encoded: bool = False) -> dict:
+        if self.gas is None or self.nonce is None or self.to is None:
+            raise Exception("empty necessary property: gas, nonce and to")
+
+        if (self.type == 0 or self.type == 1) and self.gas_price is None:
+            raise Exception("empty gas_price")
+
+        if (self.type == 1 or self.type == 2) and self.access_list is None:
+            raise Exception("empty access_list")
+
+        if self.type == 2 and (self.max_fee_per_gas is None or self.max_priority_fee_per_gas is None):
+            raise Exception("empty max_fee_per_gas or max_priority_fee_per_gas")
+
+        value = hex(self.value) if self.value is not None else "0x00",
+        transaction = {
+            "to": self.to.hex().lower() if not encoded else self.to.bytes(),
+            "value": value if not encoded else self.value,
+            "nonce": hex(self.nonce) if not encoded else self.nonce,
+            "gas": hex(self.gas) if not encoded else self.gas,
+            "data": self.input.hex().lower() if not encoded else self.input.bytes()
+        }
+        if self.type == 0:
+            transaction["gasPrice"] = hex(self.gas_price) if not encoded else self.gas_price
+        if self.type > 0:
+            transaction["chainId"] = hex(self.chain_id) if not encoded else self.chain_id
+            transaction["accessList"] = self.access_list
+        if self.type == 2:
+            transaction["maxFeePerGas"] = hex(self.max_fee_per_gas) if not encoded else self.max_fee_per_gas
+            transaction["maxPriorityFeePerGas"] = hex(self.max_priority_fee_per_gas) \
+                if not encoded else self.max_priority_fee_per_gas
+        return transaction
+
+
+def encode_transaction(tx: EthTransaction):
+    if tx.type == -1:
+        return tx.hash.hex()
+    else:
+        return tx.to_dict()
+
+
+def decode_transaction(tx: Union[dict, str]):
+    if isinstance(tx, str) and is_hex(tx):
+        return EthTransaction.from_dict({"hash": tx})
+    elif isinstance(tx, dict):
+        return EthTransaction.from_dict(tx)
+    else:
+        raise EthTypeError(Optional[dict, str], type(tx))
+
+
+EthTransactionListMeta = config(
+    decoder=lambda values: [decode_transaction(value) for value in values],
+    encoder=lambda values: [encode_transaction(value) for value in values]
+)
+
+
+def check_transaction_verbosity(values: list):
+    if len(values) == 0:
+        return False
+
+    criteria = values[0]
+    if isinstance(criteria, EthTransaction):
+        return criteria.block_hash != EthHashBytes.zero()
+    else:
+        if isinstance(criteria, dict):
+            return True
+        elif isinstance(criteria, str) and is_hex(criteria):
+            return False
+        else:
+            raise EthTypeError(Optional[dict, str], type(criteria))
