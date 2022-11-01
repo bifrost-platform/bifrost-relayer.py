@@ -41,11 +41,13 @@ def select_exception(e):
         raise EthAlreadyImported(error_msg)
     elif error_msg.startswith("nonce too low"):
         raise NonceTooLow(error_msg)
-    elif error_msg.startswith("replace transaction underpriced") or error_msg.startswith("transaction underpriced"):
+    elif error_msg.startswith("replacement transaction underpriced") or error_msg.startswith("transaction underpriced"):
         raise ReplaceTransactionUnderpriced(error_msg)
     elif error_msg.startswith("tx fee("):
         raise EthFeeCapError(error_msg)
     elif error_msg.startswith("submit transaction to pool failed: Pool(TooLowPriority { old"):
+        raise NonceTooLow(error_msg)
+    elif error_msg.startswith("submit transaction to pool failed: Pool(InvalidTransaction"):
         raise NonceTooLow(error_msg)
     else:
         raise Exception("Not handled error: {}".format(error_msg))
