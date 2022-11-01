@@ -7,9 +7,10 @@ from typing import Optional, Union, Any, Type
 
 from .multichainmonitor import MultiChainMonitor
 from ..eth.ethtype.consts import ChainIndex
-from ..eth.ethtype.exceptions import EthFeeCapError, EthUnderPriced, EthTooLowPriority
+from ..eth.ethtype.exceptions import EthTooLowPriority
+
 from ..eth.ethtype.hexbytes import EthHashBytes
-from ..eth.managers.exceptions import RpcEVMError
+from ..eth.managers.exceptions import RpcEVMError, NonceTooLow, EthFeeCapError, ReplaceTransactionUnderpriced
 from ..eth.managers.multichainmanager import EntityRootConfig
 from ..logger import Logger, formatted_log
 
@@ -20,9 +21,9 @@ from .chaineventabc import ChainEventABC, TaskStatus, ReceiptParams
 
 consumer_logger = Logger("Consumer", logging.INFO)
 receipt_checker_logger = Logger("Receipt", logging.INFO)
-evm_logger = Logger("Evm", logging.DEBUG)
-unexpected_logger = Logger("Unexpected", logging.INFO)
 tx_sender_logger = Logger("FailToSendTx", logging.INFO)
+evm_logger = Logger("Evm", logging.DEBUG)
+bridge_logger = Logger("bridge", logging.INFO)
 
 
 SendEventABC = Union[ChainEventABC, PeriodicEventABC]
@@ -179,7 +180,7 @@ class EventBridge(MultiChainMonitor):
             relayer_addr=self.active_account.address,
             log_id=event.summary(),
             related_chain=receipt_params.on_chain,
-            log_data="txHash({}):{}".format(receipt_params.tx_hash.hex(), log_status)
+            log_data="receipt({}):{}".format(receipt_params.tx_hash.hex(), log_status)
         )
 
         # restart relayer after 60 secs
@@ -221,11 +222,35 @@ class EventBridge(MultiChainMonitor):
         # set oracle task to relay
         self._generate_periodic_offchain_task()
 
+        # try:
         monitor_th = threading.Thread(target=self.run_world_chain_monitor)
-        checker_th = threading.Thread(target=self.run_world_task_manager)
-
+        monitor_th.daemon = True
+        sender_th = threading.Thread(target=self.run_world_task_manager)
+        sender_th.daemon = True
         monitor_th.start()
-        checker_th.start()
+        sender_th.start()
 
-        checker_th.join()
-        monitor_th.join()
+        while True:
+            if not monitor_th.is_alive():
+                formatted_log(
+                    bridge_logger,
+                    relayer_addr=self.active_account.address,
+                    log_id="ThreadHealthCheck",
+                    log_data="Monitor thread has been dead. re-boot after 60 secs")
+                sleep(60)
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            if not sender_th.is_alive():
+                formatted_log(
+                    bridge_logger,
+                    relayer_addr=self.active_account.address,
+                    log_id="ThreadHealthCheck",
+                    log_data="Sender thread has been dead. re-boot after 60 secs")
+                sleep(60)
+                os.execl(sys.executable, sys.executable, *sys.argv)
+
+            formatted_log(
+                bridge_logger,
+                relayer_addr=self.active_account.address,
+                log_id="ThreadHealthCheck",
+                log_data="Check the survival of the threads every 60 seconds.")
+            sleep(60)
