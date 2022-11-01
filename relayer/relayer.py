@@ -197,7 +197,8 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = self.find_height_by_timestamp(chain_index, target_time)
 
-        bootstrap_logger.info("Relayer-is-launching ({})".format(self.active_account.address.hex()))
+        bootstrap_logger.info("BIFROST's Relayer: v0.1.6")
+        bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
         self.run_eventbridge()
