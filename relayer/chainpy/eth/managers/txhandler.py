@@ -1,5 +1,6 @@
 from typing import Optional, Any
 
+from .exceptions import select_exception
 from ..ethtype.account import EthAccount
 from ..ethtype.hexbytes import EthHexBytes, EthHashBytes
 from ..ethtype.consts import ChainIndex
@@ -55,11 +56,17 @@ class EthTxHandler(EthRpcClient):
         if "chainId" in tx_dict:
             del tx_dict["chainId"]
 
-        return self.eth_estimate_gas(tx_dict)
+        try:
+            return self.eth_estimate_gas(tx_dict)
+        except Exception as e:
+            select_exception(e)
 
     def call_tx(self, transaction: EthTransaction) -> Any:
         """ send call-transaction """
-        return self.eth_call(transaction.call_dict())
+        try:
+            return self.eth_call(transaction.call_dict())
+        except Exception as e:
+            select_exception(e)
 
     def fetch_network_fee_parameters(self) -> (Optional[int], Optional[int], Optional[int]):
         """ fetch fee parameters from the network """
@@ -111,4 +118,7 @@ class EthTxHandler(EthRpcClient):
         if not tx.is_sendable():
             raise Exception("Check transaction parameters")
         signed_raw_tx = tx.sign_transaction(account)
-        return self.eth_send_raw_transaction(signed_raw_tx)
+        try:
+            return self.eth_send_raw_transaction(signed_raw_tx)
+        except Exception as e:
+            select_exception(e)

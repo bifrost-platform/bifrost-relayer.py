@@ -6,7 +6,6 @@ import time
 from typing import List, Optional, Union, Callable
 
 from .configs import EntityRootConfig
-from .exceptions import RpcEVMError, RpcAlreadyImported
 from ..ethtype.amount import EthAmount
 from ..ethtype.consts import ChainIndex
 from ..ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
@@ -86,14 +85,6 @@ class EthRpcClient:
     def url(self) -> str:
         return self.__url_with_access_key
 
-    def resend_request(self, method: str, params: list, e: str):
-        # sleep and re-request
-        formatted_log(rpc_logger, log_data=e)
-        print("request will be re-tried after {} secs".format(self.__rpc_server_downtime_allow_sec))
-        time.sleep(self.__rpc_server_downtime_allow_sec)
-        print("let's try it again!")
-        return self.send_request(method, params)
-
     def send_request(self, method: str, params: list, cnt: int = 0) -> Optional[Union[dict, str]]:
         if cnt > MAX_RETRY_NUM:
             raise Exception("Exceeded max re-try cnt on {}".format(self.__chain_index))
@@ -118,25 +109,19 @@ class EthRpcClient:
         if 200 <= code < 400:
             response_json = response.json()
         else:
+            formatted_log(
+                rpc_logger,
+                log_id="NotHandledException",
+                related_chain=self.__chain_index,
+                log_data=str(response)
+            )
             time.sleep(SLEEP_TIME_IN_SECS)
             return self.send_request(method, params, cnt + 1)
 
-        error = response_json.get("error")
-        if error is not None:
-            error_dict = response_json["error"]
-            error_msg = error_dict["message"]
-            if error_msg == "query timeout of 10 seconds exceeded":
-                return self.resend_request(method, params, response_json["error"])
-            elif str(error_msg).startswith("VM Exception while processing transaction: "):
-                raise RpcEVMError(error_msg)
-            elif str(error_msg).startswith("execution reverted: "):
-                raise RpcEVMError(error_msg)
-            elif str(error_msg).startswith("submit transaction to pool failed: Pool(AlreadyImported("):
-                raise RpcAlreadyImported(error_msg)
-            else:
-                raise Exception("Not handled error: {}".format(error_msg))
-        else:
+        if response_json.get("result") is not None:
             return response_json["result"]
+        else:
+            raise Exception(response_json["error"])
 
     @property
     def chain_index(self) -> ChainIndex:
