@@ -241,6 +241,9 @@ class RbcEvent(ChainEventABC):
         )
 
     def check_my_event(self) -> bool:
+        if self.src_chain_index not in self.manager.supported_chain_list:
+            return False
+
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         return relayer_index is not None
 
