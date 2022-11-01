@@ -99,7 +99,7 @@ class EthRpcClient:
         try:
             response = requests.post(self.url, json=body, headers=headers)
         except Exception as e:
-            formatted_log(rpc_logger, log_id="NotHandledException", related_chain=self.__chain_index, log_data=str(e))
+            formatted_log(rpc_logger, log_id="RPCException", related_chain=self.__chain_index, log_data=str(e))
             print("request will be re-tried after {} secs".format(self.__rpc_server_downtime_allow_sec))
             time.sleep(self.__rpc_server_downtime_allow_sec)
             print("let's try it again!")
@@ -111,14 +111,14 @@ class EthRpcClient:
         else:
             formatted_log(
                 rpc_logger,
-                log_id="NotHandledException",
+                log_id="OutOfStatusCode",
                 related_chain=self.__chain_index,
                 log_data=str(response)
             )
             time.sleep(SLEEP_TIME_IN_SECS)
             return self.send_request(method, params, cnt + 1)
 
-        if response_json.get("result") is not None:
+        if "result" in response_json.keys():
             return response_json["result"]
         else:
             raise Exception(response_json["error"])
