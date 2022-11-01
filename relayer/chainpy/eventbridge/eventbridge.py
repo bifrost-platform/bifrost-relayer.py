@@ -7,10 +7,9 @@ from typing import Optional, Union, Any, Type
 
 from .multichainmonitor import MultiChainMonitor
 from ..eth.ethtype.consts import ChainIndex
-from ..eth.ethtype.exceptions import EthTooLowPriority
 
 from ..eth.ethtype.hexbytes import EthHashBytes
-from ..eth.managers.exceptions import RpcEVMError, NonceTooLow, EthFeeCapError, ReplaceTransactionUnderpriced
+from ..eth.managers.exceptions import RpcEVMError
 from ..eth.managers.multichainmanager import EntityRootConfig
 from ..logger import Logger, formatted_log
 
@@ -23,7 +22,7 @@ consumer_logger = Logger("Consumer", logging.INFO)
 receipt_checker_logger = Logger("Receipt", logging.INFO)
 tx_sender_logger = Logger("FailToSendTx", logging.INFO)
 evm_logger = Logger("Evm", logging.DEBUG)
-bridge_logger = Logger("bridge", logging.INFO)
+bridge_logger = Logger("Bridge", logging.INFO)
 
 
 SendEventABC = Union[ChainEventABC, PeriodicEventABC]
