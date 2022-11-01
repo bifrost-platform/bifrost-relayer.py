@@ -299,19 +299,3 @@ Xop6H4e/l70XvghIldD84XrV4zUobg==
             sig_recover.r, sig_recover.s, sig_recover.v, msg_digest
         )
         self.assertEqual(recovered_address, self.acc.address)
-
-    def fuzz_unit(self):
-        msg = random.randint(0, 2 ** 256 - 1).to_bytes(32, byteorder="big")
-        msg_digest = ETH_HASH(msg).digest()
-
-        sig1 = self.acc.ecdsa_sign(msg)
-        result = EthAccount.ecdsa_verify_by_msg(msg, sig1.r, sig1.s, self.acc.vk)
-        self.assertTrue(result)
-
-        sig2 = self.acc.ecdsa_recoverable_sign(msg)
-        addr2 = EthAccount.ecdsa_recover_address(sig2.r, sig2.s, sig2.v, msg)
-        self.assertEqual(addr2, self.acc.address)
-
-    def test_fuzz_ecdsa(self):
-        for i in range(1000):
-            self.fuzz_unit()
