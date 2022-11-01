@@ -1,21 +1,23 @@
 import logging
+import unittest
 
 import requests
 import time
 from typing import List, Optional, Union, Callable
-
-from urllib3 import HTTPSConnectionPool
 
 from .configs import EntityRootConfig
 from .exceptions import RpcEVMError, RpcAlreadyImported
 from ..ethtype.amount import EthAmount
 from ..ethtype.consts import ChainIndex
 from ..ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
-from ..ethtype.chaindata import EthBlock, EthTransaction, EthReceipt, EthLog
+from ..ethtype.chaindata import EthBlock, EthReceipt, EthLog
 from ..ethtype.exceptions import *
+from ..ethtype.transaction import EthTransaction
 from ...logger import Logger, formatted_log
 
 rpc_logger = Logger("RPC-Client", logging.INFO)
+SLEEP_TIME_IN_SECS = 180
+MAX_RETRY_NUM = 20
 
 
 def _reduce_height_to_matured_height(matured_max_height: int, height: Union[int, str]) -> str:
@@ -92,7 +94,10 @@ class EthRpcClient:
         print("let's try it again!")
         return self.send_request(method, params)
 
-    def send_request(self, method: str, params: list) -> Optional[Union[dict, str]]:
+    def send_request(self, method: str, params: list, cnt: int = 0) -> Optional[Union[dict, str]]:
+        if cnt > MAX_RETRY_NUM:
+            raise Exception("Exceeded max re-try cnt on {}".format(self.__chain_index))
+
         body = {
             "jsonrpc": "2.0",
             "method": method,
@@ -100,17 +105,21 @@ class EthRpcClient:
             "id": 1
         }
         headers = {'Content-type': 'application/json'}
-
         try:
-            response_json = requests.post(self.url, json=body, headers=headers).json()
-
-        except HTTPSConnectionPool as e:
-            return self.resend_request(method, params, str(e))
-
+            response = requests.post(self.url, json=body, headers=headers)
         except Exception as e:
-            """ expected error: HttpsConnection """
-            formatted_log(rpc_logger, log_id="NotHandledException", related_chain=self.chain_index, log_data=str(e))
+            formatted_log(rpc_logger, log_id="NotHandledException", related_chain=self.__chain_index, log_data=str(e))
+            print("request will be re-tried after {} secs".format(self.__rpc_server_downtime_allow_sec))
+            time.sleep(self.__rpc_server_downtime_allow_sec)
+            print("let's try it again!")
             return self.send_request(method, params)
+
+        code = response.status_code
+        if 200 <= code < 400:
+            response_json = response.json()
+        else:
+            time.sleep(SLEEP_TIME_IN_SECS)
+            return self.send_request(method, params, cnt + 1)
 
         error = response_json.get("error")
         if error is not None:
@@ -321,9 +330,9 @@ class EthRpcClient:
         resp = self.send_request("eth_getTransactionCount", [address.hex(), height_hex_or_latest])
         return int(resp, 16)
 
-    def eth_send_raw_transaction(self, signed_serialized_tx: EthHexBytes):
-        # TODO impl, but low priority
-        pass
+    def eth_send_raw_transaction(self, signed_serialized_tx: EthHexBytes) -> EthHashBytes:
+        resp = self.send_request("eth_sendRawTransaction", [signed_serialized_tx.hex()])
+        return EthHashBytes(resp)
 
     def eth_get_storage_at(self):
         # TODO impl, but low priority
@@ -332,3 +341,29 @@ class EthRpcClient:
     def eth_get_code(self, addr: EthAddress):
         # TODO impl, but low priority
         pass
+
+
+class TestTransaction(unittest.TestCase):
+    def setUp(self) -> None:
+        project_root_path = "../"
+        config = EntityRootConfig.from_config_files(
+            "configs/entity.relayer.json",
+            "configs/entity.relayer.private.json",
+            project_root_path
+        )
+        self.cli = EthRpcClient(ChainIndex.BIFROST, config)
+        self.target_tx_hash = EthHashBytes(0xfb6ceb412ae267643d45b28516565b1ab07f4d16ade200d7e432be892add1448)
+        self.serialized_tx = "0xf90153f9015082bfc082301f0186015d3ef7980183036e54947abd332cf88ca31725fffb21795f90583744535280b901246196d920000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000001524d2eadae57a7f06f100476a57724c1295c8fe99db52b6af3e3902cc8210e97000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000b99000000000000000000000000000000000000000000000000000000000000000001000000000000000000062bf8e916ee7d6d68632b2ee0d6823a5c9a7cd69c874ec0"
+
+    def test_serialize_tx_from_rpc(self):
+        transaction = self.cli.eth_get_transaction_by_hash(self.target_tx_hash)
+        self.assertEqual(transaction.serialize(), self.serialized_tx)
+
+    def test_serialize_tx_built(self):
+        tx_obj: EthTransaction = EthTransaction.init(
+            int("0xbfc0", 16),  # chain_id
+            EthAddress("0x7abd332cf88ca31725fffb21795f905837445352"),  # to
+            data=EthHexBytes("0x6196d920000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000001524d2eadae57a7f06f100476a57724c1295c8fe99db52b6af3e3902cc8210e97000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000b99000000000000000000000000000000000000000000000000000000000000000001000000000000000000062bf8e916ee7d6d68632b2ee0d6823a5c9a7cd69c874e")
+        )
+        tx_obj.set_nonce(int("0x301f", 16)).set_gas_prices(int("0x015d3ef79801", 16), int("0x01", 16)).set_gas_limit(int("0x036e54", 16))
+        self.assertEqual(tx_obj.serialize(), self.serialized_tx)

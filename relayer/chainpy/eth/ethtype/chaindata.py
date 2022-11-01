@@ -1,95 +1,11 @@
 from dataclasses import dataclass, field
 
 from dataclasses_json import dataclass_json, LetterCase, config, Exclude
-from typing import Union, Optional, List, Dict
+from typing import Optional, List
 
 from .dataclassmeta import IntegerMeta, EthHexBytesMeta, EthHashBytesMeta, EthAddrMeta, EthHashBytesListMeta
-from .exceptions import *
 from .hexbytes import EthHashBytes, EthAddress, EthHexBytes
-from .utils import is_hex
-
-
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class EthTransaction:
-    hash: EthHashBytes = field(metadata=EthHashBytesMeta)
-
-    block_hash: Optional[EthHashBytes] = field(metadata=EthHashBytesMeta, default_factory=str)
-    block_number: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
-    sender: Optional[EthAddress] = field(
-        metadata=config(
-            field_name="from",
-            encoder=lambda value: value.hex(),
-            decoder=lambda value: EthAddress(value)
-        ),
-        default_factory=str
-    )
-    gas: int = field(metadata=IntegerMeta, default_factory=int)
-    gas_price: int = field(metadata=IntegerMeta, default_factory=int)
-
-    input: EthHexBytes = field(metadata=EthHexBytesMeta, default_factory=str)
-    nonce: int = field(metadata=IntegerMeta, default_factory=int)
-    r: int = field(metadata=IntegerMeta, default_factory=int)
-    s: int = field(metadata=IntegerMeta, default_factory=int)
-    v: int = field(metadata=IntegerMeta, default_factory=int)
-    transaction_index: int = field(metadata=IntegerMeta, default_factory=int)
-    value: int = field(metadata=IntegerMeta, default_factory=int)
-
-    # optional depends on rpc versions
-    type: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
-    to: Optional[EthAddress] = field(metadata=EthAddrMeta, default_factory=str)
-
-    # type 2 only
-    access_list: Optional[List[Dict[str, Any]]] = field(default_factory=list)
-    max_fee_per_gas: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
-    max_priority_fee_per_gas: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
-    chain_id: Optional[int] = field(metadata=IntegerMeta, default_factory=int)
-
-    def __post_init__(self):
-        if self.block_hash == EthHashBytes.zero():
-            self.type = -1
-        elif self.access_list is None:
-            self.type = 0
-        else:
-            self.type = 2
-
-
-def encode_transaction(tx: EthTransaction):
-    if tx.type == -1:
-        return tx.hash.hex()
-    else:
-        return tx.to_dict()
-
-
-def decode_transaction(tx: Union[dict, str]):
-    if isinstance(tx, str) and is_hex(tx):
-        return EthTransaction.from_dict({"hash": tx})
-    elif isinstance(tx, dict):
-        return EthTransaction.from_dict(tx)
-    else:
-        raise EthTypeError(Optional[dict, str], type(tx))
-
-
-EthTransactionListMeta = config(
-    decoder=lambda values: [decode_transaction(value) for value in values],
-    encoder=lambda values: [encode_transaction(value) for value in values]
-)
-
-
-def check_verbosity(values: list):
-    if len(values) == 0:
-        return False
-
-    criteria = values[0]
-    if isinstance(criteria, EthTransaction):
-        return criteria.block_hash != EthHashBytes.zero()
-    else:
-        if isinstance(criteria, dict):
-            return True
-        elif isinstance(criteria, str) and is_hex(criteria):
-            return False
-        else:
-            raise EthTypeError(Optional[dict, str], type(criteria))
+from .transaction import EthTransaction, EthTransactionListMeta, check_transaction_verbosity
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -126,8 +42,16 @@ class EthBlock:
     base_fee_per_gas: Optional[int] = field(metadata=IntegerMeta, default_factory=str)
 
     def __post_init__(self):
-        self.verbose = check_verbosity(self.transactions)
+        self.verbose = check_transaction_verbosity(self.transactions)
         self.type = 0 if self.base_fee_per_gas is None else 2
+
+    def serialize(self) -> EthHexBytes:
+        # TODO impl.
+        raise Exception("Not implemented yet")
+
+    def block_hash(self) -> EthHashBytes:
+        # TODO impl.
+        raise Exception("Not implemented yet")
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
