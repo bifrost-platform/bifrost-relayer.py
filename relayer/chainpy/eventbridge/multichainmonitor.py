@@ -1,18 +1,14 @@
 import logging
 from queue import PriorityQueue
-from typing import Union, List, Dict
+from typing import Union
 import time
 
 from relayer.chainpy.eventbridge.chaineventabc import ChainEventABC
 from relayer.chainpy.eventbridge.periodiceventabc import PeriodicEventABC
-from relayer.chainpy.eventbridge.utils import timestamp_msec, load_events_from_file, write_events_to_file
-from relayer.chainpy.eth.ethtype.consts import ChainIndex
+from relayer.chainpy.eventbridge.utils import timestamp_msec
 from relayer.chainpy.eth.managers.configs import EntityRootConfig
-from relayer.chainpy.eth.managers.eventobj import DetectedEvent
 from relayer.chainpy.eth.managers.multichainmanager import MultiChainManager
 from relayer.chainpy.logger import Logger, formatted_log
-
-from relayer.chainpy.utils import ensure_path_not_endswith_slash_char
 
 
 queue_logger = Logger("EventQueue", logging.INFO)

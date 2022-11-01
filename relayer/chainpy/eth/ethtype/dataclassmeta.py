@@ -1,9 +1,8 @@
-from typing import Optional, Union
+from typing import Union
 
 from dataclasses_json import config
 
-from relayer.chainpy.eth.ethtype.amount import EthAmount
-from relayer.chainpy.eth.ethtype.exceptions import EthNotHex, EthTypeError
+from relayer.chainpy.eth.ethtype.exceptions import EthNotHex
 from relayer.chainpy.eth.ethtype.hexbytes import EthHexBytes, EthHashBytes, EthAddress
 from relayer.chainpy.eth.ethtype.utils import is_hex
 
