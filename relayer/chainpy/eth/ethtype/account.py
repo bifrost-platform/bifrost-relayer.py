@@ -1,5 +1,4 @@
 import os
-import random
 from typing import Optional
 
 from cryptography.hazmat.backends import default_backend

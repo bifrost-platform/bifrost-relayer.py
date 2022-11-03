@@ -2,9 +2,9 @@ from .chainpy.eth.ethtype.amount import EthAmount
 from .chainpy.eth.ethtype.chaindata import EthReceipt
 from .chainpy.eth.ethtype.consts import ChainIndex
 from .chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
+from .chainpy.eth.ethtype.transaction import EthTransaction
 from .chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from .chainpy.eth.managers.multichainmanager import EntityRootConfig, MultiChainManager
-from .chainpy.eth.managers.txhandler import SendTxUnion
 from .rbcevents.consts import RBCMethodIndex, TokenStreamIndex
 
 
@@ -42,7 +42,7 @@ class User(MultiChainManager):
                       token_index: TokenStreamIndex,
                       target_addr: EthAddress,
                       amount: EthAmount
-                      ) -> (SendTxUnion, EthHashBytes):
+                      ) -> (EthTransaction, EthHashBytes):
         tx_with_fee = self.world_build_transaction(
             chain_index,
             token_index.name,
@@ -100,7 +100,7 @@ class User(MultiChainManager):
                               dst_chain: ChainIndex,
                               token_index: TokenStreamIndex,
                               cross_action_index: RBCMethodIndex,
-                              amount: EthAmount) -> SendTxUnion:
+                              amount: EthAmount) -> EthTransaction:
         user_request = UserSubmit(
             cross_action_index,
             dst_chain,
@@ -132,22 +132,6 @@ class User(MultiChainManager):
                                            amount: EthAmount) -> EthReceipt:
         tx_hash = self.send_cross_action(src_chain, dst_chain, token_index, cross_action_index, amount)
         return self.world_receipt_with_wait(src_chain, tx_hash, False)
-
-    # def send_timeout_rollback_new(self, target_chain: ChainIndex, _tx_hash: EthHexBytes):
-    #     tx_hash = EthHashBytes(_tx_hash.hex())
-    #     chain_manager = self.get_chain_manager_of(target_chain)
-    #     tx = chain_manager.eth_get_transaction_by_hash(tx_hash)
-    #
-    #     contract = self.get_contract_obj_on(target_chain, "socket")
-    #
-    #     # chain_manager.
-    #
-    #
-    #     data = tx_hash[:4]
-    #
-    #     socket_addr = chain_manager.get_contract_by_name("socket").address
-    #     chain_manager.build_tx(socket_addr, data)
-    #     self.world_call(target_chain, "socket", "timeout_rollback", )
 
     def send_timeout_rollback(self, target_chain: ChainIndex, rnd: int, sequence_num: int) -> EthHashBytes:
         params = (target_chain.value, rnd, sequence_num)
