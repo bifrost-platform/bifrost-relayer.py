@@ -120,6 +120,9 @@ class EventBridge(MultiChainMonitor):
             # build and send transaction
             tx = self.world_build_transaction(dst_chain, contract_name, method_name, params)
             _, tx_hash = self.world_send_transaction(dst_chain, tx, event.gas_limit_multiplier())
+
+            # TODO when tx_hash is zero. 1) return nonce, 2) re-enqueue the task
+
             formatted_log(
                 consumer_logger,
                 relayer_addr=self.active_account.address,

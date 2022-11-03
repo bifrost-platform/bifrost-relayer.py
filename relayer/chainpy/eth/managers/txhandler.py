@@ -13,7 +13,7 @@ from ..ethtype.transaction import EthTransaction
 
 
 PRIORITY_FEE_MULTIPLIER = 4
-GAS_MULTIPLIER = 1.5
+GAS_MULTIPLIER = 3
 
 
 class EthTxHandler(EthRpcClient):

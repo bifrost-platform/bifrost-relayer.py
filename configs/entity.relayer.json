@@ -43,7 +43,7 @@
         "rpc_server_downtime_allow_sec": 180,
         "tx_fee_type": {
             "type": 2,
-            "max_gas_price": 2000000000000,
+            "max_gas_price": 5000000000000,
             "max_priority_price": 1000000000000
         },
         "abi_base_path": "configs/",
