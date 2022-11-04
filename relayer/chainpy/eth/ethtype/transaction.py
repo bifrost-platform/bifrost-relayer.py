@@ -222,7 +222,7 @@ class EthTransaction:
         if self.type == 2 and (self.max_fee_per_gas is None or self.max_priority_fee_per_gas is None):
             raise Exception("empty max_fee_per_gas or max_priority_fee_per_gas")
 
-        value = hex(self.value) if self.value is not None else "0x00",
+        value = hex(self.value) if self.value is not None else "0x00"
         transaction = {
             "to": self.to.hex().lower() if not encoded else self.to.bytes(),
             "value": value if not encoded else self.value,

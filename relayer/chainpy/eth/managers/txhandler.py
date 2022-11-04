@@ -13,7 +13,8 @@ from ..ethtype.transaction import EthTransaction
 
 
 PRIORITY_FEE_MULTIPLIER = 4
-GAS_MULTIPLIER = 3
+TYPE0_GAS_MULTIPLIER = 1.5
+TYPE2_GAS_MULTIPLIER = 2
 
 
 class EthTxHandler(EthRpcClient):
@@ -95,7 +96,7 @@ class EthTxHandler(EthRpcClient):
         net_gas_price, net_base_fee_price, net_priority_fee_price = self.fetch_network_fee_parameters()
 
         if self.tx_type < 2:
-            net_gas_price = int(net_gas_price * GAS_MULTIPLIER)
+            net_gas_price = int(net_gas_price * TYPE0_GAS_MULTIPLIER)
             if boost:
                 net_gas_price = int(net_gas_price * 2.0)
             is_sendable = False if net_gas_price > self.fee_config.gas_price else True
@@ -105,7 +106,7 @@ class EthTxHandler(EthRpcClient):
             if boost:
                 net_base_fee_price = int(net_base_fee_price * 1.1)
                 net_priority_fee_price = int(net_priority_fee_price * 1.1)
-            net_max_gas_price = int((net_priority_fee_price + net_base_fee_price) * GAS_MULTIPLIER)
+            net_max_gas_price = int((net_priority_fee_price + net_base_fee_price) * TYPE0_GAS_MULTIPLIER)
 
             is_sendable1 = True if net_priority_fee_price < self.fee_config.max_priority_price else False
             is_sendable2 = True if net_max_gas_price < self.fee_config.max_gas_price else False
