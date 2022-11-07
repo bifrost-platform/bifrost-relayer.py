@@ -8,7 +8,7 @@ from relayer.tools.utils import display_coins_balances, remove_admin_addresses_f
     remove_addresses_from, display_addrs, init_manager
 
 
-def recharger_forever(project_root_path: str = "./"):
+def relayer_manager(project_root_path: str = "./", recharge: bool = False):
 
     recharger = init_manager("recharger", project_root_path)
     while True:
@@ -36,15 +36,17 @@ def recharger_forever(project_root_path: str = "./"):
         troll_relayers = remove_addresses_from(once_relayer_not_our, healthy_relayers)
         troll_relayers_controllers = [get_controller_of(recharger, addr) for addr in troll_relayers]
         display_addrs(
-            "troll relayers",
+            "not-healthy relayers",
             troll_relayers,
             auxiliary_addrs=troll_relayers_controllers,
             auxiliary_strs=[get_discord_id_by_controller(addr) for addr in troll_relayers_controllers]
 
         )
 
-        # recharge coins to once_relayers
-        print("\n >>> start recharge")
-        ScoreClient.recharge_coins(recharger, once_relayers)
-        print("\n >>> end recharge. go to sleep for 2 minutes")
+        if recharge:
+            # recharge coins to once_relayers
+            print("\n >>> start recharge")
+            ScoreClient.recharge_coins(recharger, once_relayers)
+            print("\n >>> end recharge.")
+        print("\n >>> sleep for 30 seconds.")
         sleep(30)
