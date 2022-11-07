@@ -16,7 +16,7 @@ from ..logger import Logger, formatted_log
 from .utils import timestamp_msec, transaction_commit_time_sec
 from .periodiceventabc import PeriodicEventABC
 from .chaineventabc import ChainEventABC, TaskStatus, ReceiptParams
-
+from ...relayer import ImOnline
 
 consumer_logger = Logger("Consumer", logging.INFO)
 receipt_checker_logger = Logger("Receipt", logging.INFO)
@@ -255,4 +255,9 @@ class EventBridge(MultiChainMonitor):
                 relayer_addr=self.active_account.address,
                 log_id="ThreadHealthCheck",
                 log_data="Check the survival of the threads every 60 seconds.")
-            sleep(60)
+
+            if ImOnline.send_request(account=self.active_account) != 200:
+                msg = "BIT scoring server error. Please contact the forum."
+                raise Exception(msg)
+
+            sleep(120)
