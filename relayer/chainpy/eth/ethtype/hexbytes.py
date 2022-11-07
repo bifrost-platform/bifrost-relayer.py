@@ -88,7 +88,7 @@ class EthAddress(EthHexBytes):
 
     @staticmethod
     def zero():
-        return EthHexBytes("0x00", 20)
+        return EthAddress("0x0000000000000000000000000000000000000000")
 
 
 class EthHexBytesTest(unittest.TestCase):

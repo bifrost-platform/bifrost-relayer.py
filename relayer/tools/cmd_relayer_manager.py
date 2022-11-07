@@ -1,11 +1,7 @@
 from time import sleep
 
-from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
-from relayer.tools.consts import ADMIN_RELAYERS
-from relayer.tools.relayer_healty import fetch_once_relayers, fetch_healthy_relayers, ScoreClient, get_controller_of, \
-    get_discord_id_by_controller
-from relayer.tools.utils import display_coins_balances, remove_admin_addresses_from, \
-    remove_addresses_from, display_addrs, init_manager
+from relayer.tools.relayer_healty import fetch_once_relayers, fetch_healthy_relayers, ScoreClient
+from relayer.tools.utils import display_coins_balances, remove_addresses_from, display_addrs, init_manager, RelayerInfo
 
 
 def relayer_manager(project_root_path: str = "./", recharge: bool = False):
@@ -15,38 +11,28 @@ def relayer_manager(project_root_path: str = "./", recharge: bool = False):
         display_coins_balances(recharger)
 
         # relayers who have been turned on at least once.
-        once_relayers = fetch_once_relayers()
-        once_relayer_not_our = remove_admin_addresses_from(once_relayers)
+        once_relayers_info = fetch_once_relayers()  # info
+        once_relayer_addrs = [addr.relayer for addr in once_relayers_info]
 
         # healthy relayers
-        healthy_relayers = fetch_healthy_relayers(recharger, 120)
-        healthy_relayers_not_our = remove_admin_addresses_from(healthy_relayers)
-        not_healthy_relayers_our = remove_addresses_from([EthAddress(addr) for addr in ADMIN_RELAYERS], healthy_relayers)
-        display_addrs("not healthy our relayers", not_healthy_relayers_our)
+        healthy_relayers = fetch_healthy_relayers(recharger, 120)  # address
+        healthy_relayers_info = list()
+        for addr in healthy_relayers:
+            if addr in once_relayer_addrs:
+                idx = once_relayer_addrs.index(addr)
+                healthy_relayers_info.append(RelayerInfo(addr, once_relayers_info[idx].version))
+            else:
+                healthy_relayers_info.append(RelayerInfo(addr, 7))
 
-        healthy_relayers_controllers = [get_controller_of(recharger, addr) for addr in healthy_relayers_not_our]
-        display_addrs(
-            "healthy relayers",
-            healthy_relayers_not_our,
-            auxiliary_addrs=healthy_relayers_controllers,
-            auxiliary_strs=[get_discord_id_by_controller(addr) for addr in healthy_relayers_controllers]
-        )
+        display_addrs(recharger, "healthy relayers", healthy_relayers_info)
 
-        # troll relayers
-        troll_relayers = remove_addresses_from(once_relayer_not_our, healthy_relayers)
-        troll_relayers_controllers = [get_controller_of(recharger, addr) for addr in troll_relayers]
-        display_addrs(
-            "not-healthy relayers",
-            troll_relayers,
-            auxiliary_addrs=troll_relayers_controllers,
-            auxiliary_strs=[get_discord_id_by_controller(addr) for addr in troll_relayers_controllers]
-
-        )
+        not_healthy_relayers_info = remove_addresses_from(once_relayers_info, healthy_relayers_info)
+        display_addrs(recharger, "not healthy relayers", not_healthy_relayers_info)
 
         if recharge:
             # recharge coins to once_relayers
             print("\n >>> start recharge")
-            ScoreClient.recharge_coins(recharger, once_relayers)
+            ScoreClient.recharge_coins(recharger, once_relayer_addrs)
             print("\n >>> end recharge.")
         print("\n >>> sleep for 30 seconds.")
         sleep(30)

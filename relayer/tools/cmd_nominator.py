@@ -5,9 +5,9 @@ from relayer.chainpy.eth.ethtype.account import EthAccount
 from relayer.chainpy.eth.ethtype.amount import EthAmount
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
-from relayer.tools.relayer_healty import fetch_healthy_relayers, get_controller_of
+from relayer.tools.relayer_healty import fetch_healthy_relayers
 from relayer.tools.utils import display_receipt_status, \
-    get_option_from_console, get_typed_item_from_console, display_addrs, init_manager
+    get_option_from_console, get_typed_item_from_console, display_addrs, init_manager, get_controller_of
 
 
 class SupportedNominatorCmd(enum.Enum):
@@ -29,13 +29,12 @@ def nominator_cmd(project_root_path: str = "./"):
         cmd = get_option_from_console("select a command number", SupportedNominatorCmd.supported_cmds())
         if cmd == SupportedNominatorCmd.FETCH_HEALTHY_RELAYER_LIST:
             healthy_relayers = fetch_healthy_relayers(nominator, 80)
-            healthy_controllers = [get_controller_of(nominator, addr) for addr in healthy_relayers]
             nominations = list()
-            for addr in healthy_controllers:
+            for addr in healthy_relayers:
                 candidate_state = nominator.world_call(ChainIndex.BIFROST, "authority", "candidate_state", [addr.hex()])
                 nominations.append(candidate_state[0][5])
 
-            display_addrs("healthy_relayers", healthy_relayers, healthy_controllers, nominations)
+            display_addrs(nominator, "healthy_relayers", healthy_relayers)
 
         elif cmd == SupportedNominatorCmd.NOMINATE:
             validator_addr: EthAddress = get_typed_item_from_console(
