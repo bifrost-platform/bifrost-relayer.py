@@ -5,7 +5,7 @@ from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
 from relayer.relayer import Relayer
 from relayer.tools.consts import ADMIN_RELAYERS
-from relayer.tools.utils import display_addrs, display_coins_balances, init_manager
+from relayer.tools.utils import display_addrs, display_coins_balances, init_manager, get_token_index_from_console
 from relayer.tools.utils import get_option_from_console
 
 
@@ -14,11 +14,11 @@ class SupportedOperatorCmd(enum.Enum):
     FETCH_ROUNDS = "fetch every round from each chain"
     FETCH_AUTHORITY_LIST = "fetch authority list"
     BALANCES_OF_AUTHORITIES = "balances of every authorities"
-    BALANCES_OF_SOCKETS = "balances of every sockets"
+    # BALANCES_OF_SOCKETS = "balances of every sockets"
 
-    GET_PRICE_OF = "get price from oracle"
-    GET_LATEST_BTC_HASH = "get latest BTC hash from oracle"
-    GET_BTC_HASH_OF_THE_HEIGHT = "get BTC hash of the height from oracle"
+    # GET_PRICE_OF = "get price from oracle"
+    # GET_LATEST_BTC_HASH = "get latest BTC hash from oracle"
+    # GET_BTC_HASH_OF_THE_HEIGHT = "get BTC hash of the height from oracle"
 
     QUIT = "quit"
 
@@ -48,7 +48,7 @@ def operator_cmd(project_root_path: str = "./"):
             # authority list
             validator_addr_list = operator.fetch_sorted_validator_list(ChainIndex.BIFROST)
             validator_addr_list = [EthAddress(addr) for addr in validator_addr_list]
-            display_addrs("<fetched authority list>", validator_addr_list)
+            display_addrs(operator, "<fetched authority list>", validator_addr_list)
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_AUTHORITIES:
             # validator coin balances

@@ -71,15 +71,10 @@ def batch_test(user: User, config: dict) -> List[ActionParams]:
 def send_transaction_batch(user: User, transactions: List[ActionParams]) -> List[UsedTx]:
     receipt_params = []
     for i, tx in enumerate(transactions):
-        print(tx)
-        try:
-            _, tx_hash = user.world_send_transaction(tx.chain, tx.tx)
-            print("nonce: ({}), fee({} {})".format(tx.tx.nonce, tx.tx.max_priority_fee_per_gas, tx.tx.max_fee_per_gas))
-            used_tx = UsedTx(tx.chain, tx_hash)
-            print(" - {}:{}".format(i, tx_hash.hex()))
-            receipt_params.append(used_tx)
-        except ReplaceTransactionUnderpriced as e:
-            print("nonce: ({}), fee({} {})".format(tx.tx.nonce, tx.tx.max_priority_fee_per_gas, tx.tx.max_fee_per_gas))
+        _, tx_hash = user.world_send_transaction(tx.chain, tx.tx)
+        used_tx = UsedTx(tx.chain, tx_hash)
+        print(" - {}:{}".format(i, tx_hash.hex()))
+        receipt_params.append(used_tx)
 
     return receipt_params
 

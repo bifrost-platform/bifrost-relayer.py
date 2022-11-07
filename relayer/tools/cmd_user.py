@@ -13,9 +13,9 @@ from relayer.tools.utils import get_option_from_console
 
 class SupportedUserCmd(enum.Enum):
     RBC_REQUEST = "rbc request"
-    RBC_BATCH_REQUEST = "rbc batch request"
-    RBC_ROLLBACK = "rbc reqeust rollback"
-    FETCH_ROUNDS = "fetch every round from each chain"
+    # RBC_BATCH_REQUEST = "rbc batch request"
+    # RBC_ROLLBACK = "rbc reqeust rollback"
+    # FETCH_ROUNDS = "fetch every round from each chain"
 
     MY_BALANCE = "balance of myself"
     TOKEN_APPROVE = "token approve"
@@ -64,10 +64,10 @@ def user_cmd(project_root_path: str = "./"):
             display_receipt_status(receipt)
             continue
 
-        elif cmd == SupportedUserCmd.RBC_BATCH_REQUEST:
-            req_num = get_typed_item_from_console("how many request? ", int)
-            direction = get_option_from_console("select a direction: inbound or outbound", ["inbound", "outbound"])
-            cccp_batch_send(user, {"txNum": req_num, "direction": direction})
+        # elif cmd == SupportedUserCmd.RBC_BATCH_REQUEST:
+        #     req_num = get_typed_item_from_console("how many request? ", int)
+        #     direction = get_option_from_console("select a direction: inbound or outbound", ["inbound", "outbound"])
+        #     cccp_batch_send(user, {"txNum": req_num, "direction": direction})
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
@@ -81,8 +81,8 @@ def user_cmd(project_root_path: str = "./"):
             receipt = user.world_receipt_with_wait(chain_index, tx_hash, False)
             display_receipt_status(receipt)
 
-        elif cmd == SupportedUserCmd.RBC_ROLLBACK:
-            raise Exception("Not implementation yet")
+        # elif cmd == SupportedUserCmd.RBC_ROLLBACK:
+        #     raise Exception("Not implementation yet")
 
         elif cmd == SupportedUserCmd.MY_BALANCE:
             # balanceOf

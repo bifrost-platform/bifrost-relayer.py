@@ -7,26 +7,32 @@ from relayer.chainpy.eth.ethtype.chaindata import EthBlock
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes
 from relayer.chainpy.eth.managers.ethchainmanager import EthChainManager
-from relayer.tools.consts import SCORE_SERVER_URL, BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT, CONTROLLER_TO_DISCORD_ID
-from relayer.tools.utils import remove_duplicated_addr, display_coins_balances
+from relayer.tools.consts import SCORE_SERVER_URL, BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT, CONTROLLER_TO_DISCORD_ID, \
+    RELAYER_ONCE
+from relayer.tools.utils import remove_duplicated_addr, display_coins_balances, RelayerInfo, get_controller_of
 from relayer.user import User
 
 
 class ScoreClient:
     @staticmethod
-    def fetch_relayer_once() -> List[EthAddress]:
+    def fetch_relayers_with_version() -> List[RelayerInfo]:
         """ Fetch relayer addresses from the score server. and return addresses w/ duplicated"""
         response_json = requests.get(SCORE_SERVER_URL).json()
-        raw_list = [EthAddress(addr_hex) for addr_hex in response_json["relayers"]]
-        lower_list = [addr.hex().lower() for addr in raw_list]
 
-        removed_duplicated_list = list()
-        for addr in lower_list:
-            if addr not in removed_duplicated_list:
-                removed_duplicated_list.append(addr)
+        ret = list()
+        addr_cache = list()
+        for result in response_json["relayers"]:
+            if result["_id"] == "0x0":
+                continue
+            addr_cache.append(EthAddress(result["_id"]))
+            ret.append(RelayerInfo.from_resp(result))
 
-        sorted_removed_duplicated_list = sorted(removed_duplicated_list)
-        return [EthAddress(addr) for addr in sorted_removed_duplicated_list]
+        for addr in RELAYER_ONCE:
+            addr_obj = EthAddress(addr)
+            if addr_obj not in addr_cache:
+                ret.append(RelayerInfo(addr_obj, 0))
+
+        return ret
 
     @staticmethod
     def recharge_coins(user: User, addrs: List[EthAddress]):
@@ -85,19 +91,6 @@ def _parse_active_addr_in_blocks(chain_manager: EthChainManager, from_height: in
     return remove_duplicated_addr(active_addrs)
 
 
-# Tool
-def get_controller_of(user: User, relayer_addr: EthAddress) -> EthAddress:
-    result = user.world_call(ChainIndex.BIFROST, "relayer_authority", "relayer_pool", [])
-
-    relayers, controllers = result[0], result[1]
-    target_relayer = relayer_addr.hex().lower()
-    if target_relayer in relayers:
-        idx = relayers.index(target_relayer)
-        return EthAddress(controllers[idx])
-    else:
-        return EthAddress.zero()
-
-
 def get_discord_id_by_controller(controller: EthAddress) -> Optional[str]:
     controller_hex = controller.hex()
     for i, key in enumerate(CONTROLLER_TO_DISCORD_ID.keys()):
@@ -127,8 +120,8 @@ def fetch_healthy_relayers(admin: User, history_block_num: int = 40) -> List[Eth
 
 
 # Tool
-def fetch_once_relayers() -> List[EthAddress]:
-    return ScoreClient.fetch_relayer_once()
+def fetch_once_relayers() -> List[RelayerInfo]:
+    return ScoreClient.fetch_relayers_with_version()
 
 
 # Tool - Action

@@ -12,10 +12,21 @@ from relayer.chainpy.eth.managers.configs import EntityRootConfig
 from relayer.chainpy.eth.managers.multichainmanager import MultiChainManager
 from relayer.rbcevents.consts import TokenStreamIndex
 from relayer.relayer import Relayer
-from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST
+from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
+    CONTROLLER_TO_DISCORD_ID
 from relayer.user import User
 
 KEY_JSON_PATH = "./relayer/tools/keys.json"
+
+
+class RelayerInfo:
+    def __init__(self, addr: EthAddress, version: int):
+        self.relayer = addr
+        self.version = version
+
+    @classmethod
+    def from_resp(cls, result: dict):
+        return RelayerInfo(EthAddress(result["_id"]), int(result["version"][-1]))
 
 
 def _parse_key(project_root_path: str, key_json_path: str, role: str) -> str:
@@ -56,42 +67,58 @@ def remove_duplicated_addr(addrs: List[EthAddress]) -> List[EthAddress]:
     return ret_addrs
 
 
-def remove_addresses_from(addrs: List[EthAddress], to_remove_addrs: List[EthAddress]):
-    input_addrs = [addr.hex().lower() for addr in addrs]
+def remove_addresses_from(addrs: List[RelayerInfo], to_remove_addrs: List[RelayerInfo]) -> List[RelayerInfo]:
     ret = list()
-    for addr_hex in input_addrs:
-        if addr_hex not in [addr.hex().lower() for addr in to_remove_addrs]:
-            ret.append(EthAddress(addr_hex))
+    to_remove_addrs_list = [addr.relayer for addr in to_remove_addrs]
+    for addr in addrs:
+        if addr.relayer not in to_remove_addrs_list:
+            ret.append(addr)
     return ret
 
 
-def remove_admin_addresses_from(addrs: List[EthAddress]) -> List[EthAddress]:
-    return remove_addresses_from(addrs, [EthAddress(addr) for addr in ADMIN_RELAYERS])
+def remove_admin_addresses_from(addrs: List[RelayerInfo]) -> List[RelayerInfo]:
+    ret = list()
+    admin_relayers = [EthAddress(addr) for addr in ADMIN_RELAYERS]
+    for addr in addrs:
+        if addr.relayer not in admin_relayers:
+            ret.append(addr)
+    return ret
 
 
-def display_addrs(
-        title: str,
-        addrs: List[EthAddress],
-        auxiliary_addrs: List[EthAddress] = None,
-        auxiliary_ints: List[int] = None,
-        auxiliary_strs: List[str] = None):
+def display_addrs(manager: Union[User, Relayer], title: str, addrs: Union[List[RelayerInfo], List[EthAddress]], not_admin: bool = True):
+    if len(addrs) == 0:
+        return
+    versions = None
+    if isinstance(addrs[0], RelayerInfo):
+        versions = [addr.version for addr in addrs]
+        addrs = [addr.relayer for addr in addrs]
+
+    healthy_relayers_controllers = [get_controller_of(manager, addr) for addr in addrs]
+    discord_ids = [CONTROLLER_TO_DISCORD_ID.get(addr.with_checksum()) for addr in healthy_relayers_controllers]
 
     print(title)
     print("-----------------------------------------------------" * 2)
+    j = 0
     for i, addr in enumerate(addrs):
-        msg = "{:>2}: {}".format(i + 1, addr.hex().lower())
-        if auxiliary_addrs is not None:
-            msg += " {}".format(auxiliary_addrs[i].hex().lower())
-        if auxiliary_ints is not None:
-            msg += " {}".format(str(auxiliary_ints[i] // 10 ** 18))
-        if auxiliary_strs is not None:
-            msg += " {}".format(auxiliary_strs[i])
+        if not_admin and (addr.with_checksum() in ADMIN_RELAYERS):
+            continue
+        if healthy_relayers_controllers[i] == EthAddress.zero():
+            continue
+        msg = "{:>2}: r({}) c({}) v({}) d({})".format(
+            j, addr.with_checksum(),
+            healthy_relayers_controllers[i].with_checksum(),
+            versions[i] if versions is not None else 0,
+            discord_ids[i]
+        )
+        j += 1
         print(msg)
     print("-----------------------------------------------------" * 2)
 
 
 def display_coins_balances(manager: MultiChainManager, addr: EthAddress = None):
-    print("\n<{} balances>".format(manager.active_account.address.hex()))
+    if addr is None:
+        addr = manager.active_account.address
+    print("\n<{} balances>".format(addr.hex()))
     print("-------------------------------" * len(manager.supported_chain_list))
     bal_str = ""
     for chain_index in manager.supported_chain_list:
@@ -229,6 +256,19 @@ def asset_list_of(chain_index: ChainIndex = None):
         if chain_index == ChainIndex.ETHEREUM and token_stream_index == TokenStreamIndex.BFC_BIFROST:
             ret.append(token_stream_index)
     return ret
+
+
+# Tool
+def get_controller_of(user: Union[Relayer, User], relayer_addr: EthAddress) -> EthAddress:
+    result = user.world_call(ChainIndex.BIFROST, "relayer_authority", "relayer_pool", [])
+
+    relayers, controllers = result[0], result[1]
+    target_relayer = relayer_addr.hex().lower()
+    if target_relayer in relayers:
+        idx = relayers.index(target_relayer)
+        return EthAddress(controllers[idx])
+    else:
+        return EthAddress.zero()
 
 
 # not tested
