@@ -2,10 +2,14 @@ FROM python:3.10-slim
 
 ENV PRIVATE_KEY=
 
-RUN apt update && apt install -y build-essential gcc
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y build-essential gcc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/
 
 WORKDIR /app
 COPY . .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT python relayer-launcher.py launch -k $PRIVATE_KEY
+ENTRYPOINT ["/bin/bash","-c","python relayer-launcher.py"]
+CMD ["launch -k $PRIVATE_KEY"]
