@@ -14,6 +14,7 @@ import time
 
 BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
+RELAYER_VERSION = "v0.1.8"
 
 
 class ImOnline:
@@ -23,7 +24,7 @@ class ImOnline:
     def send_request(cls, account: EthAccount) -> int:
         body = {
             "relayerAddress": account.address.hex(),
-            "key": "6M4KrUUroj@aRBD"
+            "version": RELAYER_VERSION
         }
         response_json = requests.post(cls.url, json=body).json()
         return int(response_json["statusCode"])
@@ -197,7 +198,7 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = self.find_height_by_timestamp(chain_index, target_time)
 
-        bootstrap_logger.info("BIFROST's Relayer: v0.1.7")
+        bootstrap_logger.info("BIFROST's Relayer: {}".format(RELAYER_VERSION))
         bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
