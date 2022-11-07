@@ -8,26 +8,12 @@ from relayer.chainpy.eth.ethtype.account import EthAccount
 from relayer.chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from relayer.rbcevents.consts import ConsensusOracleId
 from relayer.rbcevents.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
-import requests
 import time
 
+from relayer.utils import RELAYER_VERSION
 
 BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
-RELAYER_VERSION = "v0.1.8"
-
-
-class ImOnline:
-    url = "https://leaderboard-api.testnet.thebifrost.io/user/health"
-
-    @classmethod
-    def send_request(cls, account: EthAccount) -> int:
-        body = {
-            "relayerAddress": account.address.hex(),
-            "version": RELAYER_VERSION
-        }
-        response_json = requests.post(cls.url, json=body).json()
-        return int(response_json["statusCode"])
 
 
 class Relayer(EventBridge):
@@ -173,10 +159,6 @@ class Relayer(EventBridge):
             else:
                 print(">>> BIFROST Node is syncing..")
                 time.sleep(60)
-
-        if ImOnline.send_request(account=self.active_account) != 200:
-            msg = "BIT scoring server error. Please contact the forum."
-            raise Exception(msg)
 
         # check whether this relayer belongs to current validator list
         self.current_rnd = self.fetch_validator_round(ChainIndex.BIFROST)
