@@ -16,7 +16,7 @@ from ..logger import Logger, formatted_log
 from .utils import timestamp_msec, transaction_commit_time_sec
 from .periodiceventabc import PeriodicEventABC
 from .chaineventabc import ChainEventABC, TaskStatus, ReceiptParams
-from ...relayer import ImOnline
+from ...utils import ImOnline
 
 consumer_logger = Logger("Consumer", logging.INFO)
 receipt_checker_logger = Logger("Receipt", logging.INFO)
