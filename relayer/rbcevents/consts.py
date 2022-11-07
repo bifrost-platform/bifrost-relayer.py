@@ -19,6 +19,7 @@ class TokenIndex(EnumInterface):
     MATIC = 0x000000000000000b
     BIFI = 0x000000000000000c
     WBFC = 0x000000000000000d
+    AVAX = 0x000000000000000e
 
     @staticmethod
     def size():
@@ -50,6 +51,8 @@ class TokenStreamIndex(EnumInterface):
 
     # tokens on the klaytn
     KLAY_KLAYTN      = concat_2enum_as_int(TokenIndex.KLAY, ChainIndex.KLAYTN)
+
+    AVAX_AVALANCHE = concat_2enum_as_int(TokenIndex.AVAX, ChainIndex.AVALANCHE)
 
     def __repr__(self) -> str:
         return self.name
