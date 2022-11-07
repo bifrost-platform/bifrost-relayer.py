@@ -286,7 +286,8 @@
             "BIFROST",
             "ETHEREUM",
             "BINANCE",
-            "POLYGON"
+            "POLYGON",
+            "AVALANCHE"
         ]
     },
     "multichain_config": {
