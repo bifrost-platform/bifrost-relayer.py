@@ -11,7 +11,7 @@
         "rpc_server_downtime_allow_sec": 180,
         "tx_fee_type": {
             "type": 2,
-            "max_gas_price": 2000000000000,
+            "max_gas_price": 5000000000000,
             "max_priority_price": 1000000000000
         },
         "abi_base_path": "configs/",
@@ -67,11 +67,6 @@
                 "abi_file": "abi.erc20.json"
             },
             {
-                "name": "KLAY_KLAYTN",
-                "address": "0x02B0891CC3f3865E52bB0F9c4DF2Dc3d172ff9a3",
-                "abi_file": "abi.erc20.json"
-            },
-            {
                 "name": "USDC_ETHEREUM",
                 "address": "0x6EeE91b7c69e3576C13cE7a9C7C0E305dF6996F9",
                 "abi_file": "abi.erc20.json"
@@ -84,6 +79,11 @@
             {
                 "name": "BUSD_BINANCE",
                 "address": "0x9c8B701961C20d006cb7c4B5B91c6cb93EdB44Ac",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "AVAX_AVALANCHE",
+                "address": "0xE8Ff8864E9C144F1fE92bD69d98D3A5694070CE3",
                 "abi_file": "abi.erc20.json"
             }
         ],
@@ -259,10 +259,54 @@
             "BIFROST",
             "ETHEREUM",
             "BINANCE",
-            "POLYGON"
+            "POLYGON",
+            "AVALANCHE"
         ]
     },
     "multichain_config": {
         "chain_monitor_period_sec": 20
+    },
+    "avalanche": {
+        "chain_name": "AVALANCHE",
+        "block_period_sec": 2,
+        "url_with_access_key": "",
+        "bootstrap_latest_height": 15264153,
+        "block_aging_period": 3,
+        "transaction_commit_multiplier": 2,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "tx_fee_type": {
+            "type": 2,
+            "max_gas_price": 200000000000,
+            "max_priority_price": 100000000000
+        },
+        "abi_base_path": "configs/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0xDE23135c958536eE291019B405921EAE84fFa759",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 15264153
+            },
+            {
+                "name": "vault",
+                "address": "0xd1E060FD930B75DA9A709c91E6Ad03B330Fb2950",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 15264153
+            },
+            {
+                "name": "socket",
+                "address": "0x02B0891CC3f3865E52bB0F9c4DF2Dc3d172ff9a3",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 15264153
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
     }
 }

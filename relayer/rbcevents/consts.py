@@ -83,6 +83,8 @@ class TokenStreamIndex(EnumInterface):
             return self == TokenStreamIndex.MATIC_POLYGON
         if home_chain == ChainIndex.KLAYTN:
             return self == TokenStreamIndex.KLAY_KLAYTN
+        if home_chain == ChainIndex.AVALANCHE:
+            return self == TokenStreamIndex.AVAX_AVALANCHE
         raise Exception("Not supported chain: {}".format(home_chain))
 
 

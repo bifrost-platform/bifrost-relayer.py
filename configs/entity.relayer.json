@@ -112,6 +112,11 @@
                 "name": "BUSD_BINANCE",
                 "address": "0x9c8B701961C20d006cb7c4B5B91c6cb93EdB44Ac",
                 "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "AVAX_AVALANCHE",
+                "address": "0xE8Ff8864E9C144F1fE92bD69d98D3A5694070CE3",
+                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [

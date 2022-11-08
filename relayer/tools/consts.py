@@ -115,6 +115,7 @@ SUPPORTED_TOKEN_LIST = [
     TokenStreamIndex.ETH_ETHEREUM,
     TokenStreamIndex.MATIC_POLYGON,
     TokenStreamIndex.BNB_BINANCE,
+    TokenStreamIndex.AVAX_AVALANCHE,
 
     # tokens
     TokenStreamIndex.BIFI_ETHEREUM,
