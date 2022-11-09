@@ -5,13 +5,14 @@ from relayer.chainpy.eth.ethtype.account import EthAccount
 from relayer.chainpy.eth.ethtype.amount import EthAmount
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
+from relayer.tools.consts import NOMINATION_AMOUNT
 from relayer.tools.relayer_healty import fetch_healthy_relayers
 from relayer.tools.utils import display_receipt_status, \
     get_option_from_console, get_typed_item_from_console, display_addrs, init_manager, get_controller_of
 
 
 class SupportedNominatorCmd(enum.Enum):
-    FETCH_HEALTHY_RELAYER_LIST = "fetch healthy relayers"
+    FETCH_HEALTHY_AUTHORITIES = "fetch healthy relayers"
     NOMINATE = "nominate to a specific "
 
     QUIT = "quit"
@@ -27,7 +28,7 @@ def nominator_cmd(project_root_path: str = "./"):
 
     while True:
         cmd = get_option_from_console("select a command number", SupportedNominatorCmd.supported_cmds())
-        if cmd == SupportedNominatorCmd.FETCH_HEALTHY_RELAYER_LIST:
+        if cmd == SupportedNominatorCmd.FETCH_HEALTHY_AUTHORITIES:
             healthy_relayers = fetch_healthy_relayers(nominator, 80)
             nominations = list()
             for addr in healthy_relayers:
@@ -42,7 +43,6 @@ def nominator_cmd(project_root_path: str = "./"):
                 EthAddress
             )
 
-            nomination_amount = EthAmount(10000.0)
             dummy_account = EthAccount.generate()
             print("dummy_addr: {}".format(dummy_account.address.hex()))
             dummy_user = init_manager("User", project_root_path, dummy_account)
@@ -50,7 +50,7 @@ def nominator_cmd(project_root_path: str = "./"):
             _, tx_hash = nominator.world_transfer_coin(
                 ChainIndex.BIFROST,
                 dummy_account.address,
-                (nomination_amount + EthAmount(1.0))
+                (NOMINATION_AMOUNT + EthAmount(1.0))
             )
             receipt = nominator.world_receipt_with_wait(ChainIndex.BIFROST, tx_hash)
             print("transfer transaction")
