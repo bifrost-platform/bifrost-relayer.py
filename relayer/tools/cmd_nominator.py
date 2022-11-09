@@ -6,7 +6,7 @@ from relayer.chainpy.eth.ethtype.amount import EthAmount
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
 from relayer.tools.consts import NOMINATION_AMOUNT
-from relayer.tools.relayer_healty import fetch_healthy_relayers
+from relayer.tools.recharger_utils import fetch_healthy_relayers
 from relayer.tools.utils import display_receipt_status, \
     get_option_from_console, get_typed_item_from_console, display_addrs, init_manager, get_controller_of
 

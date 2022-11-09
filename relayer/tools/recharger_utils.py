@@ -36,6 +36,8 @@ class ScoreClient:
 
     @staticmethod
     def recharge_coins(user: User, addrs: List[EthAddress]):
+        receipt_params = list()
+        i = 0
         for addr in addrs:
             for chain_index in user.supported_chain_list:
                 # determine the limit amount
@@ -45,19 +47,32 @@ class ScoreClient:
                 relayer_balance = user.world_native_balance(chain_index, addr=addr)
                 if relayer_balance < limit_amount:
                     # send coins to the relayer
-                    tx, tx_hash = user.world_transfer_coin(chain_index, addr, limit_amount - relayer_balance)
-                    print("sent {} coins to {} with txHash({}) nonce({})".format(chain_index, addr.hex(), tx_hash.hex(), tx.nonce))
+
+                    recharge_amount = limit_amount - relayer_balance
+                    chain_manager = user.get_chain_manager_of(chain_index)
+                    tx = chain_manager.build_tx(addr, EthHexBytes(0x00), recharge_amount)
+                    _, tx_hash = chain_manager.send_transaction(tx)
+                    receipt_params.append((chain_index, tx_hash, recharge_amount))
+
+                    print("{:2} sent {} coins to {} with txHash({}) nonce({})".format(
+                        i, chain_index, addr.hex(), tx_hash.hex(), tx.nonce))
+                    i += 1
                     # check receipt and display the result
-                    receipt = user.world_receipt_with_wait(chain_index, tx_hash, False)
-                    if receipt is None:
-                        print("no-receipt recharge balance: {} current({}), limit({})\n".format(
-                            chain_index, relayer_balance, limit_amount))
-                    elif receipt.status == 0:
-                        print("fail recharge balance: {} current({}), limit({})\n".format(
-                            chain_index, relayer_balance, limit_amount))
-                    else:
-                        print("success recharge balance: {} before({}) limit({})\n".format(
-                            chain_index, relayer_balance, limit_amount))
+
+        for i, receipt_param in enumerate(receipt_params):
+            target_chain = receipt_param[0]
+            tx_hash = receipt_param[1]
+            amount = receipt_param[2]
+            receipt = user.world_receipt_with_wait(target_chain, tx_hash, False)
+            if receipt is None:
+                print("{:2} no-receipt recharge balance: {} recharged({})".format(
+                    i, target_chain, amount))
+            elif receipt.status == 0:
+                print("{:2} fail recharge balance: {} recharged({})".format(
+                    i, target_chain, amount))
+            else:
+                print("{:2} success recharge balance: {} recharged({})".format(
+                    i, target_chain, amount))
 
 
 def _fetch_blocks(chain_manager: EthChainManager, from_height: int, to_height: int):

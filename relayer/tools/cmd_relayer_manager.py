@@ -1,6 +1,6 @@
 from time import sleep
 
-from relayer.tools.relayer_healty import fetch_once_relayers, fetch_healthy_relayers, ScoreClient
+from relayer.tools.recharger_utils import fetch_once_relayers, fetch_healthy_relayers, ScoreClient
 from relayer.tools.utils import display_coins_balances, remove_addresses_from, display_addrs, init_manager, RelayerInfo
 
 
