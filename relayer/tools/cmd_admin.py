@@ -1,18 +1,14 @@
 import enum
-import json
 from typing import List
 
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
-from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
-from relayer.tools.consts import ADMIN_RELAYERS
 from relayer.tools.utils import get_chain_index_from_console, display_receipt_status, get_option_from_console, \
     init_manager
 
 
 class SupportedAdminCmd(enum.Enum):
-    FETCH_AUTHORITY_LIST = "fetch authority list"
-    ROUND_UP = "round up"
     FETCH_ROUNDS = "fetch every round from each chain"
+    ROUND_UP = "round up"
     BATCH_ROUND_UP = "batch round up"
 
     QUIT = "quit"
@@ -38,17 +34,7 @@ def admin_cmd(project_root_path: str = "./"):
         elif cmd == SupportedAdminCmd.ROUND_UP:
             # round up
             chain_index = get_chain_index_from_console(admin)
-            validator_addr_list = admin.world_call(ChainIndex.BIFROST, "relayer_authority", "selected_relayers", [True])[0]
-            print(">>> current_validators \n{}".format(json.dumps(validator_addr_list, indent=4)))
-
-            relayer_preset = [*ADMIN_RELAYERS, "No change"]
-            validator_addr_to_change = get_option_from_console("select a validator to ignore", relayer_preset)
-
-            if validator_addr_to_change != "No change":
-                validator_addr_to_change = EthAddress(validator_addr_to_change)
-            else:
-                validator_addr_to_change = None
-            tx_hash = admin.round_up(chain_index, validator_addr_to_change)
+            tx_hash = admin.round_up(chain_index)
 
             receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
             display_receipt_status(receipt)
@@ -58,14 +44,18 @@ def admin_cmd(project_root_path: str = "./"):
             chain_index = get_chain_index_from_console(admin)
             bifnet_round = admin.world_call(ChainIndex.BIFROST, "relayer_authority", "latest_round", [])[0]
             target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
+            if bifnet_round < target_round:
+                raise Exception("target chain's round is bigger than bifrost network")
 
-            for i in range(bifnet_round - target_round):
+            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
+            for _ in range(bifnet_round - target_round):
                 tx_hash = admin.round_up(chain_index)
                 receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
                 display_receipt_status(receipt)
-                target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-                print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
+
+            bifnet_round = admin.world_call(ChainIndex.BIFROST, "relayer_authority", "latest_round", [])[0]
+            target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
+            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
 
         else:
             return

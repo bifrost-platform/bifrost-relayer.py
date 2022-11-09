@@ -4,8 +4,7 @@ from typing import List
 from relayer.chainpy.eth.ethtype.amount import EthAmount
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
-from relayer.rbcevents.consts import RBCMethodIndex, TokenStreamIndex
-from relayer.tools.cmd_loadtest import cccp_batch_send
+from relayer.rbcevents.consts import TokenStreamIndex
 from relayer.tools.consts import RBC_SUPPORTED_METHODS
 from relayer.tools.lib import fetch_and_display_rounds
 from relayer.tools.utils import init_manager, get_chain_and_token, determine_decimal, get_typed_item_from_console, \
