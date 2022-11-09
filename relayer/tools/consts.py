@@ -1,5 +1,5 @@
 from relayer.chainpy.eth.ethtype.amount import EthAmount
-from relayer.rbcevents.consts import TokenStreamIndex
+from relayer.rbcevents.consts import TokenStreamIndex, RBCMethodIndex
 
 USER_CONFIG_PATH = "configs/entity.user.json"
 PRIVATE_CONFIG_PATH = "configs/entity.user.private.json"
@@ -127,3 +127,6 @@ SUPPORTED_TOKEN_LIST = [
 EXECUTABLE_TOKEN_LIST = [
     TokenStreamIndex.BFC_BIFROST
 ]
+
+
+RBC_SUPPORTED_METHODS = [RBCMethodIndex.WARP, RBCMethodIndex.DEPOSIT, RBCMethodIndex.REPAY]

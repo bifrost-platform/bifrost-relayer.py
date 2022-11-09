@@ -7,7 +7,7 @@ from relayer.tools.utils import get_option_from_console
 
 if __name__ == "__main__":
 
-    tool_names = ["User", "Operator", "Nominator", "Admin", "RelayerObserver", "Recharger", "LoadTester"]
+    tool_names = ["User", "Operator", "Nominator", "Admin", "RelayerObserver", "Recharger"]
 
     while True:
         selected_tools = get_option_from_console("Select the tool you will use. ", tool_names)
@@ -30,9 +30,6 @@ if __name__ == "__main__":
 
         elif selected_tools == "Admin":
             admin_cmd(project_root_path)
-
-        elif selected_tools == "LoadTester":
-            raise Exception("Not implementation")
 
         else:
             print("quited")

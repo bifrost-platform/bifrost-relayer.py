@@ -6,16 +6,18 @@ from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
 from relayer.rbcevents.consts import RBCMethodIndex, TokenStreamIndex
 from relayer.tools.cmd_loadtest import cccp_batch_send
+from relayer.tools.consts import RBC_SUPPORTED_METHODS
+from relayer.tools.lib import fetch_and_display_rounds
 from relayer.tools.utils import init_manager, get_chain_and_token, determine_decimal, get_typed_item_from_console, \
     display_receipt_status, display_multichain_asset_balances
 from relayer.tools.utils import get_option_from_console
 
 
 class SupportedUserCmd(enum.Enum):
+    FETCH_ROUNDS = "fetch every round from each chain"
     RBC_REQUEST = "rbc request"
-    # RBC_BATCH_REQUEST = "rbc batch request"
+    RBC_LOAD_TEST = "rbc batch request"
     # RBC_ROLLBACK = "rbc reqeust rollback"
-    # FETCH_ROUNDS = "fetch every round from each chain"
 
     MY_BALANCE = "balance of myself"
     TOKEN_APPROVE = "token approve"
@@ -34,23 +36,26 @@ def user_cmd(project_root_path: str = "./"):
 
     while True:
         cmd = get_option_from_console("select a command number", SupportedUserCmd.supported_cmds())
+
+        if cmd == SupportedUserCmd.FETCH_ROUNDS:
+            fetch_and_display_rounds(user)
+
         if cmd == SupportedUserCmd.RBC_REQUEST:
             # cross chain action
             direction_str = get_option_from_console("select direction", ["inbound", "outbound"])
             chain_index, token_index = get_chain_and_token(user, not_included_bifrost=True)
-            decimal = determine_decimal(token_index)
+
+            # insert cross-method
+            method_index = get_option_from_console("method", RBC_SUPPORTED_METHODS)
 
             # set amount as default
+            decimal = determine_decimal(token_index)
             if direction_str == "inbound":
                 src_chain_index, dst_chain_index, amount = chain_index, ChainIndex.BIFROST, EthAmount(0.02, decimal)
             elif direction_str == "outbound":
                 src_chain_index, dst_chain_index, amount = ChainIndex.BIFROST, chain_index, EthAmount(0.01, decimal)
             else:
                 raise Exception("Not supported direction")
-
-            # insert cross-method
-            supported_methods = [RBCMethodIndex.WARP, RBCMethodIndex.DEPOSIT, RBCMethodIndex.REPAY]
-            method_index = get_option_from_console("method", supported_methods)
 
             # insert amount
             amount_float = get_typed_item_from_console(">>> Insert amount (in float) to be sent to socket: ", float)
@@ -64,10 +69,10 @@ def user_cmd(project_root_path: str = "./"):
             display_receipt_status(receipt)
             continue
 
-        # elif cmd == SupportedUserCmd.RBC_BATCH_REQUEST:
-        #     req_num = get_typed_item_from_console("how many request? ", int)
-        #     direction = get_option_from_console("select a direction: inbound or outbound", ["inbound", "outbound"])
-        #     cccp_batch_send(user, {"txNum": req_num, "direction": direction})
+        elif cmd == SupportedUserCmd.RBC_LOAD_TEST:
+            req_num = get_typed_item_from_console("how many request? ", int)
+            direction = get_option_from_console("select a direction: inbound or outbound", ["inbound", "outbound"])
+            cccp_batch_send(user, {"txNum": req_num, "direction": direction})
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
