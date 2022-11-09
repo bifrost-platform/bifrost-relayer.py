@@ -146,29 +146,47 @@ class User(MultiChainManager):
 
         return tx_hash
 
-    def round_up(self, chain_index: ChainIndex, validator_addr: EthAddress = None, is_initial: bool = True):
-        current_validator_list = self.world_call(chain_index, "relayer_authority", "selected_relayers", [is_initial])[0]
-        current_validator_list = recursive_tuple_to_list(current_validator_list)
-        current_round = self.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
+    def round_up(self, chain_index: ChainIndex, is_initial: bool = True):
+        current_bif_round = self.world_call(ChainIndex.BIFROST, "relayer_authority", "latest_round", [])[0]
+        current_tar_round = self.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
 
-        if validator_addr is not None:
-            validator_idx = None
-            for i, addr in enumerate(current_validator_list):
-                if validator_addr == addr:
-                    validator_idx = i
-                    break
+        if current_bif_round == current_tar_round + 1:
+            validator_tuple = self.world_call(
+                ChainIndex.BIFROST,
+                "relayer_authority",
+                "selected_relayers",
+                [is_initial]
+            )[0]
 
-            if validator_idx is not None:
-                del current_validator_list[validator_idx]
-            else:
-                current_validator_list.append(validator_addr.hex())
+        elif current_bif_round > current_tar_round + 1:
+            try:
+                validator_tuple = self.world_call(
+                    ChainIndex.BIFROST,
+                    "relayer_authority",
+                    "previous_selected_relayers",
+                    [current_bif_round + 1, is_initial]
+                )[0]
+            except Exception as e:
+                if str(e) == 'Not handled error: evm error: Other("Out of round index")':
+                    validator_tuple = self.world_call(
+                        ChainIndex.BIFROST,
+                        "relayer_authority",
+                        "selected_relayers",
+                        [is_initial]
+                    )[0]
+                else:
+                    raise Exception("Not handled error")
+        else:
+            raise Exception("Wrong validator sync")
 
-        current_validator_list = sorted(current_validator_list)
+        validator_list = recursive_tuple_to_list(validator_tuple)
+        sorted_validator_list = sorted(validator_list)
+
         pre_tx = self.world_build_transaction(
             chain_index,
             "relayer_authority",
             "update_round",
-            [current_round + 1, current_validator_list]
+            [current_tar_round + 1, sorted_validator_list]
         )
 
         sent_tx, tx_hash = self.world_send_transaction(chain_index, pre_tx)
