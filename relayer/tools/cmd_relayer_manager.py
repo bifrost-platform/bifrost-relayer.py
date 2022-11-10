@@ -1,17 +1,17 @@
 from time import sleep
 
-from relayer.tools.recharger_utils import fetch_once_relayers, fetch_healthy_relayers, ScoreClient
-from relayer.tools.utils import display_coins_balances, remove_addresses_from, display_addrs, init_manager, RelayerInfo
+from relayer.tools.utils_recharger import fetch_healthy_relayers, recharge_coins
+from relayer.tools.utils import display_multichain_coins_balances, RelayerWithVersion, Manager
 
 
 def relayer_manager(project_root_path: str = "./", recharge: bool = False):
 
-    recharger = init_manager("recharger", project_root_path)
+    recharger = Manager.init_manager("recharger", project_root_path)
     while True:
-        display_coins_balances(recharger)
+        display_multichain_coins_balances(recharger)
 
         # relayers who have been turned on at least once.
-        once_relayers_info = fetch_once_relayers()  # info
+        once_relayers_info = RelayerWithVersion.fetch_relayers_once_with_version()  # info
         once_relayer_addrs = [addr.relayer for addr in once_relayers_info]
 
         # healthy relayers
@@ -20,19 +20,19 @@ def relayer_manager(project_root_path: str = "./", recharge: bool = False):
         for addr in healthy_relayers:
             if addr in once_relayer_addrs:
                 idx = once_relayer_addrs.index(addr)
-                healthy_relayers_info.append(RelayerInfo(addr, once_relayers_info[idx].version))
+                healthy_relayers_info.append(RelayerWithVersion(addr, once_relayers_info[idx].version))
             else:
-                healthy_relayers_info.append(RelayerInfo(addr, 7))
+                healthy_relayers_info.append(RelayerWithVersion(addr, 7))
 
-        display_addrs(recharger, "healthy relayers", healthy_relayers_info)
+        RelayerWithVersion.display_addrs(recharger, "healthy relayers", healthy_relayers_info)
 
-        not_healthy_relayers_info = remove_addresses_from(once_relayers_info, healthy_relayers_info)
-        display_addrs(recharger, "not healthy relayers", not_healthy_relayers_info)
+        not_healthy_relayers_info = RelayerWithVersion.difference(once_relayers_info, healthy_relayers_info)
+        RelayerWithVersion.display_addrs(recharger, "not healthy relayers", not_healthy_relayers_info)
 
         if recharge:
             # recharge coins to once_relayers
             print("\n >>> start recharge")
-            ScoreClient.recharge_coins(recharger, once_relayer_addrs)
+            recharge_coins(recharger, once_relayer_addrs)
             print("\n >>> end recharge.")
         print("\n >>> sleep for 30 seconds.")
         sleep(30)
