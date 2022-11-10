@@ -288,11 +288,7 @@
         "account_name": "default",
         "secret_hex": "",
         "supporting_chains": [
-            "BIFROST",
-            "ETHEREUM",
-            "BINANCE",
-            "POLYGON",
-            "AVALANCHE"
+            "BIFROST"
         ]
     },
     "multichain_config": {

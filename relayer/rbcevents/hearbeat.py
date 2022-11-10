@@ -17,12 +17,14 @@ heart_beat_logger = Logger("HeartBeat", logging.INFO)
 
 
 class RelayerHeartBeat(PeriodicEventABC):
-    COLLECTION_PERIOD_SEC = 120
+    COLLECTION_PERIOD_SEC = 30
 
     def __init__(self,
                  relayer: "Relayer",
                  period_sec: int = 0,
                  time_lock: int = timestamp_msec()):
+        if period_sec == 0:
+            period_sec = self.__class__.COLLECTION_PERIOD_SEC
         super().__init__(relayer, period_sec, time_lock)
 
     @property
@@ -46,6 +48,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         if not self.relayer.is_pulsed_hear_beat():
             return ChainIndex.BIFROST, "relayer_authority", "heartbeat", []
         else:
+            print("already pulsed. no send heartbeat")
             return NoneParams
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
