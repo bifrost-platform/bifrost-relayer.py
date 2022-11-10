@@ -6,9 +6,9 @@ from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress
 from relayer.rbcevents.consts import TokenStreamIndex
 from relayer.tools.consts import RBC_SUPPORTED_METHODS
-from relayer.tools.lib import fetch_and_display_rounds
-from relayer.tools.utils import init_manager, get_chain_and_token, determine_decimal, get_typed_item_from_console, \
-    display_receipt_status, display_multichain_asset_balances
+from relayer.tools.utils_load_test import cccp_batch_send
+from relayer.tools.utils import get_chain_and_token_from_console, determine_decimal, get_typed_item_from_console, \
+    display_receipt_status, display_multichain_asset_balances, fetch_and_display_rounds, Manager
 from relayer.tools.utils import get_option_from_console
 
 
@@ -30,7 +30,7 @@ class SupportedUserCmd(enum.Enum):
 
 
 def user_cmd(project_root_path: str = "./"):
-    user = init_manager("User", project_root_path)
+    user = Manager.init_manager("User", project_root_path)
     print(">>>  User Address: {}".format(user.active_account.address.with_checksum()))
 
     while True:
@@ -42,7 +42,7 @@ def user_cmd(project_root_path: str = "./"):
         if cmd == SupportedUserCmd.RBC_REQUEST:
             # cross chain action
             direction_str = get_option_from_console("select direction", ["inbound", "outbound"])
-            chain_index, token_index = get_chain_and_token(user, not_included_bifrost=True)
+            chain_index, token_index = get_chain_and_token_from_console(user, not_included_bifrost=True)
 
             # insert cross-method
             method_index = get_option_from_console("method", RBC_SUPPORTED_METHODS)
@@ -75,7 +75,7 @@ def user_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
-            chain_index, token_index = get_chain_and_token(user, True)
+            chain_index, token_index = get_chain_and_token_from_console(user, True)
             if token_index == TokenStreamIndex.NONE:
                 print(">>> There is no option.")
                 continue
@@ -93,7 +93,7 @@ def user_cmd(project_root_path: str = "./"):
             display_multichain_asset_balances(user, user.active_account.address)
 
         elif cmd == SupportedUserCmd.ASSET_TRANSFER:
-            chain_index, token_index = get_chain_and_token(user)
+            chain_index, token_index = get_chain_and_token_from_console(user)
             decimal = determine_decimal(token_index)
 
             # insert address

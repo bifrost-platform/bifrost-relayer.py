@@ -2,8 +2,7 @@ import enum
 from typing import List
 
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
-from relayer.tools.utils import get_chain_index_from_console, display_receipt_status, get_option_from_console, \
-    init_manager
+from relayer.tools.utils import get_chain_from_console, display_receipt_status, get_option_from_console, Manager
 
 
 class SupportedAdminCmd(enum.Enum):
@@ -19,7 +18,7 @@ class SupportedAdminCmd(enum.Enum):
 
 
 def admin_cmd(project_root_path: str = "./"):
-    admin = init_manager("admin", project_root_path)
+    admin = Manager.init_manager("admin", project_root_path)
     print(">>>  Admin Address: {}".format(admin.active_account.address.with_checksum()))
 
     while True:
@@ -33,7 +32,7 @@ def admin_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedAdminCmd.ROUND_UP:
             # round up
-            chain_index = get_chain_index_from_console(admin)
+            chain_index = get_chain_from_console(admin)
             tx_hash = admin.round_up(chain_index)
 
             receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
@@ -41,7 +40,7 @@ def admin_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedAdminCmd.BATCH_ROUND_UP:
             # batch round up
-            chain_index = get_chain_index_from_console(admin)
+            chain_index = get_chain_from_console(admin)
             bifnet_round = admin.world_call(ChainIndex.BIFROST, "relayer_authority", "latest_round", [])[0]
             target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
             if bifnet_round < target_round:
