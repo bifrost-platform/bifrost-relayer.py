@@ -94,7 +94,6 @@ def main(_config: dict):
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
 
         no_hb = config.get("no_heartbeat")
-        print(no_hb)
         if not no_hb:
             relayer.register_offchain_event_obj("heart_bit", RelayerHeartBeat)
 
