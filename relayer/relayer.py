@@ -294,4 +294,5 @@ class Relayer(EventBridge):
         return EthHashBytes(result)
 
     def is_pulsed_hear_beat(self) -> bool:
-        return self.world_call(ChainIndex.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [])[0]
+        relayer_addr = self.active_account.address
+        return self.world_call(ChainIndex.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]

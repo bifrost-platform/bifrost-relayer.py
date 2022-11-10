@@ -9,6 +9,7 @@ from relayer.rbcevents.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from relayer.rbcevents.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
 from relayer.chainpy.eth.ethtype.account import EthAccount
 
+
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
 
 parser.add_argument("command", help="generate new private key, then export it as a PEM file")
@@ -16,6 +17,7 @@ parser.add_argument("-p", "--password", type=str, help="password to lock/unlock 
 parser.add_argument("-s", "--pem", type=str, help="PEM file path (default: ./configs/private.pem)")
 parser.add_argument("-k", "--existingKey", type=str, help="existing key to be used to generate a pem file")
 parser.add_argument("-a", "--analyze", type=bool)
+parser.add_argument("-b", "--no-heartbeat", action="store_true")
 
 RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
 PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
@@ -75,22 +77,26 @@ def main(_config: dict):
         )
 
         # multichain monitor will detect "Socket" event from every socket contract.
-        relayer.register_chain_event_obj("Socket", RbcEvent)
+        # relayer.register_chain_event_obj("Socket", RbcEvent)
 
         # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
-        relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
+        # relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
 
         # event bridge will periodically check validator set of the bifrost network.
-        relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
+        # relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
 
         # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
-        relayer.register_offchain_event_obj("price", PriceUpOracle)
+        # relayer.register_offchain_event_obj("price", PriceUpOracle)
 
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-        relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
+        # relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-        relayer.register_offchain_event_obj("heart_bit", RelayerHeartBeat)
+
+        no_hb = config.get("no_heartbeat")
+        print(no_hb)
+        if not no_hb:
+            relayer.register_offchain_event_obj("heart_bit", RelayerHeartBeat)
 
         if config.get("analyze") is not None:
             EthRpcClient.ANALYZER_RELAYER = True

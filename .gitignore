@@ -43,7 +43,7 @@ configs/entity.observer.private.json
 configs/entity.user.private.json
 configs/env.priv.toml
 configs/priv.db.toml
-relayer/tools/admin.key.json
+relayer/tools/keys.json
 
 
 # IDE-Specific project files
