@@ -16,7 +16,6 @@ parser.add_argument("command", help="generate new private key, then export it as
 parser.add_argument("-p", "--password", type=str, help="password to lock/unlock PEM file")
 parser.add_argument("-s", "--pem", type=str, help="PEM file path (default: ./configs/private.pem)")
 parser.add_argument("-k", "--existingKey", type=str, help="existing key to be used to generate a pem file")
-parser.add_argument("-a", "--analyze", type=bool)
 parser.add_argument("-b", "--no-heartbeat", action="store_true")
 
 RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
@@ -77,19 +76,19 @@ def main(_config: dict):
         )
 
         # multichain monitor will detect "Socket" event from every socket contract.
-        # relayer.register_chain_event_obj("Socket", RbcEvent)
+        relayer.register_chain_event_obj("Socket", RbcEvent)
 
         # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
-        # relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
+        relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
 
         # event bridge will periodically check validator set of the bifrost network.
-        # relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
+        relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
 
         # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
-        # relayer.register_offchain_event_obj("price", PriceUpOracle)
+        relayer.register_offchain_event_obj("price", PriceUpOracle)
 
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-        # relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
+        relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
 
