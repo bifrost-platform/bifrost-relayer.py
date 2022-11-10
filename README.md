@@ -132,5 +132,5 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 
 # 2. launch a relayer with private-key
-$ python relayer-launcher.py launch -k <private_key_in_hex_with_0x>
+$ python relayer-launcher.py launch -k <private_key_in_hex_with_0x> --no-heartbeat
 ```
