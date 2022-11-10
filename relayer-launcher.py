@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from relayer.chainpy.eth.managers.rpchandler import EthRpcClient
+from relayer.rbcevents.hearbeat import RelayerHeartBeat
 from relayer.relayer import Relayer
 
 from relayer.rbcevents.chainevents import RbcEvent, ValidatorSetUpdatedEvent
@@ -79,14 +80,17 @@ def main(_config: dict):
         # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
         relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
 
-        # auto task will periodically check validator set of the bifrost network.
+        # event bridge will periodically check validator set of the bifrost network.
         relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
 
-        # auto task will periodically collect price source from offchain, and relay it to bifrost network.
+        # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
         relayer.register_offchain_event_obj("price", PriceUpOracle)
 
-        # auto task will periodically collect bitcoin hash, and relay it to bifrost network.
+        # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
         relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
+
+        # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
+        relayer.register_offchain_event_obj("heart_bit", RelayerHeartBeat)
 
         if config.get("analyze") is not None:
             EthRpcClient.ANALYZER_RELAYER = True

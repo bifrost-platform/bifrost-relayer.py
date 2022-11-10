@@ -140,6 +140,17 @@ class Relayer(EventBridge):
                 target_time
             )
 
+    def _register_auth(self, rnd: int, relayer_addr_list: list, addr: str):
+        addr_lower = addr.lower()
+        relayer_lower_list = [relayer_addr.lower() for relayer_addr in relayer_addr_list]
+        sorted_relayer_list = sorted(relayer_lower_list)
+
+        try:
+            relayer_index = sorted_relayer_list.index(addr_lower)
+            self.set_value_by_key(rnd, relayer_index)
+        except ValueError:
+            pass
+
     def register_relayer_index(self, rnd: int):
         my_addr = self.active_account.address.hex().lower()
         sorted_validator_list = self.fetch_sorted_previous_validator_list(ChainIndex.BIFROST, rnd)
@@ -186,17 +197,6 @@ class Relayer(EventBridge):
 
         # run relayer
         self.run_eventbridge()
-
-    def _register_auth(self, rnd: int, relayer_addr_list: list, addr: str):
-        addr_lower = addr.lower()
-        relayer_lower_list = [relayer_addr.lower() for relayer_addr in relayer_addr_list]
-        sorted_relayer_list = sorted(relayer_lower_list)
-
-        try:
-            relayer_index = sorted_relayer_list.index(addr_lower)
-            self.set_value_by_key(rnd, relayer_index)
-        except ValueError:
-            pass
 
     @property
     def relayer_index(self) -> int:
@@ -292,3 +292,6 @@ class Relayer(EventBridge):
         result = self.world_call(
             ChainIndex.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
         return EthHashBytes(result)
+
+    def is_pulsed_hear_beat(self) -> bool:
+        return self.world_call(ChainIndex.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [])[0]
