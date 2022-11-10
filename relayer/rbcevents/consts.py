@@ -130,6 +130,10 @@ class AggOracleId(EnumInterface):
     def size() -> int:
         return 32
 
+    @classmethod
+    def from_token_name(cls, token_name: str):
+        return AggOracleId[token_name + "_PRICE"]
+
 
 class ConsensusOracleId(EnumInterface):
     NONE = 0

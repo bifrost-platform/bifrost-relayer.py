@@ -1,12 +1,13 @@
 import json
 
+from relayer.chainpy.eth.ethtype.amount import EthAmount
 from relayer.chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from relayer.chainpy.eventbridge.eventbridge import EventBridge
 from relayer.chainpy.eth.managers.configs import EntityRootConfig
 from relayer.chainpy.eth.ethtype.consts import ChainIndex
 from relayer.chainpy.eth.ethtype.account import EthAccount
 from relayer.chainpy.eventbridge.multichainmonitor import bootstrap_logger
-from relayer.rbcevents.consts import ConsensusOracleId
+from relayer.rbcevents.consts import ConsensusOracleId, TokenStreamIndex, AggOracleId, TokenIndex
 from relayer.rbcevents.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
 import time
 
@@ -273,3 +274,21 @@ class Relayer(EventBridge):
     def fetch_oracle_latest_round(self, oracle_id: ConsensusOracleId):
         oracle_id_bytes = oracle_id.formatted_bytes()
         return self.world_call(ChainIndex.BIFROST, "oracle", "get_latest_round", [oracle_id_bytes])[0]
+
+    def fetch_price_from_oracle(self, token: TokenStreamIndex) -> EthAmount:
+        oid = AggOracleId.from_token_name(token.token_name())
+        result = self.world_call(
+            ChainIndex.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+
+        if token == TokenStreamIndex.USDT_ETHEREUM or token == TokenStreamIndex.USDC_ETHEREUM:
+            decimal = 6
+        else:
+            decimal = 18
+
+        return EthAmount(result, decimal)
+
+    def fetch_btc_hash_from_oracle(self) -> EthHashBytes:
+        oid = ConsensusOracleId.BTC_HASH
+        result = self.world_call(
+            ChainIndex.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+        return EthHashBytes(result)
