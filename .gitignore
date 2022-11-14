@@ -53,6 +53,7 @@ relayer/tools/keys.json
 # log file
 eventbridge.log*
 protocol.log*
+launch-all.sh
 
 # venv files:
 venv/
