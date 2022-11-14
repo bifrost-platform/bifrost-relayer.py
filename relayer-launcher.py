@@ -1,13 +1,14 @@
 import argparse
 import sys
 
-from relayer.chainpy.eth.managers.rpchandler import EthRpcClient
-from relayer.rbcevents.hearbeat import RelayerHeartBeat
-from relayer.relayer import Relayer
+from chainpy.eth.managers.rpchandler import EthRpcClient
+from chainpy.eth.ethtype.account import EthAccount
+from rbclib.hearbeat import RelayerHeartBeat
+from rbclib.relayer import Relayer
 
-from relayer.rbcevents.chainevents import RbcEvent, ValidatorSetUpdatedEvent
-from relayer.rbcevents.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
-from relayer.chainpy.eth.ethtype.account import EthAccount
+from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
+from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
+
 
 
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
@@ -94,7 +95,7 @@ def main(_config: dict):
 
         no_hb = config.get("no_heartbeat")
         if not no_hb:
-            relayer.register_offchain_event_obj("heart_bit", RelayerHeartBeat)
+            relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
 
         if config.get("analyze") is not None:
             EthRpcClient.ANALYZER_RELAYER = True
