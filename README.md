@@ -1,13 +1,13 @@
 # bifrost-relayer
 
 ## Requirement
- - python 3.8 ~ 3.10
+ - python 3.10
 
 ## Configuration
  - blockchain configurations and web3 end-points of each blockchain
    - routing-chain: BIFROST network
    - external-chains: Goerli, BNB-test, Mumbai
-   - every end-point MUST support achive-mode
+   - every end-point MUST support archive-mode
  - end-points of oracle sources
    - Upbit, Coingecko, ChainLink (on Ethereum)
  - System contracts
@@ -127,7 +127,7 @@ $ git clone git@github.com:bifrost-platform/bifrost-relayer.git
 $ cd bifrost-relayer
 
 # 1. change directory to project root, then generate virtual environment.
-$ virtualenv venv --python=python3.8 # or 3.9 or 3.10
+$ virtualenv venv --python=python3.10
 $ source venv/bin/activate
 $ pip install -r requirements.txt
 

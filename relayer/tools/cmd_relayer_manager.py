@@ -1,7 +1,7 @@
 from time import sleep
 
-from tools.utils_recharger import fetch_healthy_relayers, recharge_coins
-from tools.utils import display_multichain_coins_balances, RelayerWithVersion, Manager
+from relayer.tools.utils_recharger import fetch_healthy_relayers, recharge_coins
+from relayer.tools.utils import display_multichain_coins_balances, RelayerWithVersion, Manager
 
 
 def relayer_manager(project_root_path: str = "./", recharge: bool = False):

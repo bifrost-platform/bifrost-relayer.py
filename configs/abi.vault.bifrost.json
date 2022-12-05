@@ -4,6 +4,38 @@
         "inputs": [
             {
                 "indexed": false,
+                "internalType": "address",
+                "name": "previousAdmin",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newAdmin",
+                "type": "address"
+            }
+        ],
+        "name": "AdminChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "beacon",
+                "type": "address"
+            }
+        ],
+        "name": "BeaconUpgraded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
                 "internalType": "uint8",
                 "name": "version",
                 "type": "uint8"
@@ -70,6 +102,61 @@
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "implementation",
+                "type": "address"
+            }
+        ],
+        "name": "Upgraded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "enum Vault_Struct.Event_Type",
+                "name": "type_",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "Asset_Index",
+                "name": "asset_id_",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount_",
+                "type": "uint256"
+            }
+        ],
+        "name": "Vault",
+        "type": "event"
+    },
+    {
+        "stateMutability": "payable",
+        "type": "fallback"
+    },
+    {
+        "inputs": [],
+        "name": "WBFC",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "ZeroAddress",
         "outputs": [
@@ -104,7 +191,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "",
                 "type": "uint128"
             }
@@ -207,12 +294,12 @@
             {
                 "components": [
                     {
-                        "internalType": "Socket_Struct.ChainIndex",
+                        "internalType": "ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
                     {
-                        "internalType": "Socket_Struct.RBCmethod",
+                        "internalType": "RBCmethod",
                         "name": "method",
                         "type": "uint64"
                     }
@@ -224,12 +311,12 @@
             {
                 "components": [
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX0",
                         "type": "uint128"
                     },
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX1",
                         "type": "uint128"
                     },
@@ -320,7 +407,7 @@
         "name": "get_asset_id",
         "outputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "",
                 "type": "uint128"
             }
@@ -396,7 +483,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "",
                 "type": "uint128"
             }
@@ -415,7 +502,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "_asset_index",
                 "type": "uint128"
             },
@@ -496,6 +583,25 @@
             }
         ],
         "name": "registerAdmin",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "registerOwner",
         "outputs": [
             {
                 "internalType": "bool",
@@ -609,12 +715,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Socket_Struct.ChainIndex",
+                                "internalType": "ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
                             {
-                                "internalType": "Socket_Struct.RBCmethod",
+                                "internalType": "RBCmethod",
                                 "name": "method",
                                 "type": "uint64"
                             }
@@ -626,12 +732,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Socket_Struct.Asset_Index",
+                                "internalType": "Asset_Index",
                                 "name": "tokenIDX0",
                                 "type": "uint128"
                             },
                             {
-                                "internalType": "Socket_Struct.Asset_Index",
+                                "internalType": "Asset_Index",
                                 "name": "tokenIDX1",
                                 "type": "uint128"
                             },
@@ -682,12 +788,12 @@
             {
                 "components": [
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX0",
                         "type": "uint128"
                     },
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX1",
                         "type": "uint128"
                     },
@@ -731,14 +837,52 @@
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "revokeAdmin",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+            }
+        ],
+        "name": "revokeOwner",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "components": [
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX0",
                         "type": "uint128"
                     },
                     {
-                        "internalType": "Socket_Struct.Asset_Index",
+                        "internalType": "Asset_Index",
                         "name": "tokenIDX1",
                         "type": "uint128"
                     },
@@ -782,12 +926,25 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "address",
+                "name": "_impl",
+                "type": "address"
+            }
+        ],
+        "name": "set_1967impl",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             },
             {
-                "internalType": "Socket_Struct.RBCmethod[][]",
+                "internalType": "RBCmethod[][]",
                 "name": "_methods",
                 "type": "uint64[][]"
             }
@@ -800,7 +957,20 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "address",
+                "name": "_wbfc",
+                "type": "address"
+            }
+        ],
+        "name": "set_WBFC",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "Asset_Index",
                 "name": "_asset_index",
                 "type": "uint128"
             },
@@ -818,7 +988,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "_asset_index",
                 "type": "uint128"
             },
@@ -880,7 +1050,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             },
@@ -911,7 +1081,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             },
@@ -929,7 +1099,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             },
@@ -947,7 +1117,7 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             },
@@ -965,12 +1135,25 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index[]",
+                "internalType": "Asset_Index[]",
                 "name": "_asset_indices",
                 "type": "uint128[]"
             }
         ],
         "name": "set_mintable",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_admin",
+                "type": "address"
+            }
+        ],
+        "name": "set_proxyAdmin",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -991,7 +1174,25 @@
     {
         "inputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index[]",
+                "name": "_asset_indices",
+                "type": "uint128[]"
+            },
+            {
+                "internalType": "address",
+                "name": "_swap_router",
+                "type": "address"
+            }
+        ],
+        "name": "set_swap",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "Asset_Index",
                 "name": "_coin_index",
                 "type": "uint128"
             }
@@ -1016,10 +1217,23 @@
     },
     {
         "inputs": [],
+        "name": "swap_router",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "this_chain_coin_index",
         "outputs": [
             {
-                "internalType": "Socket_Struct.Asset_Index",
+                "internalType": "Asset_Index",
                 "name": "",
                 "type": "uint128"
             }

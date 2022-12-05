@@ -4,12 +4,12 @@ from typing import List
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
-from rbclib.consts import TokenStreamIndex
-from tools.consts import RBC_SUPPORTED_METHODS
-from tools.utils_load_test import cccp_batch_send
-from tools.utils import get_chain_and_token_from_console, determine_decimal, get_typed_item_from_console, \
+from rbclib.consts import BridgeIndex
+from relayer.tools.consts import RBC_SUPPORTED_METHODS
+from relayer.tools.utils_load_test import cccp_batch_send
+from relayer.tools.utils import get_chain_and_token_from_console, determine_decimal, get_typed_item_from_console, \
     display_receipt_status, display_multichain_asset_balances, fetch_and_display_rounds, Manager
-from tools.utils import get_option_from_console
+from relayer.tools.utils import get_option_from_console
 
 
 class SupportedUserCmd(enum.Enum):
@@ -76,7 +76,7 @@ def user_cmd(project_root_path: str = "./"):
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
             chain_index, token_index = get_chain_and_token_from_console(user, True)
-            if token_index == TokenStreamIndex.NONE:
+            if token_index == BridgeIndex.NONE:
                 print(">>> There is no option.")
                 continue
 

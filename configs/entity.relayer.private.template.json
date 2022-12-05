@@ -1,0 +1,34 @@
+{
+    "entity": {
+        "secret_hex": "<RELAYER_ACCOUNT_PRIVATE_KEY>"
+    },
+
+    "oracle_config": {
+      "bitcoin_block_hash": {
+          "url": "<BITCOIN_MAINNET_RPC_ENDPOINT>"
+        },
+      "asset_prices": {
+        "urls": {
+          "Coingecko": "https://api.coingecko.com/api/v3/",
+          "Upbit": "https://api.upbit.com/v1/",
+          "Chainlink": "<ETHEREUM_MAINNET_RPC_ENDPOINT>"
+        }
+      }
+    },
+
+   "bifrost": {
+        "url_with_access_key": "<BIFROST_NETWORK_RPC_ENDPOINT>"
+    },
+    "ethereum": {
+        "url_with_access_key": "<ETHEREUM_GOERLI_RPC_ENDPOINT>"
+    },
+    "binance": {
+        "url_with_access_key": "<BINANCE_TESTNET_RPC_ENDPOINT>"
+    },
+    "polygon": {
+        "url_with_access_key": "<POLYGON_MUMBAI_RPC_ENDPOINT>"
+    },
+    "avalanche": {
+        "url_with_access_key": "<AVALANCHE_FUJI_RPC_ENDPOINT>"
+    }
+}
