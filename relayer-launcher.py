@@ -4,11 +4,10 @@ import sys
 from chainpy.eth.managers.rpchandler import EthRpcClient
 from chainpy.eth.ethtype.account import EthAccount
 from rbclib.hearbeat import RelayerHeartBeat
-from rbclib.relayer import Relayer
+from relayer import Relayer
 
 from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
-
 
 
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
@@ -91,8 +90,6 @@ def main(_config: dict):
         # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
         relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
-        # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-
         no_hb = config.get("no_heartbeat")
         if not no_hb:
             relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
@@ -107,7 +104,7 @@ def main(_config: dict):
 
 if __name__ == "__main__":
     if not sys.argv[1:]:
-        config = {"command": "launch"}
+        config = {"command": "launch", "no_heartbeat": True}
     else:
         args = parser.parse_args()
         config = vars(args)

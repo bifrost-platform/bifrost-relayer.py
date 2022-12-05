@@ -10,13 +10,13 @@ from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from rbclib.consts import TokenStreamIndex
-from rbclib.relayer import Relayer
-from tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
+from rbclib.consts import BridgeIndex
+from relayer import Relayer
+from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
     CONTROLLER_TO_DISCORD_ID, SCORE_SERVER_URL, KNOWN_RELAYER
-from rbclib.user import User
+from relayer.user import User
 
-KEY_JSON_PATH = "./tools/keys.json"
+KEY_JSON_PATH = "./configs/keys.json"
 
 
 class Manager(User, Relayer):
@@ -249,7 +249,7 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
 
 
 # not tested
-def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = False) -> TokenStreamIndex:
+def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = False) -> BridgeIndex:
     prompt = "select chain index number"
     token_options = asset_list_of(chain_index)
 
@@ -262,7 +262,7 @@ def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = Fa
         options = token_options
 
     if not options:
-        return TokenStreamIndex.NONE
+        return BridgeIndex.NONE
     else:
         return get_option_from_console(prompt, options)
 
@@ -270,7 +270,7 @@ def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = Fa
 def get_chain_and_token_from_console(
         manager: MultiChainManager,
         token_only: bool = False,
-        not_included_bifrost: bool = False) -> (ChainIndex, TokenStreamIndex):
+        not_included_bifrost: bool = False) -> (ChainIndex, BridgeIndex):
     chain_index = get_chain_from_console(manager, not_included_bifrost)
     token_index = get_token_from_console(chain_index, token_only)
     return chain_index, token_index
@@ -284,13 +284,13 @@ def asset_list_of(chain_index: ChainIndex = None):
     for token_stream_index in SUPPORTED_TOKEN_LIST:
         if token_stream_index.home_chain_index() == chain_index:
             ret.append(token_stream_index)
-        if chain_index == ChainIndex.ETHEREUM and token_stream_index == TokenStreamIndex.BFC_BIFROST:
+        if chain_index == ChainIndex.ETHEREUM and token_stream_index == BridgeIndex.BFC_BIFROST:
             ret.append(token_stream_index)
     return ret
 
 
-def determine_decimal(token_index: TokenStreamIndex) -> int:
-    return 6 if token_index == TokenStreamIndex.USDT_ETHEREUM or token_index == TokenStreamIndex.USDC_ETHEREUM else 18
+def determine_decimal(token_index: BridgeIndex) -> int:
+    return 6 if token_index == BridgeIndex.USDT_ETHEREUM or token_index == BridgeIndex.USDC_ETHEREUM else 18
 
 
 def fetch_and_display_rounds(manager: Union[User, Relayer]):

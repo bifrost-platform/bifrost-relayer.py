@@ -39,11 +39,8 @@ caches/
 
 # relayer private config files
 configs/entity.relayer.private.json
-configs/entity.observer.private.json
 configs/entity.user.private.json
-configs/env.priv.toml
-configs/priv.db.toml
-relayer/tools/keys.json
+configs/keys.json
 
 
 # IDE-Specific project files
@@ -53,7 +50,7 @@ relayer/tools/keys.json
 # log file
 eventbridge.log*
 protocol.log*
-launch-all.sh
+launch*.sh
 
 # venv files:
 venv/

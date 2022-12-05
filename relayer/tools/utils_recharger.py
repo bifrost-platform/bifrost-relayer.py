@@ -4,8 +4,8 @@ from chainpy.eth.ethtype.chaindata import EthBlock
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
-from tools.consts import BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT
-from rbclib.user import User
+from relayer.tools.consts import BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT
+from relayer.user import User
 
 
 def _fetch_blocks(chain_manager: EthChainManager, from_height: int, to_height: int):

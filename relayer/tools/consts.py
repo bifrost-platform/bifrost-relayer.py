@@ -1,5 +1,5 @@
 from chainpy.eth.ethtype.amount import EthAmount
-from rbclib.consts import TokenStreamIndex, RBCMethodIndex
+from rbclib.consts import BridgeIndex, RBCMethodIndex
 
 USER_CONFIG_PATH = "configs/entity.user.json"
 PRIVATE_CONFIG_PATH = "configs/entity.user.private.json"
@@ -145,21 +145,21 @@ EXTERNAL_LIMIT_AMOUNT = EthAmount(2.0)
 
 SUPPORTED_TOKEN_LIST = [
     # native coins
-    TokenStreamIndex.BFC_BIFROST,
-    TokenStreamIndex.ETH_ETHEREUM,
-    TokenStreamIndex.MATIC_POLYGON,
-    TokenStreamIndex.BNB_BINANCE,
-    TokenStreamIndex.AVAX_AVALANCHE,
+    BridgeIndex.BFC_BIFROST,
+    BridgeIndex.ETH_ETHEREUM,
+    BridgeIndex.MATIC_POLYGON,
+    BridgeIndex.BNB_BINANCE,
+    BridgeIndex.AVAX_AVALANCHE,
 
     # tokens
-    TokenStreamIndex.BIFI_ETHEREUM,
-    TokenStreamIndex.USDC_ETHEREUM,
-    TokenStreamIndex.USDT_ETHEREUM,
-    TokenStreamIndex.BUSD_BINANCE
+    BridgeIndex.BIFI_ETHEREUM,
+    BridgeIndex.USDC_ETHEREUM,
+    BridgeIndex.USDT_ETHEREUM,
+    BridgeIndex.BUSD_BINANCE
 ]
 
 EXECUTABLE_TOKEN_LIST = [
-    TokenStreamIndex.BFC_BIFROST
+    BridgeIndex.BFC_BIFROST
 ]
 
 

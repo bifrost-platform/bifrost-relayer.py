@@ -5,14 +5,14 @@ from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthTransaction
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
-from rbclib.consts import TokenStreamIndex, RBCMethodIndex
-from tools.consts import EXECUTABLE_TOKEN_LIST
-from tools.utils import Manager, determine_decimal
-from rbclib.user import User
+from rbclib.consts import BridgeIndex, RBCMethodIndex
+from relayer.tools.consts import EXECUTABLE_TOKEN_LIST
+from relayer.tools.utils import Manager, determine_decimal
+from relayer.user import User
 
 
 class RequestParams:
-    def __init__(self, target_chain: ChainIndex, tx: EthTransaction, token_index: TokenStreamIndex):
+    def __init__(self, target_chain: ChainIndex, tx: EthTransaction, token_index: BridgeIndex):
         self.chain = target_chain
         self.tx = tx
         self.token_index = token_index
@@ -21,7 +21,7 @@ class RequestParams:
         return "{}:{}".format(self.chain, self.token_index.name)
 
 
-def _build_request(user: Manager, direction: str, token: TokenStreamIndex) -> RequestParams:
+def _build_request(user: Manager, direction: str, token: BridgeIndex) -> RequestParams:
     decimal = determine_decimal(token)
     if direction == "inbound":
         home_chain = token.home_chain_index()

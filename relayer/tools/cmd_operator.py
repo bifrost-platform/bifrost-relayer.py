@@ -3,10 +3,10 @@ from typing import List
 
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
-from tools.consts import ADMIN_RELAYERS
-from tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
+from relayer.tools.consts import ADMIN_RELAYERS
+from relayer.tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
     fetch_and_display_rounds, Manager, RelayerWithVersion, get_token_from_console
-from tools.utils import get_option_from_console
+from relayer.tools.utils import get_option_from_console
 
 
 class SupportedOperatorCmd(enum.Enum):
