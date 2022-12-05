@@ -11,7 +11,7 @@ from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 from rbclib.consts import BridgeIndex
-from relayer import Relayer
+from relayer.relayer import Relayer
 from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
     CONTROLLER_TO_DISCORD_ID, SCORE_SERVER_URL, KNOWN_RELAYER
 from relayer.user import User

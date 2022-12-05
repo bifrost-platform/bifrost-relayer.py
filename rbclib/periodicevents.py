@@ -14,11 +14,11 @@ from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
-from .consts import ConsensusOracleId
+from .consts import ConsensusOracleId, AggOracleId
 from .utils import log_invalid_flow
 
 if TYPE_CHECKING:
-    from relayer import Relayer
+    from relayer.relayer import Relayer
 
 
 price_logger = Logger("PriceUp", logging.INFO)

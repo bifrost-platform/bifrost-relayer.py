@@ -19,7 +19,7 @@ from chainpy.eth.ethtype.utils import recursive_tuple_to_list, ETH_HASH
 from chainpy.logger import Logger, formatted_log
 
 if TYPE_CHECKING:
-    from relayer import Relayer
+    from relayer.relayer import Relayer
 
 
 proto_logger = Logger("Protocol", logging.DEBUG)

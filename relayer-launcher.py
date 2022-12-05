@@ -1,111 +1,76 @@
 import argparse
 import sys
 
-from chainpy.eth.managers.rpchandler import EthRpcClient
-from chainpy.eth.ethtype.account import EthAccount
-from rbclib.hearbeat import RelayerHeartBeat
-from relayer import Relayer
-
+from chainpy.eth.ethtype.hexbytes import EthHexBytes
+from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
 
+from relayer.relayer import Relayer
+
 
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
-
-parser.add_argument("command", help="generate new private key, then export it as a PEM file")
-parser.add_argument("-p", "--password", type=str, help="password to lock/unlock PEM file")
-parser.add_argument("-s", "--pem", type=str, help="PEM file path (default: ./configs/private.pem)")
-parser.add_argument("-k", "--existingKey", type=str, help="existing key to be used to generate a pem file")
+parser.add_argument("-k", "--private-key", type=str, help="private key to be used by the relayer")
+parser.add_argument("-c", "--config-path", type=str, help="insert configuration directory")
+parser.add_argument("-p", "--private-config-path", type=str, help="insert sensitive configuration directory")
 parser.add_argument("-b", "--no-heartbeat", action="store_true")
 
-RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
-PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
-DEFAULT_PEM_PATH = "./configs/pems/private0.pem"
+DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
+DEFAULT_PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
 
 
 def main(_config: dict):
-    cmd = config["command"]
+    secret_key = _config.get("private_ey")
+    secret_key_obj = EthHexBytes(secret_key)
 
-    if cmd == "genkey":
-        """ generate new private key, and then export it as a encrypted pem file. """
-        pem_path = config.get("pem")
-        pem_password = config.get("password")
-        if pem_path is None or pem_password is None:
-            raise Exception("PEM file path and password are required.")
+    public_config_path, private_config_path = _config.get("config_path"), _config.get("private-config_path")
+    if public_config_path is None:
+        public_config_path = DEFAULT_RELAYER_CONFIG_PATH
+    if private_config_path is None:
+        private_config_path = DEFAULT_PRIVATE_CONFIG_PATH
 
-        acc = EthAccount.generate()
-        pem_str = acc.priv_to_pem(pem_password).decode()
-        with open(pem_path, "w") as f:
-            f.write(pem_str)
+    heart_beat_opt = _config.get("no-heartbeat")
+    if not config.get("no_heartbeat"):
+        heart_beat_opt = True
 
-    elif cmd == "genpem":
-        """ generate a pem file using existing key """
-        pem_path = config.get("pem")
-        pem_password = config.get("password")
-        if pem_path is None or pem_password is None:
-            raise Exception("PEM file path is required.")
+    # initiate relayer with two config file
+    relayer = Relayer.init_from_config_files(
+        public_config_path,
+        private_config_path=private_config_path,
+        private_key=secret_key_obj.hex() if isinstance(secret_key_obj, EthHexBytes) else None
+    )
 
-        existing_key = config.get("existingKey")
-        if existing_key is None:
-            raise Exception("PEM file path and password are required.")
+    # multichain monitor will detect "Socket" event from every socket contract.
+    relayer.register_chain_event_obj("Socket", RbcEvent)
 
-        acc = EthAccount.from_secret(existing_key)
-        pem_str = acc.priv_to_pem(pem_password).decode()
-        with open(pem_path, "w") as f:
-            f.write(pem_str)
+    # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
+    relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
 
-    elif cmd == "viewpem":
-        pem_path = config.get("pem")
-        pem_password = config.get("password")
-        if pem_path is None or pem_password is None:
-            raise Exception("PEM file path is required.")
+    # event bridge will periodically check validator set of the bifrost network.
+    relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
 
-        with open(pem_path, "r") as f:
-            lines = f.readlines()
-        decoded_pem = "".join(lines)
-        print(decoded_pem)
+    # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
+    relayer.register_offchain_event_obj("price", PriceUpOracle)
 
-    elif cmd == "launch":
-        # parse private key from the pem file
-        relayer = Relayer.init_from_config_files(
-            RELAYER_CONFIG_PATH,
-            private_config_path=PRIVATE_CONFIG_PATH,
-            private_key=config.get("existingKey"),
-            pem_path=config.get("pem"),
-            password=config.get("password")
-        )
+    # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
+    relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
-        # multichain monitor will detect "Socket" event from every socket contract.
-        relayer.register_chain_event_obj("Socket", RbcEvent)
+    if heart_beat_opt:
+        relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
 
-        # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
-        relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
-
-        # event bridge will periodically check validator set of the bifrost network.
-        relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
-
-        # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
-        relayer.register_offchain_event_obj("price", PriceUpOracle)
-
-        # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-        relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
-
-        no_hb = config.get("no_heartbeat")
-        if not no_hb:
-            relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
-
-        if config.get("analyze") is not None:
-            EthRpcClient.ANALYZER_RELAYER = True
-
-        relayer.run_relayer()
-    else:
-        raise Exception("Not supported command: \"{}\"".format(cmd))
+    relayer.run_relayer()
 
 
 if __name__ == "__main__":
     if not sys.argv[1:]:
-        config = {"command": "launch", "no_heartbeat": True}
+        config = {
+            "config_path": DEFAULT_RELAYER_CONFIG_PATH,
+            "private_path": DEFAULT_PRIVATE_CONFIG_PATH,
+            "no_heartbeat": None,
+            "private_key": None,
+        }
     else:
         args = parser.parse_args()
         config = vars(args)
+
     main(config)
