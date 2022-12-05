@@ -11,7 +11,7 @@ from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId, ChainEven
 from rbclib.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
 import time
 
-RELAYER_VERSION = "v0.2.0"
+from .__init__ import __version__
 
 BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
@@ -192,7 +192,7 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = self.find_height_by_timestamp(chain_index, target_time)
 
-        bootstrap_logger.info("BIFROST's Relayer: {}".format(RELAYER_VERSION))
+        bootstrap_logger.info("BIFROST's Relayer: {}".format(__version__))
         bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
@@ -265,7 +265,7 @@ class Relayer(EventBridge):
 
     def fetch_socket_rbc_sigs(self, target_chain: ChainIndex, request_id: tuple, chain_event_status: ChainEventStatus):
         sigs = self.world_call(target_chain, "socket", "get_signatures", [
-            request_id, int(chain_event_status.formatted_hex(), 16)
+            request_id #, int(chain_event_status.formatted_hex(), 16)  todo activate
         ])
         return sigs[0]
 
