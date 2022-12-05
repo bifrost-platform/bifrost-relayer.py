@@ -10,7 +10,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import formatted_log, Logger
 
 if TYPE_CHECKING:
-    from relayer import Relayer
+    from relayer.relayer import Relayer
 
 
 heart_beat_logger = Logger("HeartBeat", logging.INFO)

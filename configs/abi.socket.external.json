@@ -50,7 +50,7 @@
             {
                 "components": [
                     {
-                        "internalType": "ChainIndex",
+                        "internalType": "Socket_Struct.ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
@@ -185,7 +185,7 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
@@ -212,12 +212,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
                             {
-                                "internalType": "RBCmethod",
+                                "internalType": "Socket_Struct.RBCmethod",
                                 "name": "method",
                                 "type": "uint64"
                             }
@@ -229,12 +229,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX0",
                                 "type": "uint128"
                             },
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX1",
                                 "type": "uint128"
                             },
@@ -488,7 +488,7 @@
             {
                 "components": [
                     {
-                        "internalType": "ChainIndex",
+                        "internalType": "Socket_Struct.ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
@@ -529,7 +529,7 @@
             {
                 "components": [
                     {
-                        "internalType": "ChainIndex",
+                        "internalType": "Socket_Struct.ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
@@ -618,7 +618,7 @@
             {
                 "components": [
                     {
-                        "internalType": "ChainIndex",
+                        "internalType": "Socket_Struct.ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
@@ -636,11 +636,6 @@
                 "internalType": "struct Socket_Struct.RequestID",
                 "name": "_rid",
                 "type": "tuple"
-            },
-            {
-                "internalType": "enum Socket_Struct.Task_Status",
-                "name": "_status",
-                "type": "uint8"
             }
         ],
         "name": "get_signatures",
@@ -757,7 +752,7 @@
                             {
                                 "components": [
                                     {
-                                        "internalType": "ChainIndex",
+                                        "internalType": "Socket_Struct.ChainIndex",
                                         "name": "chain",
                                         "type": "uint64"
                                     },
@@ -784,12 +779,12 @@
                             {
                                 "components": [
                                     {
-                                        "internalType": "ChainIndex",
+                                        "internalType": "Socket_Struct.ChainIndex",
                                         "name": "chain",
                                         "type": "uint64"
                                     },
                                     {
-                                        "internalType": "RBCmethod",
+                                        "internalType": "Socket_Struct.RBCmethod",
                                         "name": "method",
                                         "type": "uint64"
                                     }
@@ -801,12 +796,12 @@
                             {
                                 "components": [
                                     {
-                                        "internalType": "Asset_Index",
+                                        "internalType": "Socket_Struct.Asset_Index",
                                         "name": "tokenIDX0",
                                         "type": "uint128"
                                     },
                                     {
-                                        "internalType": "Asset_Index",
+                                        "internalType": "Socket_Struct.Asset_Index",
                                         "name": "tokenIDX1",
                                         "type": "uint128"
                                     },
@@ -909,11 +904,6 @@
                 "internalType": "bytes32",
                 "name": "",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "enum Socket_Struct.Task_Status",
-                "name": "",
-                "type": "uint8"
             }
         ],
         "name": "polled_sigs",
@@ -934,7 +924,7 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
@@ -961,12 +951,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
                             {
-                                "internalType": "RBCmethod",
+                                "internalType": "Socket_Struct.RBCmethod",
                                 "name": "method",
                                 "type": "uint64"
                             }
@@ -978,12 +968,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX0",
                                 "type": "uint128"
                             },
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX1",
                                 "type": "uint128"
                             },
@@ -1060,25 +1050,6 @@
             }
         ],
         "name": "registerAdmin",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "registerOwner",
         "outputs": [
             {
                 "internalType": "bool",
@@ -1207,44 +1178,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "revokeAdmin",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "revokeOwner",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -1380,7 +1313,7 @@
     {
         "inputs": [
             {
-                "internalType": "ChainIndex",
+                "internalType": "Socket_Struct.ChainIndex",
                 "name": "_this",
                 "type": "uint64"
             }
@@ -1460,7 +1393,7 @@
         "name": "this_chain",
         "outputs": [
             {
-                "internalType": "ChainIndex",
+                "internalType": "Socket_Struct.ChainIndex",
                 "name": "",
                 "type": "uint64"
             }
@@ -1486,7 +1419,7 @@
             {
                 "components": [
                     {
-                        "internalType": "ChainIndex",
+                        "internalType": "Socket_Struct.ChainIndex",
                         "name": "chain",
                         "type": "uint64"
                     },
@@ -1510,12 +1443,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
                             {
-                                "internalType": "RBCmethod",
+                                "internalType": "Socket_Struct.RBCmethod",
                                 "name": "method",
                                 "type": "uint64"
                             }
@@ -1527,12 +1460,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX0",
                                 "type": "uint128"
                             },
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX1",
                                 "type": "uint128"
                             },
@@ -1604,12 +1537,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "ChainIndex",
+                                "internalType": "Socket_Struct.ChainIndex",
                                 "name": "chain",
                                 "type": "uint64"
                             },
                             {
-                                "internalType": "RBCmethod",
+                                "internalType": "Socket_Struct.RBCmethod",
                                 "name": "method",
                                 "type": "uint64"
                             }
@@ -1621,12 +1554,12 @@
                     {
                         "components": [
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX0",
                                 "type": "uint128"
                             },
                             {
-                                "internalType": "Asset_Index",
+                                "internalType": "Socket_Struct.Asset_Index",
                                 "name": "tokenIDX1",
                                 "type": "uint128"
                             },
