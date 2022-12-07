@@ -20,7 +20,7 @@ DEFAULT_PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
 
 
 def main(_config: dict):
-    secret_key = _config.get("private_ey")
+    secret_key = _config.get("private_key")
     secret_key_obj = EthHexBytes(secret_key)
 
     public_config_path, private_config_path = _config.get("config_path"), _config.get("private-config_path")
