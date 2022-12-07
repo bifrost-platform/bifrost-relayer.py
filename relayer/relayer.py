@@ -5,9 +5,8 @@ from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.ethtype.consts import ChainIndex
-from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
-from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId, ChainEventStatus
+from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId
 from rbclib.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
 import time
 
@@ -32,11 +31,7 @@ class Relayer(EventBridge):
     def init_from_config_files(cls,
                                relayer_config_path: str,
                                private_config_path: str = None,
-                               private_key: str = None,
-                               pem_path: str = None,
-                               password: str = None):
-        if pem_path is not None and password is None:
-            raise Exception("Pem file requires a password")
+                               private_key: str = None):
 
         with open(relayer_config_path, "r") as f:
             relayer_config_dict = json.load(f)
@@ -49,29 +44,18 @@ class Relayer(EventBridge):
         return cls.init_from_dicts(
             relayer_config_dict,
             private_config_dict=private_config_dict,
-            private_key=private_key,
-            pem_path=pem_path,
-            password=password
+            private_key=private_key
         )
 
     @classmethod
     def init_from_dicts(cls,
                         relayer_config_dict: dict,
                         private_config_dict: dict = None,
-                        private_key: str = None,
-                        pem_path: str = None,
-                        password: str = None):
+                        private_key: str = None):
         root_config: EntityRootConfig = EntityRootConfig.from_dict(relayer_config_dict, private_config_dict)
 
         if private_key is not None:
             root_config.entity.secret_hex = EthHashBytes(private_key).hex()
-
-        if pem_path is not None:
-            with open(pem_path, "r") as f:
-                lines = f.readlines()
-            decoded_pem = "".join(lines)
-            account: EthAccount = EthAccount.from_private_key_pem(decoded_pem.encode(), password)
-            root_config.entity.secret_hex = hex(account.priv)
 
         Relayer.init_classes(root_config)
         return cls(root_config)
@@ -263,10 +247,8 @@ class Relayer(EventBridge):
                 majority = self.world_call(target_chain_index, "relayer_authority", "previous_majority", [rnd, is_initial])[0]
         return majority
 
-    def fetch_socket_rbc_sigs(self, target_chain: ChainIndex, request_id: tuple, chain_event_status: ChainEventStatus):
-        sigs = self.world_call(target_chain, "socket", "get_signatures", [
-            request_id #, int(chain_event_status.formatted_hex(), 16)  todo activate
-        ])
+    def fetch_socket_rbc_sigs(self, target_chain: ChainIndex, request_id: tuple):
+        sigs = self.world_call(target_chain, "socket", "get_signatures", [request_id])
         return sigs[0]
 
     def fetch_socket_vsp_sigs(self, target_chain: ChainIndex, rnd: int):

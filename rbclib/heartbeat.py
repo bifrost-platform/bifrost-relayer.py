@@ -48,7 +48,6 @@ class RelayerHeartBeat(PeriodicEventABC):
         if not self.relayer.is_pulsed_hear_beat():
             return ChainIndex.BIFROST, "relayer_authority", "heartbeat", []
         else:
-            print("already pulsed. no send heartbeat")
             return NoneParams
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:

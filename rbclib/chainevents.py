@@ -348,9 +348,9 @@ class RbcEvent(ChainEventABC):
 
         return primary_index == my_index
 
-    def aggregated_relay(self, target_chain: ChainIndex, is_primary_relay: bool, chain_event_status: ChainEventStatus):
+    def aggregated_relay(self, target_chain: ChainIndex, is_primary_relay: bool):
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        sigs = self.relayer.fetch_socket_rbc_sigs(ChainIndex.BIFROST, self.req_id(), chain_event_status)
+        sigs = self.relayer.fetch_socket_rbc_sigs(ChainIndex.BIFROST, self.req_id())
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
 
         msg = "Aggregated" if is_primary_relay else "Total"
@@ -527,7 +527,7 @@ class ChainAcceptedEvent(RbcEvent):
 
         if self.is_primary_relayer() or not self.aggregated:
             chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
-            return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
+            return self.aggregated_relay(chain_to_send, self.aggregated)
 
         else:
             next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
@@ -599,7 +599,7 @@ class ChainRejectedEvent(RbcEvent):
 
         if self.is_primary_relayer() or not self.aggregated:
             chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
-            return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
+            return self.aggregated_relay(chain_to_send, self.aggregated)
 
         else:
             next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
