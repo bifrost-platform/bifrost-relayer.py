@@ -1,10 +1,11 @@
 from setuptools import setup
+from relayer.__init__ import __version__
 
 setup(
     name="rbclib",
-    version="0.3.0",
+    version=__version__,
     packages=["rbclib"],
     install_requires=[
-        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git"
+        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git@0.3.1"
     ]
 )
