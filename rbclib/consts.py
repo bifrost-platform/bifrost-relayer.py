@@ -2,7 +2,7 @@ import json
 import unittest
 from chainpy.eth.ethtype.consts import ChainIndex, EnumInterface, concat_2enum_as_int
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
-from chainpy.eth.ethtype.utils import ETH_HASH
+from chainpy.eth.ethtype.utils import keccak_hash
 
 
 class TokenIndex(EnumInterface):
@@ -138,7 +138,7 @@ class AggOracleId(EnumInterface):
 class ConsensusOracleId(EnumInterface):
     NONE = 0
 
-    BTC_HASH = int(ETH_HASH("bitcoinblockhash".encode()).hexdigest(), 16)
+    BTC_HASH = keccak_hash("bitcoinblockhash".encode()).int()
 
     @staticmethod
     def size() -> int:

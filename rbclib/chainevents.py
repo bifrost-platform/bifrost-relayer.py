@@ -14,7 +14,7 @@ from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
-from chainpy.eth.ethtype.utils import recursive_tuple_to_list, ETH_HASH
+from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
 
 from chainpy.logger import Logger, formatted_log
 
@@ -348,9 +348,9 @@ class RbcEvent(ChainEventABC):
 
         return primary_index == my_index
 
-    def aggregated_relay(self, target_chain: ChainIndex, is_primary_relay: bool):
+    def aggregated_relay(self, target_chain: ChainIndex, is_primary_relay: bool, chain_event_status: ChainEventStatus):
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        sigs = self.relayer.fetch_socket_rbc_sigs(ChainIndex.BIFROST, self.req_id())
+        sigs = self.relayer.fetch_socket_rbc_sigs(ChainIndex.BIFROST, self.req_id(), chain_event_status)
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
 
         msg = "Aggregated" if is_primary_relay else "Total"
@@ -367,7 +367,7 @@ class RbcEvent(ChainEventABC):
         next_status = ChainEventStatus(self.status.value + 2)
         data_with_next_status = self.change_status_of_data(self.detected_event, next_status)
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
-        submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, sig.v)
+        submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
         return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
@@ -393,7 +393,7 @@ class ChainRequestedEvent(RbcEvent):
             # generate signature if it's needed
             status_changed_data = RbcEvent.change_status_of_data(self.detected_event, ChainEventStatus.ACCEPTED)
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
-            submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, sig.v)
+            submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
             return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
     def handle_call_result(self, result: tuple):
@@ -474,7 +474,7 @@ class ChainFailedEvent(RbcEvent):
 
         msg_to_sign = self.detected_event.data
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
-        submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, sig.v)
+        submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
         return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
@@ -527,7 +527,7 @@ class ChainAcceptedEvent(RbcEvent):
 
         if self.is_primary_relayer() or not self.aggregated:
             chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
-            return self.aggregated_relay(chain_to_send, self.aggregated)
+            return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
 
         else:
             next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
@@ -599,7 +599,7 @@ class ChainRejectedEvent(RbcEvent):
 
         if self.is_primary_relayer() or not self.aggregated:
             chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
-            return self.aggregated_relay(chain_to_send, self.aggregated)
+            return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
 
         else:
             next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
@@ -860,7 +860,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
 
         types_str_list = ["uint256", "address[]"]
         data_to_sig = eth_abi.encode_abi(types_str_list, [self.round, self.sorted_validator_list])
-        sig_msg = EthHashBytes(ETH_HASH(data_to_sig).digest())
+        sig_msg = keccak_hash(data_to_sig)
 
         return {
             "event_status": self.status,

@@ -6,7 +6,7 @@ from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
-from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId
+from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId, ChainEventStatus
 from rbclib.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
 import time
 
@@ -247,8 +247,10 @@ class Relayer(EventBridge):
                 majority = self.world_call(target_chain_index, "relayer_authority", "previous_majority", [rnd, is_initial])[0]
         return majority
 
-    def fetch_socket_rbc_sigs(self, target_chain: ChainIndex, request_id: tuple):
-        sigs = self.world_call(target_chain, "socket", "get_signatures", [request_id])
+    def fetch_socket_rbc_sigs(self, target_chain: ChainIndex, request_id: tuple, chain_event_status: ChainEventStatus):
+        sigs = self.world_call(target_chain, "socket", "get_signatures", [
+            request_id, int(chain_event_status.formatted_hex(), 16)
+        ])
         return sigs[0]
 
     def fetch_socket_vsp_sigs(self, target_chain: ChainIndex, rnd: int):
@@ -278,5 +280,18 @@ class Relayer(EventBridge):
         return EthHashBytes(result)
 
     def is_pulsed_hear_beat(self) -> bool:
+        """ Check if the relayer has ever sent a heartbeat transaction in this session."""
         relayer_addr = self.active_account.address
         return self.world_call(ChainIndex.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
+
+    def is_submitted_oracle_feed(
+            self, oracle_id: ConsensusOracleId, _round: int, validator_addr: EthAddress = None) -> bool:
+        """ Check whether the external data of the round has been transmitted. """
+        if validator_addr is None:
+            validator_addr = self.active_account.address
+        oracle_id_bytes = oracle_id.formatted_bytes()
+        result = self.world_call(ChainIndex.BIFROST, "oracle", "get_consensus_feed", [
+            oracle_id_bytes, validator_addr.hex(), _round
+        ])[0]
+
+        return EthHashBytes(result) != 0

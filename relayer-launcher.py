@@ -66,7 +66,7 @@ if __name__ == "__main__":
         config = {
             "config_path": DEFAULT_RELAYER_CONFIG_PATH,
             "private_path": DEFAULT_PRIVATE_CONFIG_PATH,
-            "no_heartbeat": None,
+            "no_heartbeat": True,
             "private_key": None,
         }
     else:

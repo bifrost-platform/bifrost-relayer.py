@@ -2,13 +2,13 @@ import logging
 from typing import Optional, TYPE_CHECKING
 import eth_abi
 
+from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from chainpy.logger import formatted_log
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.btc.managers.simplerpccli import SimpleBtcClient
 from chainpy.eth.ethtype.consts import ChainIndex
-from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
@@ -146,6 +146,8 @@ class BtcHashUpOracle(PeriodicEventABC):
             btc_cli = SimpleBtcClient(self.__class__.URL, 1, self.__class__.AUTH_ID, self.__class__.AUTH_PASSWD)
         self.__cli = btc_cli
 
+        self.delayed = False
+
     @staticmethod
     def setup(url: str, auth_id: str = None, auth_passwd: str = None, collect_period_sec: int = 60):
         BtcHashUpOracle.URL = url
@@ -158,7 +160,9 @@ class BtcHashUpOracle(PeriodicEventABC):
         return self.manager
 
     def clone_next(self):
-        return self.__class__(self.relayer, self.period_sec, self.time_lock + self.period_sec * 1000, self.__cli)
+        period_msec = self.period_sec * 1000
+        time_lock = self.time_lock + period_msec // 10 if self.delayed else self.time_lock + period_msec
+        return self.__class__(self.relayer, self.period_sec, time_lock, self.__cli)
 
     def summary(self) -> str:
         return "{}".format(self.__class__.__name__)
@@ -174,26 +178,50 @@ class BtcHashUpOracle(PeriodicEventABC):
             return NoneParams
 
         latest_height_from_socket = self.relayer.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
-
         btc_header = self.__cli.get_latest_confirmed_block_header(True)
-        height, _hash = btc_header["height"], btc_header["hash"]
-        if height > latest_height_from_socket:
-            block_hash = EthHashBytes(_hash)
+        latest_height_from_chain = btc_header["height"]
+        block_hash = EthHashBytes(btc_header["hash"])
 
+        delta = latest_height_from_chain - latest_height_from_socket
+        if delta < 0:
+            # critical error
+            formatted_log(
+                btc_logger,
+                relayer_addr=self.relayer.active_account.address,
+                log_id=self.__class__.__name__,
+                related_chain=ChainIndex.BIFROST,
+                log_data="oracle-error:OracleHeight({})>BtcHeight({})".format(
+                    latest_height_from_socket, latest_height_from_chain
+                )
+            )
+            return NoneParams
+
+        self.delayed = True if delta > 1 else False
+
+        feed_target_height = latest_height_from_socket + 1
+        submitted = self.relayer.is_submitted_oracle_feed(ConsensusOracleId.BTC_HASH, feed_target_height)
+        if not submitted:
             formatted_log(
                 btc_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=ChainIndex.BIFROST,
-                log_data="btcHash({}):height({})".format(block_hash.hex(), height)
+                log_data="height({}):btcHash({})".format(block_hash.hex(), feed_target_height)
             )
             return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
                 [ConsensusOracleId.BTC_HASH.formatted_bytes()],
-                [height],
+                [feed_target_height],
                 [block_hash.bytes()]
             ]
 
         else:
+            formatted_log(
+                btc_logger,
+                relayer_addr=self.manager.active_account.address,
+                log_id=self.__class__.__name__,
+                related_chain=ChainIndex.BIFROST,
+                log_data="pass-feed:height({})".format(feed_target_height)
+            )
             return NoneParams
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
