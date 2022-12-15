@@ -259,7 +259,7 @@ class Relayer(EventBridge):
 
     def fetch_oracle_latest_round(self, oracle_id: ConsensusOracleId):
         oracle_id_bytes = oracle_id.formatted_bytes()
-        return self.world_call(ChainIndex.BIFROST, "oracle", "get_latest_round", [oracle_id_bytes])[0]
+        return self.world_call(ChainIndex.BIFROST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
 
     def fetch_price_from_oracle(self, token: BridgeIndex) -> EthAmount:
         oid = AggOracleId.from_token_name(token.token_name())

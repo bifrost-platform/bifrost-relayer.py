@@ -52,7 +52,7 @@
 			{"name": "relayer_authority", "address": "0x20b7FA98EDA10ed30c6c05Aa7df7EA10D5b2CDf0", "abi_file": "abi.relayer.bifrost.json", "deploy_height": 1426518},
 			{"name": "vault", "address": "0xe76430626816aC95002A255933CF34EA2C43b846", "abi_file": "abi.vault.bifrost.json", "deploy_height": 1426522},
 			{"name": "socket", "address": "0x9d7e24952Ec8cCFe88Ec153e45914E8b5B911c74", "abi_file": "abi.socket.bifrost.json", "deploy_height": 1426524},
-			{"name": "oracle", "address": "0x383C529f81c41aDCDC8EFAaA4e02c7139d780961", "abi_file": "abi.oracle.bifrost.json", "deploy_height": 1426520},
+			{"name": "oracle", "address": "0x0DaffD83E5B6C465c8d18F55735A4E187E62d644", "abi_file": "abi.oracle.bifrost.json", "deploy_height": 1542899},
 			{"name": "ETH_ETHEREUM", "address": "0xDE23135c958536eE291019B405921EAE84fFa759", "abi_file": "abi.erc20.json"},
             {"name": "BIFI_ETHEREUM", "address": "0x619d50242bCA4141aEEE35822F751D768e63397a", "abi_file": "abi.erc20.json"},
             {"name": "BNB_BINANCE", "address": "0xd1E060FD930B75DA9A709c91E6Ad03B330Fb2950", "abi_file": "abi.erc20.json"},

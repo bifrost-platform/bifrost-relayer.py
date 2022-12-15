@@ -281,7 +281,7 @@
             },
             {
                 "internalType": "address",
-                "name": "validator",
+                "name": "_feeder",
                 "type": "address"
             }
         ],
@@ -305,12 +305,12 @@
             },
             {
                 "internalType": "address",
-                "name": "validator",
+                "name": "_feeder",
                 "type": "address"
             },
             {
                 "internalType": "uint256",
-                "name": "round",
+                "name": "_round",
                 "type": "uint256"
             }
         ],
@@ -318,7 +318,7 @@
         "outputs": [
             {
                 "internalType": "bytes32",
-                "name": "",
+                "name": "_feed",
                 "type": "bytes32"
             }
         ],
@@ -339,49 +339,6 @@
                 "internalType": "bytes32",
                 "name": "",
                 "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "Oracle_Manager_Struct.Oracle_ID",
-                "name": "oid",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "uint256",
-                "name": "round",
-                "type": "uint256"
-            }
-        ],
-        "name": "get_history",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "Oracle_Manager_Struct.Oracle_ID",
-                "name": "oid",
-                "type": "bytes32"
-            }
-        ],
-        "name": "get_latest_round",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -491,7 +448,7 @@
                     },
                     {
                         "internalType": "uint64",
-                        "name": "feeder_length",
+                        "name": "_reserved",
                         "type": "uint64"
                     }
                 ],
@@ -520,25 +477,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "Oracle_Manager_Struct.Oracle_ID",
-                "name": "oid",
-                "type": "bytes32"
-            }
-        ],
-        "name": "latest_oracle",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -599,7 +537,7 @@
                     },
                     {
                         "internalType": "uint64",
-                        "name": "feeder_length",
+                        "name": "_reserved",
                         "type": "uint64"
                     }
                 ],
