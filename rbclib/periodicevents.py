@@ -319,7 +319,7 @@ class AuthDownOracle(PeriodicEventABC):
         types_str_list = ["uint256", "address[]"]
         data_to_sig = eth_abi.encode_abi(types_str_list, [round_from_bn, sorted_validator_list])
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_to_sig)
-        socket_sig = SocketSignature.from_single_sig(sig.r, sig.s, sig.v)
+        socket_sig = SocketSignature.from_single_sig(sig.r, sig.s, sig.v + 27)
 
         self.current_round = round_from_bn
         submit_data = [(round_from_bn, sorted_validator_list, socket_sig.tuple())]
