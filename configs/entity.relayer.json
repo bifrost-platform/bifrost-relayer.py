@@ -89,9 +89,9 @@
         },
         "abi_base_path": "configs/",
         "contracts": [
-			{"name": "relayer_authority", "address": "0x4fb48e9ca5354B72456D20B1854380b0Dd75180a", "abi_file": "abi.relayer.external.json", "deploy_height": 8052946},
-			{"name": "vault", "address": "0x76f7B34eaf48b7414D99715130798879fbA64e2c", "abi_file": "abi.vault.external.json", "deploy_height": 8052948},
-			{"name": "socket", "address": "0x8e767c38b482c2D69838c4C5cd8872664A089907", "abi_file": "abi.socket.external.json", "deploy_height": 8052951},
+			{"name": "relayer_authority", "address": "0x114fdf94Fa8D10951B2a21f127B29738bdB81aca", "abi_file": "abi.relayer.external.json", "deploy_height": 8052946},
+			{"name": "vault", "address": "0xE60eFCc0cDF02D9267Ce48b693A22fcd959D7eaB", "abi_file": "abi.vault.external.json", "deploy_height": 8052948},
+			{"name": "socket", "address": "0x7B8e791511e1a305d2c4D41953AD316939AD5579", "abi_file": "abi.socket.external.json", "deploy_height": 8052951},
 			{"name": "BFC_BIFROST", "address": "0x3A815eBa66EaBE966a6Ae7e5Df9652eca24e9c54", "abi_file": "abi.erc20.json"},
             {"name": "BIFI_ETHEREUM", "address": "0x055ED934c426855caB467FdF8441D4FD6a7D2659", "abi_file": "abi.erc20.json"},
             {"name": "USDC_ETHEREUM", "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70", "abi_file": "abi.erc20.json"},
