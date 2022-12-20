@@ -3,6 +3,8 @@ from typing import List
 
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
+
+from rbclib.consts import ConsensusOracleId
 from relayer.tools.consts import ADMIN_RELAYERS
 from relayer.tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
     fetch_and_display_rounds, Manager, RelayerWithVersion, get_token_from_console
@@ -20,6 +22,7 @@ class SupportedOperatorCmd(enum.Enum):
     GET_PRICE_OF = "get price from oracle"
     GET_LATEST_BTC_HASH = "get latest BTC hash from oracle"
     # GET_BTC_HASH_OF_THE_HEIGHT = "get BTC hash of the height from oracle"
+    GET_BTC_FEEDS = "get btc hash feed of each relayer"
 
     QUIT = "quit"
 
@@ -74,5 +77,12 @@ def operator_cmd(project_root_path: str = "./"):
             btc_hash = operator.fetch_btc_hash_from_oracle()
             print(btc_hash.hex())
 
+        elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS:
+            relayers = operator.fetch_sorted_validator_list(ChainIndex.BIFROST)
+            latest_round = operator.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
+            print("latest_round: {}".format(latest_round))
+            for relayer in relayers:
+                result = operator.fetch_submitted_oracle_fee(ConsensusOracleId.BTC_HASH, latest_round + 1, EthAddress(relayer))
+                print("addr: {} {}".format(relayer, result.hex()))
         else:
             return

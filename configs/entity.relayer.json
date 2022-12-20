@@ -41,12 +41,12 @@
         "receipt_max_try": 20,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
-        "tx_fee_type": {
+        "fee_config": {
             "type": 2,
             "max_gas_price": 5000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_base_path": "configs/",
+        "abi_dir": "configs/",
         "contracts": [
             {"name": "authority", "address": "0x0000000000000000000000000000000000000400", "abi_file": "abi.authority.bifrost.json", "deploy_height": 0},
 			{"name": "relayer_authority", "address": "0x20b7FA98EDA10ed30c6c05Aa7df7EA10D5b2CDf0", "abi_file": "abi.relayer.bifrost.json", "deploy_height": 1426518},
@@ -82,12 +82,12 @@
         "receipt_max_try": 20,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
-        "tx_fee_type": {
+        "fee_config": {
             "type": 2,
             "max_gas_price": 2000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_base_path": "configs/",
+        "abi_dir": "configs/",
         "contracts": [
 			{"name": "relayer_authority", "address": "0x114fdf94Fa8D10951B2a21f127B29738bdB81aca", "abi_file": "abi.relayer.external.json", "deploy_height": 8052946},
 			{"name": "vault", "address": "0xE60eFCc0cDF02D9267Ce48b693A22fcd959D7eaB", "abi_file": "abi.vault.external.json", "deploy_height": 8052948},
@@ -114,11 +114,11 @@
         "receipt_max_try": 20,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
-        "tx_fee_type": {
+        "fee_config": {
             "type": 0,
             "gas_price": 2000000000000
         },
-        "abi_base_path": "configs/",
+        "abi_dir": "configs/",
         "contracts": [
 			{"name": "relayer_authority", "address": "0x6C5135560af4E4a52E0f2E57c50Cb9f00cD143ae", "abi_file": "abi.relayer.external.json", "deploy_height": 25067012},
 			{"name": "vault", "address": "0xb72d7cB539FF7a7F59d178180fDF88Fd6Ac18975", "abi_file": "abi.vault.external.json", "deploy_height": 25067016},
@@ -142,12 +142,12 @@
         "receipt_max_try": 20,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
-        "tx_fee_type": {
+        "fee_config": {
             "type": 2,
             "max_gas_price": 2000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_base_path": "configs/",
+        "abi_dir": "configs/",
         "contracts": [
 			{"name": "relayer_authority", "address": "0xA8229A4EF8873651502f508109f725d03C27007E", "abi_file": "abi.relayer.external.json", "deploy_height": 29429271},
 			{"name": "vault", "address": "0x1b460169e85b6F06f6d36d5A5aD414d998631973", "abi_file": "abi.vault.external.json", "deploy_height": 29429275},

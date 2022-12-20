@@ -8,7 +8,6 @@ from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
-from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 from rbclib.consts import BridgeIndex
 from relayer.relayer import Relayer
@@ -20,21 +19,21 @@ KEY_JSON_PATH = "./configs/keys.json"
 
 
 class Manager(User, Relayer):
-    def __init__(self, entity_config: EntityRootConfig):
-        super().__init__(entity_config)
+    def __init__(self, multichain_config: dict):
+        super().__init__(multichain_config)
 
     @classmethod
     def init_manager(cls, role: str, project_root_path: str = "./", account: EthAccount = None):
-        config = EntityRootConfig.from_config_files(USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, project_root_path)
+        manager = Manager.from_config_files(USER_CONFIG_PATH, PRIVATE_CONFIG_PATH)
 
         with open(project_root_path + KEY_JSON_PATH) as f:
             key = json.load(f)[role.lower()]
-        config.entity.secret_hex = str(key)
+        manager.set_account(key)
 
         if account is not None:
-            config.entity.secret_hex = hex(account.priv)
+            manager.set_account(hex(account.priv))
 
-        return Manager(config)
+        return manager
 
 
 class RelayerWithVersion:
