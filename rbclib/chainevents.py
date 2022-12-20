@@ -8,7 +8,7 @@ from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
-from chainpy.eventbridge.utils import timestamp_msec, transaction_commit_time_sec
+from chainpy.eventbridge.utils import timestamp_msec
 
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
@@ -772,7 +772,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         else:
             # secondary relayer do (prepare to call after a few minutes)
             next_time_lock = timestamp_msec() \
-                             + transaction_commit_time_sec(self.selected_chain, self.relayer.root_config) \
+                             + self.relayer.get_chain_manager_of(self.selected_chain).tx_commit_time_sec \
                              + 1000 * ValidatorSetUpdatedEvent.CALL_DELAY_SEC
             self.switch_to_call(next_time_lock)
             self.relayer.queue.enqueue(self)
@@ -828,7 +828,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         # collect events on only bifrost network
         chain_manager = manager.get_chain_manager_of(target_chain)
         from_block, to_block = _range[target_chain][0], _range[target_chain][1]
-        events_raw = chain_manager.collect_target_event_in_range(event_name, from_block, to_block)
+        events_raw = chain_manager.ranged_collect_events(event_name, from_block, to_block)
 
         # remove event object except target status event object
         target_event_objects = list()

@@ -1,9 +1,10 @@
 import json
 
+from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
+from chainpy.eth.managers.configs import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId, ChainEventStatus
@@ -17,8 +18,8 @@ BOOTSTRAP_OFFSET_ROUNDS = 5
 
 
 class Relayer(EventBridge):
-    def __init__(self, entity_config: EntityRootConfig, relayer_index_cache_max_length: int = 100):
-        super().__init__(entity_config, int, relayer_index_cache_max_length)
+    def __init__(self, multichain_config: dict, relayer_index_cache_max_length: int = 100):
+        super().__init__(multichain_config, int, relayer_index_cache_max_length)
         self.current_rnd = None
 
     @property
@@ -28,11 +29,7 @@ class Relayer(EventBridge):
         return self.current_rnd - BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
 
     @classmethod
-    def init_from_config_files(cls,
-                               relayer_config_path: str,
-                               private_config_path: str = None,
-                               private_key: str = None):
-
+    def init_from_config_files(cls, relayer_config_path: str, private_config_path: str = None, private_key: str = None):
         with open(relayer_config_path, "r") as f:
             relayer_config_dict = json.load(f)
 
@@ -48,37 +45,32 @@ class Relayer(EventBridge):
         )
 
     @classmethod
-    def init_from_dicts(cls,
-                        relayer_config_dict: dict,
-                        private_config_dict: dict = None,
-                        private_key: str = None):
-        root_config: EntityRootConfig = EntityRootConfig.from_dict(relayer_config_dict, private_config_dict)
-
+    def init_from_dicts(cls, relayer_config_dict: dict, private_config_dict: dict = None, private_key: str = None):
+        merged_dict = merge_dict(relayer_config_dict, private_config_dict)
         if private_key is not None:
-            root_config.entity.secret_hex = EthHashBytes(private_key).hex()
+            merged_dict["entity"]["secret_hex"] = hex(EthAccount.from_secret(private_key).priv)
 
-        Relayer.init_classes(root_config)
-        return cls(root_config)
+        oracle_config = merged_dict.get("oracle_config")
+        Relayer.init_classes(oracle_config)
+        return cls(merged_dict)
 
     @staticmethod
-    def init_classes(root_config: EntityRootConfig):
+    def init_classes(oracle_config_dict: dict):
         # setup hardcoded value (not from config file) because it's a system parameter
         AuthDownOracle.setup(60)
 
-        price_oracle_config = root_config.oracle_config.asset_prices
+        price_oracle_config = oracle_config_dict["asset_prices"]
         PriceUpOracle.setup(
-            price_oracle_config.names,
-            price_oracle_config.source_names,
-            price_oracle_config.urls,
-            price_oracle_config.collection_period_sec
+            price_oracle_config["names"],
+            price_oracle_config["source_names"],
+            price_oracle_config["urls"],
+            price_oracle_config["collection_period_sec"]
         )
 
-        btc_hash_oracle_config = root_config.oracle_config.bitcoin_block_hash
+        btc_hash_oracle_config = oracle_config_dict["bitcoin_block_hash"]
         BtcHashUpOracle.setup(
-            btc_hash_oracle_config.url,
-            btc_hash_oracle_config.auth_id,
-            btc_hash_oracle_config.auth_password,
-            btc_hash_oracle_config.collection_period_sec
+            btc_hash_oracle_config["url"],
+            btc_hash_oracle_config["collection_period_sec"]
         )
 
     def find_height_by_timestamp(self, chain_index: ChainIndex, target_time: int, front_height: int = 0, front_time: int = 0):
@@ -287,11 +279,19 @@ class Relayer(EventBridge):
     def is_submitted_oracle_feed(
             self, oracle_id: ConsensusOracleId, _round: int, validator_addr: EthAddress = None) -> bool:
         """ Check whether the external data of the round has been transmitted. """
+        result = self.fetch_submitted_oracle_fee(oracle_id, _round, validator_addr)
+
+        return result != 0
+
+    def fetch_submitted_oracle_fee(
+            self,
+            oracle_id: ConsensusOracleId,
+            _round: int,
+            validator_addr: EthAddress = None) -> EthHashBytes:
         if validator_addr is None:
             validator_addr = self.active_account.address
         oracle_id_bytes = oracle_id.formatted_bytes()
         result = self.world_call(ChainIndex.BIFROST, "oracle", "get_consensus_feed", [
             oracle_id_bytes, validator_addr.hex(), _round
         ])[0]
-
-        return EthHashBytes(result) != 0
+        return EthHashBytes(result)

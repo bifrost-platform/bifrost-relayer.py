@@ -183,6 +183,9 @@ class BtcHashUpOracle(PeriodicEventABC):
         block_hash = EthHashBytes(btc_header["hash"])
 
         delta = latest_height_from_chain - latest_height_from_socket
+        if delta == 0:
+            return NoneParams
+
         if delta < 0:
             # critical error
             formatted_log(
@@ -220,7 +223,7 @@ class BtcHashUpOracle(PeriodicEventABC):
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=ChainIndex.BIFROST,
-                log_data="pass-feed:height({})".format(feed_target_height)
+                log_data="submitted:height({})".format(feed_target_height)
             )
             return NoneParams
 

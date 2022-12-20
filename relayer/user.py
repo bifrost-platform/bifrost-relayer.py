@@ -4,7 +4,6 @@ from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
 from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
-from chainpy.eth.managers.configs import EntityRootConfig
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 from rbclib.consts import RBCMethodIndex, BridgeIndex
 
@@ -35,8 +34,8 @@ class UserSubmit:
 
 
 class User(MultiChainManager):
-    def __init__(self, entity_config: EntityRootConfig):
-        super().__init__(entity_config)
+    def __init__(self, multichain_config: dict):
+        super().__init__(multichain_config)
 
     def token_approve(self,
                       chain_index: ChainIndex,
@@ -122,7 +121,7 @@ class User(MultiChainManager):
                           cross_action_index: RBCMethodIndex,
                           amount: EthAmount) -> EthHashBytes:
         tx = self.build_cross_action_tx(src_chain, dst_chain, token_index, cross_action_index, amount)
-        _, tx_hash = self.world_send_transaction(src_chain, tx)
+        tx_hash = self.world_send_transaction(src_chain, tx)
         return tx_hash
 
     def send_cross_action_and_wait_receipt(self,
