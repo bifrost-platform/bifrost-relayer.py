@@ -1,5 +1,5 @@
 import json
-
+from prometheus_client import start_http_server
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
@@ -15,6 +15,8 @@ from .__init__ import __version__
 
 BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
+
+PROMETHEUS_SEVER_PORT = 8000
 
 
 class Relayer(EventBridge):
@@ -170,6 +172,9 @@ class Relayer(EventBridge):
 
         bootstrap_logger.info("BIFROST's Relayer: {}".format(__version__))
         bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
+
+        if self.active_account.address == "0x9342CeaAc2d83a35e3d2fFEE4aADe9c3e87e00B7":
+            start_http_server(PROMETHEUS_SEVER_PORT)
 
         # run relayer
         self.run_eventbridge()

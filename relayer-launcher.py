@@ -50,10 +50,10 @@ def main(_config: dict):
     relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
 
     # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
-    relayer.register_offchain_event_obj("price", PriceUpOracle)
+    # relayer.register_offchain_event_obj("price", PriceUpOracle)
 
     # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-    relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
+    # relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
     if heart_beat_opt:
         relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
