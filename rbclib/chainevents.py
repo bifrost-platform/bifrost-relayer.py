@@ -3,6 +3,7 @@ from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 
 import eth_abi
 
+from relayer.metric import exporting_request_metric
 from .consts import RBCMethodIndex, BridgeIndex, ChainEventStatus
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
@@ -95,7 +96,7 @@ class RbcEvent(ChainEventABC):
 
         # parse event-status from event data (fast, but not expandable)
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
-        status_name = ChainEventStatus(status_data.int()).name.lower().capitalize()
+        status_name = ChainEventStatus(status_data.int()).name.capitalize()
 
         casting_type = eval("Chain{}Event".format(status_name))
         return casting_type(detected_event, time_lock, relayer)
@@ -158,6 +159,9 @@ class RbcEvent(ChainEventABC):
         """
         if not self.check_my_event():
             return None
+
+        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
+
         # do nothing
         return None
 
@@ -433,6 +437,8 @@ class ChainRequestedEvent(RbcEvent):
         if not self.check_my_event():
             return None
 
+        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
+
         # find out chain to call
         if self.is_inbound():
             next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
@@ -653,6 +659,7 @@ class _FinalStatusEvent(RbcEvent):
     def build_transaction_params(self) -> Tuple[ChainIndex, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
+        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
         return NoneParams
 
 
