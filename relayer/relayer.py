@@ -3,7 +3,7 @@ import json
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
-from chainpy.eth.managers.configs import merge_dict
+from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
