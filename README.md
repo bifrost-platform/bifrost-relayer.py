@@ -14,7 +14,6 @@
    - socket, vault and authority contract addresses
    - supported erc20 contracts addresses
    - abi.json of each contracts
-   -
  - Relayer account
    - a multichain-account (ethereum-style)
 
@@ -55,10 +54,10 @@ And the configuration file containing 4 properties: [_entity, multichain_config,
    "receipt_max_try": 12,
    "max_log_num": 1000,  # eth_getLogs queries events by max_log_num.
    "rpc_server_downtime_allow_sec": 180,
-   "tx_fee_type": {"type": 2, "max_gas_price": 1000000000000, "max_priority_price": 2500000000},
+   "fee_cnofig": {"type": 2, "max_gas_price": 1000000000000, "max_priority_price": 2500000000},
 
    # REQUIRED, FIXED
-   "abi_base_path": "configs/",
+   "abi_dir": "configs/",
    "contracts": [
       {"name": "vault", "address":  "<contract_address_hexstring>", "abi_file": "<abi_file_name>"},
       {"name": "socket", "address": "<contract_address_hexstring>", "abi_file": "<abi_file_name>"},
@@ -132,5 +131,8 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 
 # 2. launch a relayer with private-key
-$ python relayer-launcher.py launch -k <private_key_in_hex_with_0x> --no-heartbeat
+$ python3 relayer-launcher.py -k <private_key_hex_with_0x_prefix>
+
+# 2-1. should add "--no-heartbeat" option for local test
+$ python3 relayer-launcher.py -k <private_key_hex_with_0x_prefix> --no-heartbeat
 ```
