@@ -3,6 +3,7 @@ import logging
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from typing import TYPE_CHECKING, Optional
 
+from relayer.metric import PrometheusExporterRelayer
 from .chainevents import NoneParams
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
@@ -54,6 +55,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
+        PrometheusExporterRelayer.exporting_heartbeat_metric()
         formatted_log(
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
