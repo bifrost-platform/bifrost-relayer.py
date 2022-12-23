@@ -12,6 +12,7 @@ from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
+from relayer.metric import PrometheusExporterRelayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
 from .consts import ConsensusOracleId, AggOracleId
@@ -56,6 +57,7 @@ class PriceUpOracle(PeriodicEventABC):
                 self.__class__.SOURCE_NAMES,
                 self.__class__.URL_DICT
             )
+        PrometheusExporterRelayer.exporting_running_time_metric()
 
     @staticmethod
     def setup(coin_names: list, source_names: list, url_dict: dict, collection_period_sec: int):
@@ -91,6 +93,7 @@ class PriceUpOracle(PeriodicEventABC):
         oid_list = [eval("AggOracleId.{}_PRICE".format(coin_id)) for coin_id in self.__class__.COIN_IDS]
         oid_list = [oid.formatted_bytes() for oid in oid_list]
         prices = [value for value in collected_prices.values()]
+        PrometheusExporterRelayer.exporting_asset_prices(self.__class__.COIN_IDS, prices)
 
         formatted_log(
             price_logger,
@@ -147,6 +150,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         self.__cli = btc_cli
 
         self.delayed = False
+        PrometheusExporterRelayer.exporting_running_time_metric()
 
     @staticmethod
     def setup(url: str, auth_id: str = None, auth_passwd: str = None, collect_period_sec: int = 60):
@@ -178,9 +182,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             return NoneParams
 
         latest_height_from_socket = self.relayer.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
-        btc_header = self.__cli.get_latest_confirmed_block_header(True)
-        latest_height_from_chain = btc_header["height"]
-        block_hash = EthHashBytes(btc_header["hash"])
+        latest_height_from_chain = self.__cli.get_latest_confirmed_height()
 
         delta = latest_height_from_chain - latest_height_from_socket
         if delta == 0:
@@ -204,13 +206,17 @@ class BtcHashUpOracle(PeriodicEventABC):
         feed_target_height = latest_height_from_socket + 1
         submitted = self.relayer.is_submitted_oracle_feed(ConsensusOracleId.BTC_HASH, feed_target_height)
         if not submitted:
+            result = self.__cli.get_block_hash_by_height(feed_target_height)
+            block_hash = EthHashBytes(result)
+            PrometheusExporterRelayer.exporting_btc_hash(feed_target_height)
             formatted_log(
                 btc_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=ChainIndex.BIFROST,
-                log_data="height({}):btcHash({})".format(block_hash.hex(), feed_target_height)
+                log_data="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
+
             return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
                 [ConsensusOracleId.BTC_HASH.formatted_bytes()],
                 [feed_target_height],
@@ -265,6 +271,7 @@ class AuthDownOracle(PeriodicEventABC):
             self.__current_round = self.relayer.fetch_lowest_validator_round()
         else:
             self.__current_round = _round
+        PrometheusExporterRelayer.exporting_running_time_metric()
 
     @staticmethod
     def setup(collect_period_sec: int = 60):
@@ -299,6 +306,11 @@ class AuthDownOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         round_from_bn = self.relayer.fetch_validator_round(ChainIndex.BIFROST)
+        PrometheusExporterRelayer.exporting_bifnet_rnd(round_from_bn)
+
+        for chain_index in self.relayer.supported_chain_list:
+            rnd = self.relayer.fetch_validator_round(chain_index)
+            PrometheusExporterRelayer.exporting_external_chain_rnd(chain_index, rnd)
 
         formatted_log(
             validator_logger,

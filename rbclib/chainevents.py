@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 
 import eth_abi
 
-from relayer.metric import exporting_request_metric
+from relayer.metric import PrometheusExporterRelayer
 from .consts import RBCMethodIndex, BridgeIndex, ChainEventStatus
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
@@ -160,7 +160,7 @@ class RbcEvent(ChainEventABC):
         if not self.check_my_event():
             return None
 
-        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
 
         # do nothing
         return None
@@ -437,7 +437,7 @@ class ChainRequestedEvent(RbcEvent):
         if not self.check_my_event():
             return None
 
-        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
 
         # find out chain to call
         if self.is_inbound():
@@ -659,7 +659,7 @@ class _FinalStatusEvent(RbcEvent):
     def build_transaction_params(self) -> Tuple[ChainIndex, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
-        exporting_request_metric(self.src_chain_index, self.status, self.relayer.active_account.address)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
         return NoneParams
 
 
@@ -761,6 +761,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
 
         # check to need to sync validator list to the selected chain
         target_round = self.relayer.fetch_validator_round(self.selected_chain)
+
         if target_round >= self.round:
             return NoneParams
 
