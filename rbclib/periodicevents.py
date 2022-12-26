@@ -306,7 +306,6 @@ class AuthDownOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         round_from_bn = self.relayer.fetch_validator_round(ChainIndex.BIFROST)
-        PrometheusExporterRelayer.exporting_bifnet_rnd(round_from_bn)
 
         for chain_index in self.relayer.supported_chain_list:
             rnd = self.relayer.fetch_validator_round(chain_index)

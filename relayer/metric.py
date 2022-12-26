@@ -92,12 +92,6 @@ class PrometheusExporterRelayer(PrometheusExporter):
         PrometheusExporterRelayer.BTC_BLOCK_HEIGHT.set(height)
 
     @staticmethod
-    def exporting_bifnet_rnd(rnd: int):
-        if not PrometheusExporterRelayer.PROMETHEUS_ON:
-            return
-        PrometheusExporterRelayer.BIFROST_NETWORK_ROUND.set(rnd)
-
-    @staticmethod
     def exporting_external_chain_rnd(chain_index: ChainIndex, rnd: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
@@ -109,7 +103,3 @@ class PrometheusExporterRelayer(PrometheusExporter):
                 "Description"
             )
         PrometheusExporterRelayer.EXTERNAL_CHAIN_ROUND[chain_index].set(rnd)
-
-
-# if __name__ == "__main__":
-#     exporting_heartbeat_metric()
