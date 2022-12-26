@@ -10,17 +10,30 @@ from chainpy.prometheus_metric import PrometheusExporter
 from rbclib.consts import ChainEventStatus
 
 
+HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
+RUNNING_SESSIONS_QUERY_NAME = "relayer_running_sessions"
+INCOMPLETE_GAUGE_QUERY_NAME = "relayer_incomplete_gauge_of_{}"
+
+BTC_HEIGHT_QUERY_NAME = "relayer_btc_height"
+ASSET_PRICES_QUERY_NAME = "relayer_prices_of_{}"
+
+CHAIN_ROUNDS_QUERY_NAME = "relayer_chain_rounds_of_{}"
+REQUEST_COUNTERS_QUERY_NAME = "relayer_{}_counter_starts_on_{}"
+
+
 class PrometheusExporterRelayer(PrometheusExporter):
     SUPPORTED_CHAINS = [ChainIndex.BIFROST, ChainIndex.ETHEREUM, ChainIndex.BINANCE, ChainIndex.POLYGON]
     START_TIME = timestamp_msec()
 
-    REQUEST_COUNTERS: Dict[ChainEventStatus, Dict[ChainIndex, Counter]] = dict()
+    HEARTBEAT_COUNTER = Counter(HEARTBEAT_COUNTER_QUERY_NAME, "Description")
+    RUNNING_SESSIONS = Gauge(RUNNING_SESSIONS_QUERY_NAME, "Description")
     INCOMPLETE_SCORE_GAUGE: Dict[ChainIndex, Gauge] = dict()
-    HEARTBEAT_COUNTER = Counter("num_of_heartbeat", "Description")
-    RUNNING_SESSIONS = Gauge("running_sessions", "Description")
+
+    BTC_HEIGHT = Gauge(BTC_HEIGHT_QUERY_NAME, "Description")
     ASSET_PRICES: Dict[str, Gauge] = dict()
-    BTC_BLOCK_HEIGHT = Gauge("latest_height_for_btc_hash", "Description")
-    EXTERNAL_CHAIN_ROUND: Dict[ChainIndex, Gauge] = dict()
+
+    CHAIN_ROUNDS: Dict[ChainIndex, Gauge] = dict()
+    REQUEST_COUNTERS: Dict[ChainEventStatus, Dict[ChainIndex, Counter]] = dict()
 
     @staticmethod
     def init_prometheus_exporter_on_relayer(port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
@@ -30,7 +43,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
         for chain_index in PrometheusExporterRelayer.SUPPORTED_CHAINS:
             """ add 3 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
             PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE[chain_index] = Gauge(
-                "incomplete_gauge_of_{}".format(chain_index.name),
+                INCOMPLETE_GAUGE_QUERY_NAME.format(chain_index.name),
                 "Description of counter"
             )
 
@@ -40,7 +53,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
                 if PrometheusExporterRelayer.REQUEST_COUNTERS.get(status) is None:
                     PrometheusExporterRelayer.REQUEST_COUNTERS[status] = dict()
                 PrometheusExporterRelayer.REQUEST_COUNTERS[status][chain_index] = Counter(
-                    '{}_counter_starts_on_{}'.format(status.name, chain_index.name),
+                    REQUEST_COUNTERS_QUERY_NAME.format(status.name, chain_index.name),
                     'Description of counter'
                 )
 
@@ -81,7 +94,9 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
         for symbol in coin_symbols:
             if PrometheusExporterRelayer.ASSET_PRICES.get(symbol) is None:
-                PrometheusExporterRelayer.ASSET_PRICES[symbol] = Gauge("price_of_{}".format(symbol), "Description")
+                PrometheusExporterRelayer.ASSET_PRICES[symbol] = Gauge(
+                    ASSET_PRICES_QUERY_NAME.format(symbol), "Description"
+                )
             price = float(prices[coin_symbols.index(symbol)].float_str)
             PrometheusExporterRelayer.ASSET_PRICES[symbol].set(price)
 
@@ -89,17 +104,17 @@ class PrometheusExporterRelayer(PrometheusExporter):
     def exporting_btc_hash(height: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
-        PrometheusExporterRelayer.BTC_BLOCK_HEIGHT.set(height)
+        PrometheusExporterRelayer.BTC_HEIGHT.set(height)
 
     @staticmethod
     def exporting_external_chain_rnd(chain_index: ChainIndex, rnd: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
 
-        if PrometheusExporterRelayer.EXTERNAL_CHAIN_ROUND.get(chain_index) is None:
+        if PrometheusExporterRelayer.CHAIN_ROUNDS.get(chain_index) is None:
             chain_name = chain_index.name.lower()
-            PrometheusExporterRelayer.EXTERNAL_CHAIN_ROUND[chain_index] = Gauge(
-                "round_of_{}".format(chain_name),
+            PrometheusExporterRelayer.CHAIN_ROUNDS[chain_index] = Gauge(
+                CHAIN_ROUNDS_QUERY_NAME.format(chain_name),
                 "Description"
             )
-        PrometheusExporterRelayer.EXTERNAL_CHAIN_ROUND[chain_index].set(rnd)
+        PrometheusExporterRelayer.CHAIN_ROUNDS[chain_index].set(rnd)
