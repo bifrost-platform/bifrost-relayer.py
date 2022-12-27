@@ -92,7 +92,7 @@ class BridgeIndex(EnumInterface):
 class RBCMethodIndex(EnumInterface):
     NONE = 0x000000
     WARP = 0x010001
-    WARP_MERGE = 0x02000b
+    WARP_UNIFY = 0x02000b
     DEPOSIT = 0x020002
     REPAY = 0x020003
     WARP_SWAP = 0x020004
@@ -103,6 +103,8 @@ class RBCMethodIndex(EnumInterface):
     BORROW = 0x030008
     SWAP_WARP = 0x030009
     XEND = 0x03000a
+
+    WARP_SWAP_WARP = 0x03000c
 
     # CALL      = 0x03000b
 
