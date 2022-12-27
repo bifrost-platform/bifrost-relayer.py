@@ -13,6 +13,8 @@ from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from relayer.metric import PrometheusExporterRelayer
+from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, fetch_lowest_validator_round, \
+    fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
 from .consts import ConsensusOracleId, AggOracleId
@@ -82,7 +84,7 @@ class PriceUpOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = self.relayer.is_validator(ChainIndex.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(self.relayer, ChainIndex.BIFROST, self.relayer.active_account.address)
         if not auth:
             return NoneParams
 
@@ -177,11 +179,11 @@ class BtcHashUpOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = self.relayer.is_validator(ChainIndex.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(self.relayer, ChainIndex.BIFROST, self.relayer.active_account.address)
         if not auth:
             return NoneParams
 
-        latest_height_from_socket = self.relayer.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
+        latest_height_from_socket = fetch_oracle_latest_round(self.relayer, ConsensusOracleId.BTC_HASH)
         latest_height_from_chain = self.__cli.get_latest_confirmed_height()
 
         delta = latest_height_from_chain - latest_height_from_socket
@@ -204,7 +206,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         self.delayed = True if delta > 1 else False
 
         feed_target_height = latest_height_from_socket + 1
-        submitted = self.relayer.is_submitted_oracle_feed(ConsensusOracleId.BTC_HASH, feed_target_height)
+        submitted = is_submitted_oracle_feed(self.relayer, ConsensusOracleId.BTC_HASH, feed_target_height)
         if not submitted:
             result = self.__cli.get_block_hash_by_height(feed_target_height)
             block_hash = EthHashBytes(result)
@@ -268,7 +270,7 @@ class AuthDownOracle(PeriodicEventABC):
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
             supported_chain_list.remove(ChainIndex.BIFROST)
-            self.__current_round = self.relayer.fetch_lowest_validator_round()
+            self.__current_round = fetch_lowest_validator_round(self.relayer)
         else:
             self.__current_round = _round
         PrometheusExporterRelayer.exporting_running_time_metric()
@@ -305,10 +307,10 @@ class AuthDownOracle(PeriodicEventABC):
         return ChainIndex.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
-        round_from_bn = self.relayer.fetch_validator_round(ChainIndex.BIFROST)
+        round_from_bn = fetch_latest_round(self.relayer, ChainIndex.BIFROST)
 
         for chain_index in self.relayer.supported_chain_list:
-            rnd = self.relayer.fetch_validator_round(chain_index)
+            rnd = fetch_latest_round(self.relayer, chain_index)
             PrometheusExporterRelayer.exporting_external_chain_rnd(chain_index, rnd)
 
         formatted_log(
@@ -322,13 +324,13 @@ class AuthDownOracle(PeriodicEventABC):
         if self.__current_round >= round_from_bn:
             return NoneParams
 
-        if not self.relayer.is_previous_validator(
-                ChainIndex.BIFROST, round_from_bn - 1, self.relayer.active_account.address
+        if not is_selected_previous_relayer(
+                self.relayer, ChainIndex.BIFROST, round_from_bn - 1, self.relayer.active_account.address
         ):
             self.current_round = round_from_bn
             return NoneParams
 
-        sorted_validator_list = self.relayer.fetch_sorted_validator_list(ChainIndex.BIFROST)
+        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, ChainIndex.BIFROST)
 
         types_str_list = ["uint256", "address[]"]
         data_to_sig = eth_abi.encode_abi(types_str_list, [round_from_bn, sorted_validator_list])

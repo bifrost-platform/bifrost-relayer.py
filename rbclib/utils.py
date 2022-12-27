@@ -7,5 +7,5 @@ def log_invalid_flow(logger, event):
     logger.warning("Invalid flow: {} called when handling {} by {}-th relayer".format(
         caller_func_name,
         event.summary(),
-        event.manager.relayer_index
+        event.manager.active_account.address
     ))

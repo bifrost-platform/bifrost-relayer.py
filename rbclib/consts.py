@@ -4,6 +4,9 @@ from chainpy.eth.ethtype.consts import ChainIndex, EnumInterface, concat_2enum_a
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.eth.ethtype.utils import keccak_hash
 
+BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
+BOOTSTRAP_OFFSET_ROUNDS = 5
+
 
 class TokenIndex(EnumInterface):
     BFC  = 0x0000000000000001

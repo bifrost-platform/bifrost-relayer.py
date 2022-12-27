@@ -2,9 +2,12 @@ import logging
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 
 import eth_abi
+from chainpy.eventbridge.eventbridge import EventBridge
 
 from relayer.metric import PrometheusExporterRelayer
-from .consts import RBCMethodIndex, BridgeIndex, ChainEventStatus
+from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
+    fetch_sorted_previous_relayer_list, fetch_latest_round
+from .consts import RBCMethodIndex, BridgeIndex, ChainEventStatus, BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
 from chainpy.eventbridge.chaineventabc import ChainEventABC
@@ -21,7 +24,6 @@ from chainpy.logger import Logger, formatted_log
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
-
 
 proto_logger = Logger("Protocol", logging.DEBUG)
 
@@ -84,25 +86,24 @@ class RbcEvent(ChainEventABC):
     CALL_DELAY_SEC = 600
     EVENT_NAME = "Socket"
 
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
 
     def __cmp__(self, other):
         return self.status.value < other.status.value
 
     @classmethod
-    def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: "Relayer"):
+    def init(cls, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         """ Depending on the event status, selects a child class of Socket Event, and initiates its instance. """
-
         # parse event-status from event data (fast, but not expandable)
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
         status_name = ChainEventStatus(status_data.int()).name.capitalize()
 
         casting_type = eval("Chain{}Event".format(status_name))
-        return casting_type(detected_event, time_lock, relayer)
+        return casting_type(detected_event, time_lock, manager)
 
     @property
-    def relayer(self) -> "Relayer":
+    def relayer(self) -> EventBridge:
         return self.manager
 
     def clone_with_other_status(self, next_status: ChainEventStatus, time_lock: Optional[int] = None):
@@ -299,7 +300,10 @@ class RbcEvent(ChainEventABC):
 
         # remove too late event
         not_handled_events_obj = list()
-        min_rnd = manager.valid_min_rnd
+
+        if manager.current_rnd is None:
+            raise Exception("relayer's current rnd is None")
+        min_rnd = manager.current_rnd - BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
         for not_finalized_event_obj in not_finalized_event_objs:
             if min_rnd > not_finalized_event_obj.rnd:
                 continue
@@ -345,7 +349,7 @@ class RbcEvent(ChainEventABC):
         return data[:start] + EthHashBytes(event_status.value) + data[end:]
 
     def is_primary_relayer(self):
-        total_validator_num = self.relayer.fetch_validator_num(ChainIndex.BIFROST)
+        total_validator_num = fetch_relayer_num(self.relayer, ChainIndex.BIFROST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
@@ -354,7 +358,7 @@ class RbcEvent(ChainEventABC):
 
     def aggregated_relay(self, target_chain: ChainIndex, is_primary_relay: bool, chain_event_status: ChainEventStatus):
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        sigs = self.relayer.fetch_socket_rbc_sigs(ChainIndex.BIFROST, self.req_id(), chain_event_status)
+        sigs = fetch_socket_rbc_sigs(self.relayer, self.req_id(), chain_event_status)
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
 
         msg = "Aggregated" if is_primary_relay else "Total"
@@ -408,7 +412,7 @@ class ChainRequestedEvent(RbcEvent):
         voting_num = voting_list[self.status.value]
 
         # get quorum
-        quorum = self.relayer.fetch_quorum(ChainIndex.BIFROST, self.rnd)
+        quorum = fetch_quorum(self.relayer, ChainIndex.BIFROST, self.rnd)
         if quorum == 0:
             return None
 
@@ -760,13 +764,13 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             return NoneParams
 
         # check to need to sync validator list to the selected chain
-        target_round = self.relayer.fetch_validator_round(self.selected_chain)
+        target_round = fetch_latest_round(self.relayer, self.selected_chain)
 
         if target_round >= self.round:
             return NoneParams
 
         # code branch: primary(send) vs secondary(call)
-        previous_validator_list = self.relayer.fetch_sorted_previous_validator_list(ChainIndex.BIFROST, self.round - 1)
+        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, ChainIndex.BIFROST, self.round - 1)
 
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         previous_validator_set_size = len(previous_validator_list)
@@ -774,7 +778,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         primary_index = self.detected_event.block_number % previous_validator_set_size
         if primary_index == self.relayer.get_value_by_key(self.round - 1) or not self.aggregated:
             # primary relayer do
-            result = self.relayer.fetch_socket_vsp_sigs(ChainIndex.BIFROST, self.round)
+            result = fetch_socket_vsp_sigs(self.relayer, self.round)
             submit_data = AggregatedRoundUpSubmit(self).add_tuple_sigs(result)
             return self.selected_chain, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME, submit_data.submit_tuple()
         else:

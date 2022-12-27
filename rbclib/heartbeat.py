@@ -4,6 +4,7 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from typing import TYPE_CHECKING, Optional
 
 from relayer.metric import PrometheusExporterRelayer
+from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
@@ -46,7 +47,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         return NoneParams
 
     def build_transaction_params(self) -> SendParamTuple:
-        if not self.relayer.is_pulsed_hear_beat():
+        if not is_pulsed_hear_beat(self.relayer):
             return ChainIndex.BIFROST, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
