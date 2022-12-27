@@ -46,6 +46,7 @@ class BridgeIndex(EnumInterface):
 
     BNB_BINANCE = concat_2enum_as_int(TokenIndex.BNB, ChainIndex.BINANCE)
     BUSD_BINANCE = concat_2enum_as_int(TokenIndex.BUSD, ChainIndex.BINANCE)
+    USDC_BINANCE = concat_2enum_as_int(TokenIndex.USDC, ChainIndex.BINANCE)
 
     MATIC_POLYGON = concat_2enum_as_int(TokenIndex.MATIC, ChainIndex.POLYGON)
 
@@ -91,7 +92,7 @@ class BridgeIndex(EnumInterface):
 class RBCMethodIndex(EnumInterface):
     NONE = 0x000000
     WARP = 0x010001
-
+    WARP_MERGE = 0x02000b
     DEPOSIT = 0x020002
     REPAY = 0x020003
     WARP_SWAP = 0x020004
