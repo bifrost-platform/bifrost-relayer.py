@@ -4,6 +4,8 @@ from typing import List
 from chainpy.eth.ethtype.consts import ChainIndex
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
+from rbclib.bifrostutils import fetch_submitted_oracle_feed, fetch_btc_hash_from_oracle, fetch_price_from_oracle, \
+    fetch_oracle_latest_round, fetch_sorted_relayer_list
 from rbclib.consts import ConsensusOracleId
 from relayer.tools.consts import ADMIN_RELAYERS
 from relayer.tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
@@ -44,7 +46,7 @@ def operator_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedOperatorCmd.FETCH_EXTERNAL_AUTHORITY_LIST:  # TODO version?
             # authority list
-            validator_addr_list = operator.fetch_sorted_validator_list(ChainIndex.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list(operator, ChainIndex.BIFROST)
             validator_addr_list = [RelayerWithVersion(addr) for addr in validator_addr_list]
             RelayerWithVersion.display_addrs(operator, "<fetched authority list>", validator_addr_list)
 
@@ -53,7 +55,7 @@ def operator_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_AUTHORITIES:
             # validator coin balances
-            validator_addr_list = operator.fetch_sorted_validator_list(ChainIndex.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list(operator, ChainIndex.BIFROST)
             validator_addr_list = [EthAddress(addr) for addr in validator_addr_list]
             print("----------------------------------------------------------------------------------")
             for i, addr in enumerate(validator_addr_list):
@@ -69,20 +71,20 @@ def operator_cmd(project_root_path: str = "./"):
         elif cmd == SupportedOperatorCmd.GET_PRICE_OF:
             # get price from oracle
             token_stream_index = get_token_from_console()
-            price = operator.fetch_price_from_oracle(token_stream_index)
+            price = fetch_price_from_oracle(operator, token_stream_index)
             print(price.change_decimal(6).float_str)
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_BTC_HASH:
             # get btc hash from oracle contract
-            btc_hash = operator.fetch_btc_hash_from_oracle()
+            btc_hash = fetch_btc_hash_from_oracle(operator)
             print(btc_hash.hex())
 
         elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS:
-            relayers = operator.fetch_sorted_validator_list(ChainIndex.BIFROST)
-            latest_round = operator.fetch_oracle_latest_round(ConsensusOracleId.BTC_HASH)
+            relayers = fetch_sorted_relayer_list(operator, ChainIndex.BIFROST)
+            latest_round = fetch_oracle_latest_round(operator, ConsensusOracleId.BTC_HASH)
             print("latest_round: {}".format(latest_round))
             for relayer in relayers:
-                result = operator.fetch_submitted_oracle_fee(ConsensusOracleId.BTC_HASH, latest_round + 1, EthAddress(relayer))
+                result = fetch_submitted_oracle_feed(operator, ConsensusOracleId.BTC_HASH, latest_round + 1, EthAddress(relayer))
                 print("addr: {} {}".format(relayer, result.hex()))
         else:
             return
