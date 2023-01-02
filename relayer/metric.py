@@ -1,12 +1,11 @@
-from typing import Dict, List
+from typing import List
+
+from prometheus_client import Counter, Gauge
 
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.consts import ChainIndex
-from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from chainpy.eventbridge.utils import timestamp_msec
-from prometheus_client import Counter, Gauge, Info
 from chainpy.prometheus_metric import PrometheusExporter
-
 from rbclib.consts import ChainEventStatus
 
 HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
@@ -17,11 +16,11 @@ BTC_HEIGHT_QUERY_NAME = "relayer_btc_height"
 ASSET_PRICES_QUERY_NAME = "relayer_prices_of_symbol"
 
 CHAIN_ROUNDS_QUERY_NAME = "relayer_chain_rounds_of_chain"
-REQUEST_COUNTERS_QUERY_NAME = "relayer_status_counter_starts_on_chain_index"
+REQUEST_COUNTERS_QUERY_NAME = "relayer_status_counter"
 
 
 class PrometheusExporterRelayer(PrometheusExporter):
-    SUPPORTED_CHAINS = [ChainIndex.BIFROST, ChainIndex.ETHEREUM, ChainIndex.BINANCE, ChainIndex.POLYGON]
+
     START_TIME = timestamp_msec()
 
     HEARTBEAT_COUNTER = Counter(HEARTBEAT_COUNTER_QUERY_NAME, "Description")
@@ -32,31 +31,42 @@ class PrometheusExporterRelayer(PrometheusExporter):
     ASSET_PRICES = Gauge(ASSET_PRICES_QUERY_NAME, "Description", ['symbol'])
 
     CHAIN_ROUNDS = Gauge(CHAIN_ROUNDS_QUERY_NAME, "Description", ['chain'])
-    REQUEST_COUNTERS = Counter(REQUEST_COUNTERS_QUERY_NAME, 'Description of counter', ['status', 'chain'])
+    REQUEST_COUNTERS = Counter(REQUEST_COUNTERS_QUERY_NAME, 'Description of counter', ['status'])
 
     @staticmethod
-    def init_prometheus_exporter_on_relayer(port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
+    def init_prometheus_exporter_on_relayer(
+            supported_chains: List[ChainIndex],
+            port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
         PrometheusExporter.init_prometheus_exporter(port)
 
-        for chain_index in PrometheusExporterRelayer.SUPPORTED_CHAINS:
+        for chain_index in supported_chains:
+            """ add 2 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
             chain_name = chain_index.name.lower()
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain_name).set(0)
 
-            """ add 3 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain_name)
-
-            for status in ChainEventStatus:
-                if status == ChainEventStatus.NONE:
-                    continue
-                PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name, chain_name)
+        ignored = [
+            ChainEventStatus.NONE,
+            ChainEventStatus.NEXT_AUTHORITY_RELAYED,
+            ChainEventStatus.NEXT_AUTHORITY_COMMITTED
+        ]
+        for status in (set(ChainEventStatus) - set(ignored)):
+            PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name).inc(0)
 
     @staticmethod
     def exporting_request_metric(_chain_index: ChainIndex, _status: ChainEventStatus):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
 
-        PrometheusExporterRelayer.REQUEST_COUNTERS.labels(_status.name, _chain_index.name.lower()).inc()
+        PrometheusExporterRelayer.REQUEST_COUNTERS.labels(_status.name).inc()
 
-        if _status == ChainEventStatus.ACCEPTED or _status == ChainEventStatus.REJECTED:
+        ignored = [
+            ChainEventStatus.NONE,
+            ChainEventStatus.ACCEPTED,
+            ChainEventStatus.REJECTED,
+            ChainEventStatus.NEXT_AUTHORITY_RELAYED,
+            ChainEventStatus.NEXT_AUTHORITY_COMMITTED
+        ]
+        if _status in ignored:
             # do nothing
             pass
         elif _status == ChainEventStatus.REQUESTED:

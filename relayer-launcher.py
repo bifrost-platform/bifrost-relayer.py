@@ -65,7 +65,7 @@ def main(_config: dict):
         relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
 
     if prometheus_on:
-        PrometheusExporterRelayer.init_prometheus_exporter_on_relayer()
+        PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
     relayer.run_relayer()
 
