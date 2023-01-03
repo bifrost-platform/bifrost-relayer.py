@@ -8,7 +8,7 @@ from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.btc.managers.simplerpccli import SimpleBtcClient
-from chainpy.eth.ethtype.consts import ChainIndex
+from chainpy.eth.ethtype.consts import ChainIdx
 from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
@@ -17,7 +17,7 @@ from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, f
     fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
-from .consts import ConsensusOracleId, AggOracleId
+from .consts import Oracle
 from .utils import log_invalid_flow
 
 if TYPE_CHECKING:
@@ -80,11 +80,11 @@ class PriceUpOracle(PeriodicEventABC):
 
     def build_call_transaction_params(self) -> CallParamTuple:
         log_invalid_flow(price_logger, self)
-        return ChainIndex.NONE, "", "", []
+        return ChainIdx.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = is_selected_relayer(self.relayer, ChainIndex.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(self.relayer, ChainIdx.BIFROST, self.relayer.active_account.address)
         if not auth:
             return NoneParams
 
@@ -101,11 +101,11 @@ class PriceUpOracle(PeriodicEventABC):
             price_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id=self.__class__.__name__,
-            related_chain=ChainIndex.BIFROST,
+            related_chain=ChainIdx.BIFROST,
             # log_data=str("/".join([price.float_str for price in prices]))
             log_data="price-feeding"
         )
-        return ChainIndex.BIFROST, "socket", "oracle_aggregate_feeding", [
+        return ChainIdx.BIFROST, "socket", "oracle_aggregate_feeding", [
             oid_list,
             [price.bytes() for price in prices]
         ]
@@ -175,15 +175,15 @@ class BtcHashUpOracle(PeriodicEventABC):
 
     def build_call_transaction_params(self) -> CallParamTuple:
         log_invalid_flow(btc_logger, self)
-        return ChainIndex.NONE, "", "", []
+        return ChainIdx.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = is_selected_relayer(self.relayer, ChainIndex.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(self.relayer, ChainIdx.BIFROST, self.relayer.active_account.address)
         if not auth:
             return NoneParams
 
-        latest_height_from_socket = fetch_oracle_latest_round(self.relayer, ConsensusOracleId.BTC_HASH)
+        latest_height_from_socket = fetch_oracle_latest_round(self.relayer, Oracle.BITCOIN_BLOCK_HASH)
         latest_height_from_chain = self.__cli.get_latest_confirmed_height()
 
         delta = latest_height_from_chain - latest_height_from_socket
@@ -196,7 +196,7 @@ class BtcHashUpOracle(PeriodicEventABC):
                 btc_logger,
                 relayer_addr=self.relayer.active_account.address,
                 log_id=self.__class__.__name__,
-                related_chain=ChainIndex.BIFROST,
+                related_chain=ChainIdx.BIFROST,
                 log_data="oracle-error:OracleHeight({})>BtcHeight({})".format(
                     latest_height_from_socket, latest_height_from_chain
                 )
@@ -206,7 +206,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         self.delayed = True if delta > 1 else False
 
         feed_target_height = latest_height_from_socket + 1
-        submitted = is_submitted_oracle_feed(self.relayer, ConsensusOracleId.BTC_HASH, feed_target_height)
+        submitted = is_submitted_oracle_feed(self.relayer, Oracle.BITCOIN_BLOCK_HASH, feed_target_height)
         if not submitted:
             result = self.__cli.get_block_hash_by_height(feed_target_height)
             block_hash = EthHashBytes(result)
@@ -215,12 +215,12 @@ class BtcHashUpOracle(PeriodicEventABC):
                 btc_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
-                related_chain=ChainIndex.BIFROST,
+                related_chain=ChainIdx.BIFROST,
                 log_data="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
 
-            return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
-                [ConsensusOracleId.BTC_HASH.formatted_bytes()],
+            return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
+                [Oracle.BITCOIN_BLOCK_HASH.formatted_bytes()],
                 [feed_target_height],
                 [block_hash.bytes()]
             ]
@@ -230,7 +230,7 @@ class BtcHashUpOracle(PeriodicEventABC):
                 btc_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
-                related_chain=ChainIndex.BIFROST,
+                related_chain=ChainIdx.BIFROST,
                 log_data="submitted:height({})".format(feed_target_height)
             )
             return NoneParams
@@ -269,7 +269,7 @@ class AuthDownOracle(PeriodicEventABC):
         super().__init__(relayer, period_sec, time_lock)
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
-            supported_chain_list.remove(ChainIndex.BIFROST)
+            supported_chain_list.remove(ChainIdx.BIFROST)
             self.__current_round = fetch_lowest_validator_round(self.relayer)
         else:
             self.__current_round = _round
@@ -304,10 +304,10 @@ class AuthDownOracle(PeriodicEventABC):
 
     def build_call_transaction_params(self) -> CallParamTuple:
         log_invalid_flow(price_logger, self)
-        return ChainIndex.NONE, "", "", []
+        return ChainIdx.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
-        round_from_bn = fetch_latest_round(self.relayer, ChainIndex.BIFROST)
+        round_from_bn = fetch_latest_round(self.relayer, ChainIdx.BIFROST)
 
         for chain_index in self.relayer.supported_chain_list:
             rnd = fetch_latest_round(self.relayer, chain_index)
@@ -317,7 +317,7 @@ class AuthDownOracle(PeriodicEventABC):
             validator_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="CheckAuthority",
-            related_chain=ChainIndex.BIFROST,
+            related_chain=ChainIdx.BIFROST,
             log_data="cached({}):fetched({})".format(self.__current_round, round_from_bn)
         )
 
@@ -325,12 +325,12 @@ class AuthDownOracle(PeriodicEventABC):
             return NoneParams
 
         if not is_selected_previous_relayer(
-                self.relayer, ChainIndex.BIFROST, round_from_bn - 1, self.relayer.active_account.address
+                self.relayer, ChainIdx.BIFROST, round_from_bn - 1, self.relayer.active_account.address
         ):
             self.current_round = round_from_bn
             return NoneParams
 
-        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, ChainIndex.BIFROST)
+        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, ChainIdx.BIFROST)
 
         types_str_list = ["uint256", "address[]"]
         data_to_sig = eth_abi.encode_abi(types_str_list, [round_from_bn, sorted_validator_list])
@@ -339,7 +339,7 @@ class AuthDownOracle(PeriodicEventABC):
 
         self.current_round = round_from_bn
         submit_data = [(round_from_bn, sorted_validator_list, socket_sig.tuple())]
-        return ChainIndex.BIFROST, SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME, submit_data
+        return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME, submit_data
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
         log_invalid_flow(price_logger, self)

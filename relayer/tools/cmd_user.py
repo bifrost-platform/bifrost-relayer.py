@@ -2,9 +2,9 @@ import enum
 from typing import List
 
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import ChainIndex
+from chainpy.eth.ethtype.consts import ChainIdx
 from chainpy.eth.ethtype.hexbytes import EthAddress
-from rbclib.consts import BridgeIndex
+from rbclib.consts import Bridge
 from relayer.tools.consts import RBC_SUPPORTED_METHODS
 from relayer.tools.utils_load_test import cccp_batch_send
 from relayer.tools.utils import get_chain_and_token_from_console, determine_decimal, get_typed_item_from_console, \
@@ -50,9 +50,9 @@ def user_cmd(project_root_path: str = "./"):
             # set amount as default
             decimal = determine_decimal(token_index)
             if direction_str == "inbound":
-                src_chain_index, dst_chain_index, amount = chain_index, ChainIndex.BIFROST, EthAmount(0.02, decimal)
+                src_chain_index, dst_chain_index, amount = chain_index, ChainIdx.BIFROST, EthAmount(0.02, decimal)
             elif direction_str == "outbound":
-                src_chain_index, dst_chain_index, amount = ChainIndex.BIFROST, chain_index, EthAmount(0.01, decimal)
+                src_chain_index, dst_chain_index, amount = ChainIdx.BIFROST, chain_index, EthAmount(0.01, decimal)
             else:
                 raise Exception("Not supported direction")
 
@@ -76,7 +76,7 @@ def user_cmd(project_root_path: str = "./"):
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
             chain_index, token_index = get_chain_and_token_from_console(user, True)
-            if token_index == BridgeIndex.NONE:
+            if token_index == Bridge.NONE:
                 print(">>> There is no option.")
                 continue
 

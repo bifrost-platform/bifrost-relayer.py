@@ -74,7 +74,7 @@ def parser(hex_str: str, element_types: List[Union[int, type]]) -> List[Union[in
     return elements
 
 
-class SymbolIdx(EnumInterface):
+class Symbol(EnumInterface):
     BFC  = 0x01
     BIFI = 0x2
     BTC  = 0x3
@@ -102,17 +102,17 @@ class SymbolIdx(EnumInterface):
         return []
 
     def is_coin_on(self, chain_index: ChainIdx) -> bool:
-        if self == SymbolIdx.BFC and chain_index == ChainIdx.BIFROST:
+        if self == Symbol.BFC and chain_index == ChainIdx.BIFROST:
             return True
-        if self == SymbolIdx.BTC and chain_index == ChainIdx.BITCOIN:
+        if self == Symbol.BTC and chain_index == ChainIdx.BITCOIN:
             return True
-        if self == SymbolIdx.ETH and chain_index == ChainIdx.ETHEREUM:
+        if self == Symbol.ETH and chain_index == ChainIdx.ETHEREUM:
             return True
-        if self == SymbolIdx.BNB and chain_index == ChainIdx.ETHEREUM:
+        if self == Symbol.BNB and chain_index == ChainIdx.ETHEREUM:
             return True
-        if self == SymbolIdx.MATIC and chain_index == ChainIdx.POLYGON:
+        if self == Symbol.MATIC and chain_index == ChainIdx.POLYGON:
             return True
-        if self == SymbolIdx.KLAY and chain_index == ChainIdx.KLAYTN:
+        if self == Symbol.KLAY and chain_index == ChainIdx.KLAYTN:
             return True
         return False
 
@@ -149,37 +149,38 @@ USDC_ON_POLYGON_ERC20_ADDRESS = "0x00000000"
 USDC_ON_AVALANCHE_ERC20_ADDRESS = "0x00000000"
 
 
-class AssetIdx(EnumInterface):
-    BTC_ON_BITCOIN = concat_items_as_int(SymbolIdx.BTC, ChainIdx.BITCOIN, 0xffffffff)
-    BTC_ON_BIFROST = concat_items_as_int(SymbolIdx.BTC, ChainIdx.BIFROST, BTC_ON_BIFROST_ERC20_ADDRESS)
-    BTC_ON_ETHEREUM = concat_items_as_int(SymbolIdx.BTC, ChainIdx.ETHEREUM, BTC_ON_ETHEREUM_ERC20_ADDRESS)
+class Asset(EnumInterface):
+    BTC_ON_BITCOIN = concat_items_as_int(Symbol.BTC, ChainIdx.BITCOIN, 0xffffffff)
+    BTC_ON_BIFROST = concat_items_as_int(Symbol.BTC, ChainIdx.BIFROST, BTC_ON_BIFROST_ERC20_ADDRESS)
+    BTC_ON_ETHEREUM = concat_items_as_int(Symbol.BTC, ChainIdx.ETHEREUM, BTC_ON_ETHEREUM_ERC20_ADDRESS)
 
-    BFC_ON_BIFROST = concat_items_as_int(SymbolIdx.BFC, ChainIdx.BIFROST, 0xffffffff)
-    BFC_ON_ETHEREUM = concat_items_as_int(SymbolIdx.BFC, ChainIdx.ETHEREUM, BFC_ON_ETHEREUM_ERC20_ADDRESS)
+    BFC_ON_BIFROST = concat_items_as_int(Symbol.BFC, ChainIdx.BIFROST, 0xffffffff)
+    BFC_ON_ETHEREUM = concat_items_as_int(Symbol.BFC, ChainIdx.ETHEREUM, BFC_ON_ETHEREUM_ERC20_ADDRESS)
 
-    BIFI_ON_BIFROST = concat_items_as_int(SymbolIdx.BIFI, ChainIdx.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
-    BIFI_ON_ETHEREUM = concat_items_as_int(SymbolIdx.BIFI, ChainIdx.ETHEREUM, BIFI_ON_ETHEREUM_ERC20_ADDRESS)
+    BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, ChainIdx.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
+    UNIFIED_BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, ChainIdx.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
+    BIFI_ON_ETHEREUM = concat_items_as_int(Symbol.BIFI, ChainIdx.ETHEREUM, BIFI_ON_ETHEREUM_ERC20_ADDRESS)
 
-    ETH_ON_BIFROST = concat_items_as_int(SymbolIdx.ETH, ChainIdx.BIFROST, ETH_ON_BIFROST_ERC20_ADDRESS)
-    ETH_ON_ETHEREUM = concat_items_as_int(SymbolIdx.ETH, ChainIdx.ETHEREUM, 0xffffffff)
+    ETH_ON_BIFROST = concat_items_as_int(Symbol.ETH, ChainIdx.BIFROST, ETH_ON_BIFROST_ERC20_ADDRESS)
+    ETH_ON_ETHEREUM = concat_items_as_int(Symbol.ETH, ChainIdx.ETHEREUM, 0xffffffff)
 
-    BNB_ON_BIFROST = concat_items_as_int(SymbolIdx.BNB, ChainIdx.BIFROST, BNB_ON_BIFROST_ERC20_ADDRESS)
-    BNB_ON_BINANCE = concat_items_as_int(SymbolIdx.BNB, ChainIdx.BINANCE, 0xffffffff)
+    BNB_ON_BIFROST = concat_items_as_int(Symbol.BNB, ChainIdx.BIFROST, BNB_ON_BIFROST_ERC20_ADDRESS)
+    BNB_ON_BINANCE = concat_items_as_int(Symbol.BNB, ChainIdx.BINANCE, 0xffffffff)
 
-    AVAX_ON_BIFROST = concat_items_as_int(SymbolIdx.AVAX, ChainIdx.BIFROST, AVAX_ON_BIFROST_ERC20_ADDRESS)
-    AVAX_ON_AVALANCHE = concat_items_as_int(SymbolIdx.AVAX, ChainIdx.AVALANCHE, 0xffffffff)
+    AVAX_ON_BIFROST = concat_items_as_int(Symbol.AVAX, ChainIdx.BIFROST, AVAX_ON_BIFROST_ERC20_ADDRESS)
+    AVAX_ON_AVALANCHE = concat_items_as_int(Symbol.AVAX, ChainIdx.AVALANCHE, 0xffffffff)
 
-    MATIC_ON_BIFROST = concat_items_as_int(SymbolIdx.MATIC, ChainIdx.BIFROST, MATIC_ON_BIFROST_ERC20_ADDRESS)
-    MATIC_ON_POLYGON = concat_items_as_int(SymbolIdx.MATIC, ChainIdx.BIFROST, 0xffffffff)
+    MATIC_ON_BIFROST = concat_items_as_int(Symbol.MATIC, ChainIdx.BIFROST, MATIC_ON_BIFROST_ERC20_ADDRESS)
+    MATIC_ON_POLYGON = concat_items_as_int(Symbol.MATIC, ChainIdx.BIFROST, 0xffffffff)
 
-    USDC_ON_BIFROST = concat_items_as_int(SymbolIdx.USDC, ChainIdx.BIFROST, USDC_ON_BIFROST_ERC20_ADDRESS)
-    USDC_ON_ETHEREUM = concat_items_as_int(SymbolIdx.USDC, ChainIdx.ETHEREUM, USDC_ON_ETHEREUM_ERC20_ADDRESS)
-    USDC_ON_BINANCE = concat_items_as_int(SymbolIdx.USDC, ChainIdx.BINANCE, USDC_ON_BINANCE_ERC20_ADDRESS)
-    USDC_ON_AVALANCHE = concat_items_as_int(SymbolIdx.USDC, ChainIdx.AVALANCHE, USDC_ON_AVALANCHE_ERC20_ADDRESS)
-    USDC_ON_POLYGON = concat_items_as_int(SymbolIdx.USDC, ChainIdx.POLYGON, USDC_ON_POLYGON_ERC20_ADDRESS)
+    USDC_ON_BIFROST = concat_items_as_int(Symbol.USDC, ChainIdx.BIFROST, USDC_ON_BIFROST_ERC20_ADDRESS)
+    USDC_ON_ETHEREUM = concat_items_as_int(Symbol.USDC, ChainIdx.ETHEREUM, USDC_ON_ETHEREUM_ERC20_ADDRESS)
+    USDC_ON_BINANCE = concat_items_as_int(Symbol.USDC, ChainIdx.BINANCE, USDC_ON_BINANCE_ERC20_ADDRESS)
+    USDC_ON_AVALANCHE = concat_items_as_int(Symbol.USDC, ChainIdx.AVALANCHE, USDC_ON_AVALANCHE_ERC20_ADDRESS)
+    USDC_ON_POLYGON = concat_items_as_int(Symbol.USDC, ChainIdx.POLYGON, USDC_ON_POLYGON_ERC20_ADDRESS)
 
-    BUSD_ON_BIFROST = concat_items_as_int(SymbolIdx.BUSD, ChainIdx.BIFROST, BUSD_ON_BIFROST_ERC20_ADDRESS)
-    BUSD_ON_BINANCE = concat_items_as_int(SymbolIdx.BUSD, ChainIdx.BINANCE, BUSD_ON_BINANCE_ERC20_ADDRESS)
+    BUSD_ON_BIFROST = concat_items_as_int(Symbol.BUSD, ChainIdx.BIFROST, BUSD_ON_BIFROST_ERC20_ADDRESS)
+    BUSD_ON_BINANCE = concat_items_as_int(Symbol.BUSD, ChainIdx.BINANCE, BUSD_ON_BINANCE_ERC20_ADDRESS)
 
     @staticmethod
     def is_composed() -> bool:
@@ -187,40 +188,40 @@ class AssetIdx(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [SymbolIdx.__name__, ChainIdx.__name__, "ADDRESS-4"]
+        return [Symbol.__name__, ChainIdx.__name__, "ADDRESS-4"]
 
-    def analyze(self) -> (SymbolIdx, ChainIdx, str):
+    def analyze(self) -> (Symbol, ChainIdx, str):
         """ symbol, related chain and erc20 address """
-        return parser(self.formatted_hex(), [SymbolIdx, ChainIdx, ERC20_ADDRESS_BSIZE])
+        return parser(self.formatted_hex(), [Symbol, ChainIdx, ERC20_ADDRESS_BSIZE])
 
     @staticmethod
     def size():
-        return SymbolIdx.size() + ChainIdx.size() + ERC20_ADDRESS_BSIZE
+        return Symbol.size() + ChainIdx.size() + ERC20_ADDRESS_BSIZE
 
-    def symbol(self) -> SymbolIdx:
-        return cast(SymbolIdx, self.analyze()[0])
+    def symbol(self) -> Symbol:
+        return cast(Symbol, self.analyze()[0])
 
     def is_coin_on(self, chain_index: ChainIdx) -> bool:
         return self.symbol().is_coin_on(chain_index)
 
 
-class BridgeIndex(EnumInterface):
+class Bridge(EnumInterface):
     NONE = 0x00
 
-    BFC_BIFROST_ETHEREUM = concat_items_as_int(AssetIdx.BFC_ON_BIFROST, AssetIdx.BFC_ON_ETHEREUM, "0x00")
-    BIFI_BIFROST_ETHEREUM = concat_items_as_int(AssetIdx.BIFI_ON_BIFROST, AssetIdx.BIFI_ON_ETHEREUM, "0x00")
-    BTC_BITCOIN_BIFROST = concat_items_as_int(AssetIdx.BTC_ON_BITCOIN, AssetIdx.BTC_ON_BIFROST, "0x00")
-    ETH_BIFROST_ETHEREUM = concat_items_as_int(AssetIdx.ETH_ON_BIFROST, AssetIdx.ETH_ON_BIFROST, "0x00")
-    BNB_BIFROST_BINANCE = concat_items_as_int(AssetIdx.BNB_ON_BIFROST, AssetIdx.BNB_ON_BINANCE, "0x00")
-    MATIC_BIFROST_POLYGON = concat_items_as_int(AssetIdx.MATIC_ON_BIFROST, AssetIdx.MATIC_ON_POLYGON, "0x00")
-    AVAX_BIFROST_AVALANCHE = concat_items_as_int(AssetIdx.AVAX_ON_BIFROST, AssetIdx.AVAX_ON_AVALANCHE, "0x00")
+    BFC_BIFROST_ETHEREUM = concat_items_as_int(Asset.BFC_ON_BIFROST, Asset.BFC_ON_ETHEREUM, "0x01")
+    BIFI_BIFROST_ETHEREUM = concat_items_as_int(Asset.BIFI_ON_BIFROST, Asset.BIFI_ON_ETHEREUM, "0x01")
+    BTC_BITCOIN_BIFROST = concat_items_as_int(Asset.BTC_ON_BITCOIN, Asset.BTC_ON_BIFROST, "0x01")
+    ETH_BIFROST_ETHEREUM = concat_items_as_int(Asset.ETH_ON_BIFROST, Asset.ETH_ON_BIFROST, "0x01")
+    BNB_BIFROST_BINANCE = concat_items_as_int(Asset.BNB_ON_BIFROST, Asset.BNB_ON_BINANCE, "0x01")
+    MATIC_BIFROST_POLYGON = concat_items_as_int(Asset.MATIC_ON_BIFROST, Asset.MATIC_ON_POLYGON, "0x01")
+    AVAX_BIFROST_AVALANCHE = concat_items_as_int(Asset.AVAX_ON_BIFROST, Asset.AVAX_ON_AVALANCHE, "0x01")
 
-    USDC_BIFROST_ETHEREUM = concat_items_as_int(AssetIdx.USDC_ON_BIFROST, AssetIdx.USDC_ON_ETHEREUM, "0x00")
-    USDC_BIFROST_BINANCE = concat_items_as_int(AssetIdx.USDC_ON_BIFROST, AssetIdx.USDC_ON_BINANCE, "0x00")
-    USDC_BIFROST_AVALANCHE = concat_items_as_int(AssetIdx.USDC_ON_BIFROST, AssetIdx.USDC_ON_AVALANCHE, "0x00")
-    USDC_BIFROST_POLYGON = concat_items_as_int(AssetIdx.USDC_ON_BIFROST, AssetIdx.USDC_ON_POLYGON, "0x00")
+    USDC_BIFROST_ETHEREUM = concat_items_as_int(Asset.USDC_ON_BIFROST, Asset.USDC_ON_ETHEREUM, "0x01")
+    USDC_BIFROST_BINANCE = concat_items_as_int(Asset.USDC_ON_BIFROST, Asset.USDC_ON_BINANCE, "0x01")
+    USDC_BIFROST_AVALANCHE = concat_items_as_int(Asset.USDC_ON_BIFROST, Asset.USDC_ON_AVALANCHE, "0x01")
+    USDC_BIFROST_POLYGON = concat_items_as_int(Asset.USDC_ON_BIFROST, Asset.USDC_ON_POLYGON, "0x01")
 
-    BUSD_BIFROST_ETHEREUM = concat_items_as_int(AssetIdx.BUSD_ON_BIFROST, AssetIdx.BUSD_ON_BINANCE, "0x00")
+    BUSD_BIFROST_ETHEREUM = concat_items_as_int(Asset.BUSD_ON_BIFROST, Asset.BUSD_ON_BINANCE, "0x01")
 
     def __repr__(self) -> str:
         return self.name
@@ -231,18 +232,18 @@ class BridgeIndex(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [AssetIdx.__name__, AssetIdx.__name__, "DISTINGUISH_BYTE-1"]
+        return [Asset.__name__, Asset.__name__, "DISTINGUISH_BYTE-1"]
 
     @staticmethod
     def size() -> int:
-        return AssetIdx.size() * 2 + DISTINGUISH_NUM_BSIZE
+        return Asset.size() * 2 + DISTINGUISH_NUM_BSIZE
 
-    def analyze(self) -> (AssetIdx, AssetIdx, int):
+    def analyze(self) -> (Asset, Asset, int):
         """ parse 2 indices and duplicate-prevention number"""
-        return parser(self.formatted_hex(), [AssetIdx, AssetIdx, DISTINGUISH_NUM_BSIZE])
+        return parser(self.formatted_hex(), [Asset, Asset, DISTINGUISH_NUM_BSIZE])
 
-    def symbol(self) -> SymbolIdx:
-        return cast(self.analyze()[0], SymbolIdx).symbol()
+    def symbol(self) -> Symbol:
+        return cast(self.analyze()[0], Symbol).symbol()
 
     def is_coin_on(self, chain_index: ChainIdx) -> bool:
         return self.symbol().is_coin_on(chain_index)
@@ -250,21 +251,18 @@ class BridgeIndex(EnumInterface):
 
 class OPCode(EnumInterface):
     NONE = 0x00
-    INBOUND = 0x01
-    OUTBOUND = 0x02
-    IN_AND_OUTBOUND = 0x03
-    WARP = 0x04
-    UNIFY = 0x05
-    SPLIT = 0x06
-    UNIFY_SPLIT = 0x07
-    DEPOSIT = 0x08
-    WITHDRAW = 0x09
-    BORROW = 0xa
-    REPAY = 0xb
-    X_OPEN = 0xc
-    X_END = 0xd
-    SWAP = 0xe
-    CALL = 0xf
+    WARP = 0x01
+    UNIFY = 0x02
+    SPLIT = 0x03
+    UNIFY_SPLIT = 0x04
+    DEPOSIT = 0x05
+    WITHDRAW = 0x06
+    BORROW = 0x7
+    REPAY = 0x8
+    X_OPEN = 0x9
+    X_END = 0xa
+    SWAP = 0xb
+    CALL = 0xc
 
     @staticmethod
     def size():
@@ -279,28 +277,47 @@ class OPCode(EnumInterface):
         return []
 
 
-class RBCMethodIdxV1(EnumInterface):
+class RBCMethodDirection(EnumInterface):
+    NONE = 0x00
+    INBOUND = 0x01
+    OUTBOUND = 0x02
+    IN_AND_OUTBOUND = 0x03
+
+    @staticmethod
+    def is_composed() -> bool:
+        return False
+
+    @staticmethod
+    def components() -> List[str]:
+        return []
+
+    @staticmethod
+    def size() -> int:
+        return 1
+
+
+class RBCMethodV1(EnumInterface):
     NONE = 0x0000000000000000
-    WARP_IN = concat_items_as_int(2, OPCode.INBOUND, OPCode.WARP)
-    WARP_UNIFY = concat_items_as_int(3, OPCode.INBOUND, OPCode.WARP, OPCode.UNIFY)
-    WARP_UNIFY_DEPOSIT = concat_items_as_int(4, OPCode.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.DEPOSIT)
-    WARP_UNIFY_REPAY = concat_items_as_int(4, OPCode.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.REPAY)
-    WARP_UNIFY_SWAP = concat_items_as_int(4, OPCode.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.SWAP)
-    WARP_XOPEN = concat_items_as_int(4, OPCode.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.X_OPEN)
-    WARP_CALL = concat_items_as_int(3, OPCode.INBOUND, OPCode.CALL, OPCode.WARP)
+    WARP_IN = concat_items_as_int(2, RBCMethodDirection.INBOUND, OPCode.WARP)
+    WARP_UNIFY = concat_items_as_int(3, RBCMethodDirection.INBOUND, OPCode.WARP, OPCode.UNIFY)
+    WARP_UNIFY_DEPOSIT = concat_items_as_int(4, RBCMethodDirection.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.DEPOSIT)
+    WARP_UNIFY_REPAY = concat_items_as_int(4, RBCMethodDirection.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.REPAY)
+    WARP_UNIFY_SWAP = concat_items_as_int(4, RBCMethodDirection.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.SWAP)
+    WARP_XOPEN = concat_items_as_int(4, RBCMethodDirection.INBOUND, OPCode.WARP, OPCode.UNIFY, OPCode.X_OPEN)
+    WARP_CALL = concat_items_as_int(3, RBCMethodDirection.INBOUND, OPCode.CALL, OPCode.WARP)
 
-    WARP_OUT = concat_items_as_int(2, OPCode.OUTBOUND, OPCode.WARP)
-    SPLIT_WARP = concat_items_as_int(3, OPCode.OUTBOUND, OPCode.SPLIT, OPCode.WARP)
-    BORROW_SPLIT_WARP = concat_items_as_int(4, OPCode.OUTBOUND, OPCode.BORROW, OPCode.SPLIT, OPCode.WARP)
-    WITHDRAW_SPLIT_WARP = concat_items_as_int(4, OPCode.OUTBOUND, OPCode.WITHDRAW, OPCode.SPLIT, OPCode.WARP)
-    SWAP_SPLIT_WARP = concat_items_as_int(4, OPCode.OUTBOUND, OPCode.SWAP, OPCode.SPLIT, OPCode.WARP)
-    XEND_SPLIT_WARP = concat_items_as_int(4, OPCode.OUTBOUND, OPCode.X_END, OPCode.SPLIT, OPCode.WARP)
-    CALL_WARP = concat_items_as_int(3, OPCode.OUTBOUND, OPCode.CALL, OPCode.WARP)
+    WARP_OUT = concat_items_as_int(2, RBCMethodDirection.OUTBOUND, OPCode.WARP)
+    SPLIT_WARP = concat_items_as_int(3, RBCMethodDirection.OUTBOUND, OPCode.SPLIT, OPCode.WARP)
+    BORROW_SPLIT_WARP = concat_items_as_int(4, RBCMethodDirection.OUTBOUND, OPCode.BORROW, OPCode.SPLIT, OPCode.WARP)
+    WITHDRAW_SPLIT_WARP = concat_items_as_int(4, RBCMethodDirection.OUTBOUND, OPCode.WITHDRAW, OPCode.SPLIT, OPCode.WARP)
+    SWAP_SPLIT_WARP = concat_items_as_int(4, RBCMethodDirection.OUTBOUND, OPCode.SWAP, OPCode.SPLIT, OPCode.WARP)
+    XEND_SPLIT_WARP = concat_items_as_int(4, RBCMethodDirection.OUTBOUND, OPCode.X_END, OPCode.SPLIT, OPCode.WARP)
+    CALL_WARP = concat_items_as_int(3, RBCMethodDirection.OUTBOUND, OPCode.CALL, OPCode.WARP)
 
-    WARP_SWAP_WARP = concat_items_as_int(4, OPCode.IN_AND_OUTBOUND, OPCode.WARP, OPCode.SWAP, OPCode.WARP)
-    WARP_UNIFY_SPLIT_WARP = concat_items_as_int(4, OPCode.IN_AND_OUTBOUND, OPCode.WARP, OPCode.UNIFY_SPLIT, OPCode.WARP)
+    WARP_SWAP_WARP = concat_items_as_int(4, RBCMethodDirection.IN_AND_OUTBOUND, OPCode.WARP, OPCode.SWAP, OPCode.WARP)
+    WARP_UNIFY_SPLIT_WARP = concat_items_as_int(4, RBCMethodDirection.IN_AND_OUTBOUND, OPCode.WARP, OPCode.UNIFY_SPLIT, OPCode.WARP)
     WARP_UNIFY_SWAP_SPLIT_WARP = concat_items_as_int(
-        6, OPCode.IN_AND_OUTBOUND, OPCode.WARP, OPCode.SPLIT, OPCode.SWAP, OPCode.UNIFY, OPCode.WARP
+        6, RBCMethodDirection.IN_AND_OUTBOUND, OPCode.WARP, OPCode.SPLIT, OPCode.SWAP, OPCode.UNIFY, OPCode.WARP
     )
 
     @staticmethod
@@ -309,7 +326,7 @@ class RBCMethodIdxV1(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return ["NUM_OF_OPCODE(1B)", "DYNAMIC_SIZE_ARRAY[{}]".format(OPCode.__name__)]
+        return ["LENGTH(1B)", RBCMethodDirection.__name__,  "DYNAMIC_SIZE_ARRAY[{}]".format(OPCode.__name__)]
 
     def analyze(self) -> (int, List[OPCode]):
         self_hex = self.formatted_hex().replace("0x", "")
@@ -336,7 +353,7 @@ class RBCMethodIdxV1(EnumInterface):
 
     @staticmethod
     def size():
-        return 32
+        return 16
 
 
 class OracleType(EnumInterface):
@@ -375,20 +392,20 @@ class OracleSourceType(EnumInterface):
         return []
 
 
-class OracleIdx(EnumInterface):
+class Oracle(EnumInterface):
     NONE = 0
-    BFC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.BFC_ON_ETHEREUM)
-    BIFI_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.BIFI_ON_ETHEREUM)
-    BTC_PRICE_ON_BITCOIN = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.BTC_ON_BITCOIN)
-    ETH_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.ETH_ON_ETHEREUM)
-    BNB_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.BNB_ON_BINANCE)
-    MATIC_PRICE_ON_POLYGON = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.MATIC_ON_POLYGON)
-    AVAX_PRICE_ON_AVALANCHE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.AVAX_ON_AVALANCHE)
+    BFC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BFC_ON_ETHEREUM)
+    BIFI_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BIFI_ON_ETHEREUM)
+    BTC_PRICE_ON_BITCOIN = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BTC_ON_BITCOIN)
+    ETH_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.ETH_ON_ETHEREUM)
+    BNB_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BNB_ON_BINANCE)
+    MATIC_PRICE_ON_POLYGON = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.MATIC_ON_POLYGON)
+    AVAX_PRICE_ON_AVALANCHE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.AVAX_ON_AVALANCHE)
 
-    USDC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.USDC_ON_ETHEREUM)
-    BUSD_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, AssetIdx.BUSD_ON_BINANCE)
+    USDC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.USDC_ON_ETHEREUM)
+    BUSD_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BUSD_ON_BINANCE)
 
-    BITCOIN_BLOCK_HASH = concat_items_as_int(OracleType.CONSENSUS, OracleSourceType.BLOCK_HASH, AssetIdx.BTC_ON_BITCOIN)
+    BITCOIN_BLOCK_HASH = concat_items_as_int(OracleType.CONSENSUS, OracleSourceType.BLOCK_HASH, Asset.BTC_ON_BITCOIN)
 
     @staticmethod
     def is_composed() -> bool:
@@ -396,23 +413,26 @@ class OracleIdx(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [OracleType.__name__, OracleType.__name__, AssetIdx.__name__]
+        return [OracleType.__name__, OracleSourceType.__name__, Asset.__name__]
 
     def analyze(self):
-        return parser(self.formatted_hex(), [OracleType, OracleSourceType, AssetIdx])
+        return parser(self.formatted_hex(), [OracleType, OracleSourceType, Asset])
 
     @staticmethod
     def size() -> int:
-        return 32
+        return OracleType.size() + OracleSourceType.size() + Asset.size()
 
     def formatted_hex(self) -> str:
         if self == self.__class__.NONE:
             return "0x" + "00" * self.size()
-        zero_pad = "00" * (self.size() - OracleType.size() - OracleSourceType.size() - AssetIdx.size())
+        zero_pad = "00" * (self.size() - OracleType.size() - OracleSourceType.size() - Asset.size())
         return to_even_hex(self.value) + zero_pad
 
     def formatted_bytes(self) -> bytes:
         return bytes.fromhex(self.formatted_hex().replace("0x", ""))
+
+    # def from_bridge(self, bridge: Bridge):
+
 
 
 class ChainEventStatus(EnumInterface):
@@ -457,17 +477,18 @@ class TestEnum(unittest.TestCase):
 
     def test_print_enum(self):
         enum_dict = {}
-        enum_dict["ChainIndex"] = TestEnum.generate_dict_for_index(ChainIdx)
-        enum_dict["SymbolIdx"] = TestEnum.generate_dict_for_index(SymbolIdx)
-        enum_dict["AssetIdx"] = TestEnum.generate_dict_for_index(AssetIdx)
-        enum_dict["BridgeIndex"] = TestEnum.generate_dict_for_index(BridgeIndex)
+        enum_dict["ChainIdx"] = TestEnum.generate_dict_for_index(ChainIdx)
+        enum_dict["SymbolIdx"] = TestEnum.generate_dict_for_index(Symbol)
+        enum_dict["AssetIdx"] = TestEnum.generate_dict_for_index(Asset)
+        enum_dict["BridgeIndex"] = TestEnum.generate_dict_for_index(Bridge)
 
         enum_dict["OPCode"] = TestEnum.generate_dict_for_index(OPCode)
-        enum_dict["RBCMethodIndex"] = TestEnum.generate_dict_for_index(RBCMethodIdxV1)
+        enum_dict["RBCMethodDirection"] = TestEnum.generate_dict_for_index(RBCMethodDirection)
+        enum_dict["RBCMethodIndex"] = TestEnum.generate_dict_for_index(RBCMethodV1)
 
         enum_dict["OracleType"] = TestEnum.generate_dict_for_index(OracleType)
         enum_dict["OracleSourceType"] = TestEnum.generate_dict_for_index(OracleSourceType)
-        enum_dict["OracleIdx"] = TestEnum.generate_dict_for_index(OracleIdx)
+        enum_dict["OracleIdx"] = TestEnum.generate_dict_for_index(Oracle)
         enum_dict["ChainEventStatus"] = TestEnum.generate_dict_for_index(ChainEventStatus)
 
         print(json.dumps(enum_dict, indent=4))
