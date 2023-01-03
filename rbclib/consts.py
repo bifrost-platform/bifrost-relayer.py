@@ -1,6 +1,6 @@
 import json
 import unittest
-from chainpy.eth.ethtype.consts import ChainIndex, EnumInterface, concat_2enum_as_int
+from chainpy.eth.ethtype.consts import ChainIndex, EnumInterface
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.eth.ethtype.utils import keccak_hash
 
@@ -8,7 +8,19 @@ BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
 
 
-class TokenIndex(EnumInterface):
+def sized_hex(a: int, a_size: int) -> str:
+    limit = 2 ** (a_size << 3) - 1
+    if a > limit:
+        raise Exception("overflow")
+    return "0x" + hex(a)[2:].zfill(a_size * 2)
+
+
+def concat_2enum_as_int(a, b) -> int:
+    a_hex, b_hex = sized_hex(a.value, a.size()), sized_hex(b.value, b.size())
+    return int(a_hex + b_hex.replace("0x", ""), 16)
+
+
+class SymbolIdx(EnumInterface):
     BFC  = 0x0000000000000001
     BTC  = 0x0000000000000002
     ETH  = 0x0000000000000003
@@ -33,41 +45,41 @@ class BridgeIndex(EnumInterface):
     NONE             = 0x00000000000000000000000000000000
 
     # tokens relate to the Bifrost coin
-    BFC_BIFROST      = concat_2enum_as_int(TokenIndex.BFC, ChainIndex.BIFROST)
-    WBFC_BIFROST     = concat_2enum_as_int(TokenIndex.WBFC, ChainIndex.BIFROST)
+    BFC_BIFROST      = concat_2enum_as_int(SymbolIdx.BFC, ChainIndex.BIFROST)
+    WBFC_BIFROST     = concat_2enum_as_int(SymbolIdx.WBFC, ChainIndex.BIFROST)
 
     # bitcoin
-    BTC_BITCOIN      = concat_2enum_as_int(TokenIndex.BTC, ChainIndex.BITCOIN)
+    BTC_BITCOIN      = concat_2enum_as_int(SymbolIdx.BTC, ChainIndex.BITCOIN)
 
     # tokens on the ethereum
-    ETH_ETHEREUM     = concat_2enum_as_int(TokenIndex.ETH, ChainIndex.ETHEREUM)
-    DAI_ETHEREUM     = concat_2enum_as_int(TokenIndex.DAI, ChainIndex.ETHEREUM)
-    USDC_ETHEREUM    = concat_2enum_as_int(TokenIndex.USDC, ChainIndex.ETHEREUM)
-    USDT_ETHEREUM    = concat_2enum_as_int(TokenIndex.USDT, ChainIndex.ETHEREUM)
-    LINK_ETHEREUM    = concat_2enum_as_int(TokenIndex.LINK, ChainIndex.ETHEREUM)
-    BIFI_ETHEREUM = concat_2enum_as_int(TokenIndex.BIFI, ChainIndex.ETHEREUM)
+    ETH_ETHEREUM     = concat_2enum_as_int(SymbolIdx.ETH, ChainIndex.ETHEREUM)
+    DAI_ETHEREUM     = concat_2enum_as_int(SymbolIdx.DAI, ChainIndex.ETHEREUM)
+    USDC_ETHEREUM    = concat_2enum_as_int(SymbolIdx.USDC, ChainIndex.ETHEREUM)
+    USDT_ETHEREUM    = concat_2enum_as_int(SymbolIdx.USDT, ChainIndex.ETHEREUM)
+    LINK_ETHEREUM    = concat_2enum_as_int(SymbolIdx.LINK, ChainIndex.ETHEREUM)
+    BIFI_ETHEREUM = concat_2enum_as_int(SymbolIdx.BIFI, ChainIndex.ETHEREUM)
 
-    BNB_BINANCE = concat_2enum_as_int(TokenIndex.BNB, ChainIndex.BINANCE)
-    BUSD_BINANCE = concat_2enum_as_int(TokenIndex.BUSD, ChainIndex.BINANCE)
-    USDC_BINANCE = concat_2enum_as_int(TokenIndex.USDC, ChainIndex.BINANCE)
+    BNB_BINANCE = concat_2enum_as_int(SymbolIdx.BNB, ChainIndex.BINANCE)
+    BUSD_BINANCE = concat_2enum_as_int(SymbolIdx.BUSD, ChainIndex.BINANCE)
+    USDC_BINANCE = concat_2enum_as_int(SymbolIdx.USDC, ChainIndex.BINANCE)
 
-    MATIC_POLYGON = concat_2enum_as_int(TokenIndex.MATIC, ChainIndex.POLYGON)
+    MATIC_POLYGON = concat_2enum_as_int(SymbolIdx.MATIC, ChainIndex.POLYGON)
 
     # tokens on the klaytn
-    KLAY_KLAYTN      = concat_2enum_as_int(TokenIndex.KLAY, ChainIndex.KLAYTN)
+    KLAY_KLAYTN      = concat_2enum_as_int(SymbolIdx.KLAY, ChainIndex.KLAYTN)
 
-    AVAX_AVALANCHE = concat_2enum_as_int(TokenIndex.AVAX, ChainIndex.AVALANCHE)
+    AVAX_AVALANCHE = concat_2enum_as_int(SymbolIdx.AVAX, ChainIndex.AVALANCHE)
 
     def __repr__(self) -> str:
         return self.name
 
     @staticmethod
     def size() -> int:
-        return TokenIndex.size() + ChainIndex.size()  # 16
+        return SymbolIdx.size() + ChainIndex.size()  # 16
 
     def home_chain_index(self) -> ChainIndex:
         value_bytes = EthHexBytes(self.value, self.size())
-        return ChainIndex(value_bytes[TokenIndex.size():])
+        return ChainIndex(value_bytes[SymbolIdx.size():])
 
     def token_name(self) -> str:
         return self.name.split("_")[0]
@@ -119,18 +131,18 @@ class RBCMethodIndex(EnumInterface):
 class AggOracleId(EnumInterface):
     NONE = 0
 
-    BFC_PRICE = TokenIndex.BFC.value
-    BTC_PRICE = TokenIndex.BTC.value
-    ETH_PRICE = TokenIndex.ETH.value
-    DAI_PRICE = TokenIndex.DAI.value
-    USDC_PRICE = TokenIndex.USDC.value
-    USDT_PRICE = TokenIndex.USDT.value
-    LINK_PRICE = TokenIndex.LINK.value
-    KLAY_PRICE = TokenIndex.KLAY.value
-    BNB_PRICE = TokenIndex.BNB.value
-    MATIC_PRICE = TokenIndex.MATIC.value
-    BIFI_PRICE = TokenIndex.BIFI.value
-    BUSD_PRICE = TokenIndex.BUSD.value
+    BFC_PRICE = SymbolIdx.BFC.value
+    BTC_PRICE = SymbolIdx.BTC.value
+    ETH_PRICE = SymbolIdx.ETH.value
+    DAI_PRICE = SymbolIdx.DAI.value
+    USDC_PRICE = SymbolIdx.USDC.value
+    USDT_PRICE = SymbolIdx.USDT.value
+    LINK_PRICE = SymbolIdx.LINK.value
+    KLAY_PRICE = SymbolIdx.KLAY.value
+    BNB_PRICE = SymbolIdx.BNB.value
+    MATIC_PRICE = SymbolIdx.MATIC.value
+    BIFI_PRICE = SymbolIdx.BIFI.value
+    BUSD_PRICE = SymbolIdx.BUSD.value
 
     @staticmethod
     def size() -> int:
@@ -181,7 +193,7 @@ class TestEnum(unittest.TestCase):
     def test_print_enum(self):
         enum_dict = {}
         enum_dict["ChainIndex"] = TestEnum.generate_dict_for_index(ChainIndex)
-        enum_dict["TokenIndex"] = TestEnum.generate_dict_for_index(TokenIndex)
+        enum_dict["TokenIndex"] = TestEnum.generate_dict_for_index(SymbolIdx)
 
         enum_dict["BridgeIndex"] = TestEnum.generate_dict_for_index(BridgeIndex)
         enum_dict["ChainEventStatus"] = TestEnum.generate_dict_for_index(ChainEventStatus)
