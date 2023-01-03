@@ -3,7 +3,7 @@ from typing import List
 
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from relayer.tools.consts import NOMINATION_AMOUNT
 from relayer.tools.utils_recharger import fetch_healthy_relayers
@@ -35,7 +35,7 @@ def nominator_cmd(project_root_path: str = "./"):
             nominations = list()
             for rwv in healthy_relayers:
                 candidate_state = nominator.world_call(
-                    ChainIdx.BIFROST, "authority", "candidate_state", [rwv.relayer.hex()])
+                    Chain.BIFROST, "authority", "candidate_state", [rwv.relayer.hex()])
                 nominations.append(candidate_state[0][5])
 
             RelayerWithVersion.display_addrs(nominator, "healthy_relayers", healthy_relayers)
@@ -51,11 +51,11 @@ def nominator_cmd(project_root_path: str = "./"):
             dummy_user = Manager.init_manager("User", project_root_path, dummy_account)
 
             _, tx_hash = nominator.world_transfer_coin(
-                ChainIdx.BIFROST,
+                Chain.BIFROST,
                 dummy_account.address,
                 (NOMINATION_AMOUNT + EthAmount(1.0))
             )
-            receipt = nominator.world_receipt_with_wait(ChainIdx.BIFROST, tx_hash)
+            receipt = nominator.world_receipt_with_wait(Chain.BIFROST, tx_hash)
             print("transfer transaction")
             display_receipt_status(receipt)
             if receipt is None:
@@ -64,13 +64,13 @@ def nominator_cmd(project_root_path: str = "./"):
                 raise Exception("transaction fails")
 
             tx = dummy_user.world_build_transaction(
-                ChainIdx.BIFROST,
+                Chain.BIFROST,
                 "authority",
                 "nominate",
                 [validator_addr.hex(), EthAmount(10000.0).int(), 100, 100]
             )
-            _, tx_hash = dummy_user.world_send_transaction(ChainIdx.BIFROST, tx)
-            receipt = dummy_user.world_receipt_with_wait(ChainIdx.BIFROST, tx_hash)
+            _, tx_hash = dummy_user.world_send_transaction(Chain.BIFROST, tx)
+            receipt = dummy_user.world_receipt_with_wait(Chain.BIFROST, tx_hash)
             print("nominate transaction")
             display_receipt_status(receipt)
 

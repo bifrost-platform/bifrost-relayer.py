@@ -1,7 +1,7 @@
 import enum
 from typing import List
 
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.bifrostutils import fetch_submitted_oracle_feed, fetch_btc_hash_from_oracle, fetch_price_from_oracle, \
@@ -46,7 +46,7 @@ def operator_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedOperatorCmd.FETCH_EXTERNAL_AUTHORITY_LIST:  # TODO version?
             # authority list
-            validator_addr_list = fetch_sorted_relayer_list(operator, ChainIdx.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list(operator, Chain.BIFROST)
             validator_addr_list = [RelayerWithVersion(addr) for addr in validator_addr_list]
             RelayerWithVersion.display_addrs(operator, "<fetched authority list>", validator_addr_list)
 
@@ -55,7 +55,7 @@ def operator_cmd(project_root_path: str = "./"):
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_AUTHORITIES:
             # validator coin balances
-            validator_addr_list = fetch_sorted_relayer_list(operator, ChainIdx.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list(operator, Chain.BIFROST)
             validator_addr_list = [EthAddress(addr) for addr in validator_addr_list]
             print("----------------------------------------------------------------------------------")
             for i, addr in enumerate(validator_addr_list):
@@ -80,11 +80,11 @@ def operator_cmd(project_root_path: str = "./"):
             print(btc_hash.hex())
 
         elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS:
-            relayers = fetch_sorted_relayer_list(operator, ChainIdx.BIFROST)
-            latest_round = fetch_oracle_latest_round(operator, Oracle.BTC_PRICE_ON_BITCOIN)
+            relayers = fetch_sorted_relayer_list(operator, Chain.BIFROST)
+            latest_round = fetch_oracle_latest_round(operator, Oracle.BITCOIN_BLOCK_HASH)
             print("latest_round: {}".format(latest_round))
             for relayer in relayers:
-                result = fetch_submitted_oracle_feed(operator, Oracle.BTC_PRICE_ON_BITCOIN, latest_round + 1, EthAddress(relayer))
+                result = fetch_submitted_oracle_feed(operator, Oracle.BITCOIN_BLOCK_HASH, latest_round + 1, EthAddress(relayer))
                 print("addr: {} {}".format(relayer, result.hex()))
         else:
             return

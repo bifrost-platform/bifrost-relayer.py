@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthTransaction
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from rbclib.consts import Bridge, RBCMethodV1
 from relayer.tools.consts import EXECUTABLE_TOKEN_LIST
@@ -12,7 +12,7 @@ from relayer.user import User
 
 
 class RequestParams:
-    def __init__(self, target_chain: ChainIdx, tx: EthTransaction, token_index: Bridge):
+    def __init__(self, target_chain: Chain, tx: EthTransaction, token_index: Bridge):
         self.chain = target_chain
         self.tx = tx
         self.token_index = token_index
@@ -25,16 +25,16 @@ def _build_request(user: Manager, direction: str, token: Bridge) -> RequestParam
     decimal = determine_decimal(token)
     if direction == "inbound":
         home_chain = token.home_chain_index()
-        target_chain = ChainIdx.ETHEREUM if home_chain == ChainIdx.BIFROST else home_chain
+        target_chain = Chain.ETHEREUM if home_chain == Chain.BIFROST else home_chain
         amount = EthAmount(0.02)
     else:
-        target_chain = ChainIdx.BIFROST
+        target_chain = Chain.BIFROST
         amount = EthAmount(0.01)
 
     if decimal != 18:
         amount = EthAmount(3.0, decimal)
 
-    tx = user.build_cross_action_tx(target_chain, ChainIdx.BIFROST, token, RBCMethodIndex.WARP, amount)
+    tx = user.build_cross_action_tx(target_chain, Chain.BIFROST, token, RBCMethodV1.WARP_IN, amount)
     return RequestParams(target_chain, tx, token)
 
 
@@ -56,7 +56,7 @@ def build_request_batch(user: Manager, config: dict) -> List[RequestParams]:
     return request_list
 
 
-def send_request_batch(user: User, transactions: List[RequestParams]) -> List[Tuple[ChainIdx, EthHashBytes]]:
+def send_request_batch(user: User, transactions: List[RequestParams]) -> List[Tuple[Chain, EthHashBytes]]:
     receipt_params = []
     for i, tx in enumerate(transactions):
         _, tx_hash = user.world_send_transaction(tx.chain, tx.tx)
@@ -66,7 +66,7 @@ def send_request_batch(user: User, transactions: List[RequestParams]) -> List[Tu
     return receipt_params
 
 
-def check_receipt_batch(user, receipt_params: List[Tuple[ChainIdx, EthHashBytes]]):
+def check_receipt_batch(user, receipt_params: List[Tuple[Chain, EthHashBytes]]):
     for receipt_param in receipt_params:
         chain, tx_hash = receipt_param[0], receipt_param[1]
         receipt = user.world_receipt_with_wait(chain, tx_hash)

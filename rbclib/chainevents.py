@@ -16,7 +16,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
 
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
 proto_logger = Logger("Protocol", logging.DEBUG)
 
-RangesDict = Dict[ChainIdx, Tuple[int, int]]
-NoneParams = (ChainIdx.NONE, "", "", [])
+RangesDict = Dict[Chain, Tuple[int, int]]
+NoneParams = (Chain.NONE, "", "", [])
 
 
 RBC_EVENT_STATUS_START_DATA_START_INDEX = 128
@@ -133,7 +133,7 @@ class RbcEvent(ChainEventABC):
         request_id_str = [req_id[0].name, req_id[1], req_id[2]]
         return "{}:{}".format(request_id_str, self.status.name)
 
-    def build_call_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ builds and returns call transaction parameters related to this event. """
         if not self.check_my_event():
             return NoneParams
@@ -185,17 +185,17 @@ class RbcEvent(ChainEventABC):
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
-        return self.src_chain_index != ChainIdx.BIFROST
+        return self.src_chain_index != Chain.BIFROST
 
     def is_outbound(self) -> bool:
-        return self.src_chain_index == ChainIdx.BIFROST
+        return self.src_chain_index == Chain.BIFROST
 
-    def req_id(self, obj_flag: bool = False) -> Tuple[Union[int, ChainIdx], int, int]:
+    def req_id(self, obj_flag: bool = False) -> Tuple[Union[int, Chain], int, int]:
         unzipped_decoded_data = self.decoded_data[0]
         req_id_tuple = unzipped_decoded_data[0]
         if not obj_flag:
             return req_id_tuple
-        return ChainIdx(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
+        return Chain(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
 
     @property
     def req_id_str(self) -> str:
@@ -204,7 +204,7 @@ class RbcEvent(ChainEventABC):
         return req_id_bytes.hex()
 
     @property
-    def src_chain_index(self) -> ChainIdx:
+    def src_chain_index(self) -> Chain:
         return self.req_id(True)[0]
 
     @property
@@ -226,15 +226,15 @@ class RbcEvent(ChainEventABC):
         req_id_bytes = EthHashBytes(req_id_tuple[0]) + EthHashBytes(req_id_tuple[1]) + EthHashBytes(req_id_tuple[2])
         return (req_id_bytes + EthHashBytes(self.status.value)).hex()
 
-    def inst(self, obj_flag: bool = False) -> Tuple[Union[ChainIdx, int], Union[RBCMethodV1, int]]:
+    def inst(self, obj_flag: bool = False) -> Tuple[Union[Chain, int], Union[RBCMethodV1, int]]:
         unzipped_decoded_data = self.decoded_data[0]
         inst_id_tuple = unzipped_decoded_data[2]
         if not obj_flag:
             return inst_id_tuple
-        return ChainIdx(inst_id_tuple[0]), RBCMethodV1(inst_id_tuple[1])
+        return Chain(inst_id_tuple[0]), RBCMethodV1(inst_id_tuple[1])
 
     @property
-    def dst_chain_index(self) -> ChainIdx:
+    def dst_chain_index(self) -> Chain:
         return self.inst(True)[0]
 
     @property
@@ -287,13 +287,13 @@ class RbcEvent(ChainEventABC):
         }
 
     @staticmethod
-    def bootstrap(manager: "Relayer", _range: Dict[ChainIdx, List[int]]) -> List['RbcEvent']:
+    def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['RbcEvent']:
         # Announcing the start of the event collection
         formatted_log(
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(RbcEvent.EVENT_NAME),
-            related_chain=ChainIdx.NONE,
+            related_chain=Chain.NONE,
             log_data="range({})".format(_range)
         )
 
@@ -326,7 +326,7 @@ class RbcEvent(ChainEventABC):
                 bootstrap_logger,
                 relayer_addr=manager.active_account.address,
                 log_id="Unchecked{}Log".format(RbcEvent.EVENT_NAME),
-                related_chain=ChainIdx.NONE,
+                related_chain=Chain.NONE,
                 log_data=event_obj.summary()
             )
         return not_finalized_event_objs
@@ -360,14 +360,14 @@ class RbcEvent(ChainEventABC):
         return data[:start] + EthHashBytes(event_status.value) + data[end:]
 
     def is_primary_relayer(self):
-        total_validator_num = fetch_relayer_num(self.relayer, ChainIdx.BIFROST)
+        total_validator_num = fetch_relayer_num(self.relayer, Chain.BIFROST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
 
         return primary_index == my_index
 
-    def aggregated_relay(self, target_chain: ChainIdx, is_primary_relay: bool, chain_event_status: ChainEventStatus):
+    def aggregated_relay(self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus):
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         sigs = fetch_socket_rbc_sigs(self.relayer, self.req_id(), chain_event_status)
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
@@ -387,7 +387,7 @@ class RbcEvent(ChainEventABC):
         data_with_next_status = self.change_status_of_data(self.detected_event, next_status)
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainRequestedEvent(RbcEvent):
@@ -401,19 +401,19 @@ class ChainRequestedEvent(RbcEvent):
             return NoneParams
         return self.dst_chain_index, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id(False)]
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, list]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, list]:
         """ A method to build a transaction which handles the event """
         if not self.check_my_event():
             return NoneParams
 
         if self.is_inbound():
-            return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()  # TODO inbound forced fail
+            return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()  # TODO inbound forced fail
         else:
             # generate signature if it's needed
             status_changed_data = RbcEvent.change_status_of_data(self.detected_event, ChainEventStatus.ACCEPTED)
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
             submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-            return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+            return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():
@@ -423,7 +423,7 @@ class ChainRequestedEvent(RbcEvent):
         voting_num = voting_list[self.status.value]
 
         # get quorum
-        quorum = fetch_quorum(self.relayer, ChainIdx.BIFROST, self.rnd)
+        quorum = fetch_quorum(self.relayer, Chain.BIFROST, self.rnd)
         if quorum == 0:
             return None
 
@@ -432,7 +432,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=ChainIdx.BIFROST,
+                related_chain=Chain.BIFROST,
                 log_data="voting-num({})".format(voting_num)
             )
             ret = None
@@ -441,7 +441,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=ChainIdx.BIFROST,
+                related_chain=Chain.BIFROST,
                 log_data="voting-num({}):change-status".format(voting_num)
             )
             ret = self.handle_tx_result_fail()
@@ -484,7 +484,7 @@ class ChainFailedEvent(RbcEvent):
         if self.status != ChainEventStatus.FAILED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ A method to build a transaction which handles the event """
         if not self.check_my_event():
             return NoneParams
@@ -496,7 +496,7 @@ class ChainFailedEvent(RbcEvent):
         msg_to_sign = self.detected_event.data
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return ChainIdx.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainExecutedEvent(RbcEvent):
@@ -505,7 +505,7 @@ class ChainExecutedEvent(RbcEvent):
         if self.status != ChainEventStatus.EXECUTED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
         return self.build_transaction_param_with_sig()
@@ -523,7 +523,7 @@ class ChainRevertedEvent(RbcEvent):
         if self.status != ChainEventStatus.REVERTED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
         return self.build_transaction_param_with_sig()
@@ -542,7 +542,7 @@ class ChainAcceptedEvent(RbcEvent):
             raise Exception("Event status not matches")
         self.aggregated = True
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
 
@@ -614,7 +614,7 @@ class ChainRejectedEvent(RbcEvent):
             raise Exception("Event status not matches")
         self.aggregated = True
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
 
@@ -671,7 +671,7 @@ class _FinalStatusEvent(RbcEvent):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
         super().__init__(detected_event, time_lock, manager)
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
         PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
@@ -700,7 +700,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, 0, manager)
         self.updating_chains = self.relayer.supported_chain_list
-        self.updating_chains.remove(ChainIdx.BIFROST)
+        self.updating_chains.remove(Chain.BIFROST)
         self.selected_chain = None
         self.aggregated = True
 
@@ -713,7 +713,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
     def relayer(self) -> "Relayer":
         return self.manager
 
-    def clone(self, selected_chain: ChainIdx):
+    def clone(self, selected_chain: Chain):
         clone_obj = self.__class__(self.detected_event, self.time_lock, self.relayer)
         clone_obj.selected_chain = selected_chain
         return clone_obj
@@ -735,7 +735,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
                 proto_logger,
                 relayer_addr=self.relayer.active_account.address,
                 log_id="UpdateRelayerIndex",
-                related_chain=ChainIdx.NONE,
+                related_chain=Chain.NONE,
                 log_data="from({}):to({})".format(prev_index, new_index)
             )
 
@@ -756,7 +756,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
     def is_previous_relayer(self):
         return self.relayer.has_key(self.round - 1)
 
-    def build_transaction_params(self) -> Tuple[ChainIdx, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         # ignore event except one with status: 10
         if self.status != ChainEventStatus.NEXT_AUTHORITY_COMMITTED:
             return NoneParams
@@ -781,7 +781,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             return NoneParams
 
         # code branch: primary(send) vs secondary(call)
-        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, ChainIdx.BIFROST, self.round - 1)
+        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, Chain.BIFROST, self.round - 1)
 
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         previous_validator_set_size = len(previous_validator_list)
@@ -836,15 +836,15 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         return "{}:{}".format(self.detected_event.event_name, self.round)
 
     @staticmethod
-    def bootstrap(manager: "Relayer", _range: Dict[ChainIdx, List[int]]) -> List['ChainEventABC']:
+    def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
         # Announcing the start of the event collection
         event_name = ValidatorSetUpdatedEvent.EVENT_NAME
-        target_chain = ChainIdx.BIFROST
+        target_chain = Chain.BIFROST
         formatted_log(
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(event_name),
-            related_chain=ChainIdx.NONE,
+            related_chain=Chain.NONE,
             log_data="range({})".format(_range[target_chain])
         )
 
@@ -865,7 +865,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Unchecked{}Log".format(event_name),
-            related_chain=ChainIdx.BIFROST,
+            related_chain=Chain.BIFROST,
             log_data="{}".format(
                 latest_event_object.summary() if latest_event_object is not None else ""
             )

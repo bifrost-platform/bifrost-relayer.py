@@ -2,7 +2,7 @@ import enum
 from typing import List
 
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from rbclib.consts import Bridge
 from relayer.tools.consts import RBC_SUPPORTED_METHODS
@@ -50,9 +50,9 @@ def user_cmd(project_root_path: str = "./"):
             # set amount as default
             decimal = determine_decimal(token_index)
             if direction_str == "inbound":
-                src_chain_index, dst_chain_index, amount = chain_index, ChainIdx.BIFROST, EthAmount(0.02, decimal)
+                src_chain_index, dst_chain_index, amount = chain_index, Chain.BIFROST, EthAmount(0.02, decimal)
             elif direction_str == "outbound":
-                src_chain_index, dst_chain_index, amount = ChainIdx.BIFROST, chain_index, EthAmount(0.01, decimal)
+                src_chain_index, dst_chain_index, amount = Chain.BIFROST, chain_index, EthAmount(0.01, decimal)
             else:
                 raise Exception("Not supported direction")
 

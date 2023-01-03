@@ -25,5 +25,3 @@ class ExternalRbcEvents(RbcEvent):
             return casting_type(detected_event, time_lock, relayer, True)
         else:
             return None
-
-    # def summary(self) -> str:
