@@ -6,10 +6,10 @@ import requests
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
-from chainpy.eth.ethtype.consts import ChainIndex
+from chainpy.eth.ethtype.consts import ChainIdx
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from rbclib.consts import BridgeIndex
+from rbclib.consts import Bridge
 from relayer.relayer import Relayer
 from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
     CONTROLLER_TO_DISCORD_ID, SCORE_SERVER_URL, KNOWN_RELAYER
@@ -129,7 +129,7 @@ class RelayerWithVersion:
 
     def get_controller_of(self, manager: Manager) -> EthAddress:
         if self.controller is None:
-            result = manager.world_call(ChainIndex.BIFROST, "relayer_authority", "relayer_pool", [])
+            result = manager.world_call(ChainIdx.BIFROST, "relayer_authority", "relayer_pool", [])
 
             relayers, controllers = result[0], result[1]
             target_relayer = self.relayer.hex().lower()
@@ -176,7 +176,7 @@ def display_multichain_asset_balances(manager: Manager, addr: EthAddress = None)
 
 
 def display_multichain_balances_on(
-        manager: Manager, chain_index: ChainIndex,
+        manager: Manager, chain_index: ChainIdx,
         addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False):
     target_addr = manager.active_account.address if addr is None else addr
     if not no_print_title:
@@ -236,11 +236,11 @@ def get_option_from_console(prompt: str, options: List) -> Any:
     return selected_option
 
 
-def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: bool = False) -> ChainIndex:
+def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: bool = False) -> ChainIdx:
     # remove BIFROST from the supported chain list
     supported_chain_list_clone = copy.deepcopy(manager.supported_chain_list)
     if not_included_bifrost:
-        supported_chain_list_clone.remove(ChainIndex.BIFROST)
+        supported_chain_list_clone.remove(ChainIdx.BIFROST)
 
     prompt = "select a chain"
     chain_index = get_option_from_console(prompt, supported_chain_list_clone)
@@ -248,7 +248,7 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
 
 
 # not tested
-def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = False) -> BridgeIndex:
+def get_token_from_console(chain_index: ChainIdx = None, token_only: bool = False) -> Bridge:
     prompt = "select chain index number"
     token_options = asset_list_of(chain_index)
 
@@ -261,7 +261,7 @@ def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = Fa
         options = token_options
 
     if not options:
-        return BridgeIndex.NONE
+        return Bridge.NONE
     else:
         return get_option_from_console(prompt, options)
 
@@ -269,27 +269,27 @@ def get_token_from_console(chain_index: ChainIndex = None, token_only: bool = Fa
 def get_chain_and_token_from_console(
         manager: MultiChainManager,
         token_only: bool = False,
-        not_included_bifrost: bool = False) -> (ChainIndex, BridgeIndex):
+        not_included_bifrost: bool = False) -> (ChainIdx, Bridge):
     chain_index = get_chain_from_console(manager, not_included_bifrost)
     token_index = get_token_from_console(chain_index, token_only)
     return chain_index, token_index
 
 
-def asset_list_of(chain_index: ChainIndex = None):
+def asset_list_of(chain_index: ChainIdx = None):
     ret = []
-    if chain_index is None or chain_index == ChainIndex.BIFROST:
+    if chain_index is None or chain_index == ChainIdx.BIFROST:
         return SUPPORTED_TOKEN_LIST
 
     for token_stream_index in SUPPORTED_TOKEN_LIST:
         if token_stream_index.home_chain_index() == chain_index:
             ret.append(token_stream_index)
-        if chain_index == ChainIndex.ETHEREUM and token_stream_index == BridgeIndex.BFC_BIFROST:
+        if chain_index == ChainIdx.ETHEREUM and token_stream_index == Bridge.BFC_BIFROST:
             ret.append(token_stream_index)
     return ret
 
 
-def determine_decimal(token_index: BridgeIndex) -> int:
-    return 6 if token_index == BridgeIndex.USDT_ETHEREUM or token_index == BridgeIndex.USDC_ETHEREUM else 18
+def determine_decimal(token_index: Bridge) -> int:
+    return 6 if token_index == Bridge.USDT_ETHEREUM or token_index == Bridge.USDC_ETHEREUM else 18
 
 
 def fetch_and_display_rounds(manager: Union[User, Relayer]):

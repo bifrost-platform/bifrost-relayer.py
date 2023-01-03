@@ -1,9 +1,9 @@
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
-from chainpy.eth.ethtype.consts import ChainIndex
+from chainpy.eth.ethtype.consts import ChainIdx
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
-from rbclib.consts import ConsensusOracleId, BridgeIndex, AggOracleId, ChainEventStatus
+from rbclib.consts import Oracle, Bridge, ChainEventStatus
 
 
 def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, front_height: int = 0,
@@ -18,7 +18,7 @@ def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, f
     if front_time >= target_time:
         return front_height
 
-    if chain_manager.chain_index != ChainIndex.BIFROST:
+    if chain_manager.chain_index != ChainIdx.BIFROST:
         target_time -= 30000
     return binary_search(chain_manager, front_height, front_time, current_height, current_time, target_time)
 
@@ -53,7 +53,7 @@ def binary_search(
 
 def is_selected_relayer(
         manager: EventBridge,
-        target_chain: ChainIndex,
+        target_chain: ChainIdx,
         addr: EthAddress,
         is_initial: bool = True) -> bool:
     return manager.world_call(target_chain, "relayer_authority", "is_selected_relayer", [addr.hex(), is_initial])[0]
@@ -62,7 +62,7 @@ def is_selected_relayer(
 # TODO how about integrate is_selected_relayer and is_selected_previous_relayer?
 def is_selected_previous_relayer(
         manager: EventBridge,
-        target_chain: ChainIndex,
+        target_chain: ChainIdx,
         round_num: int,
         addr: EthAddress,
         is_initial: bool = True) -> bool:
@@ -71,18 +71,18 @@ def is_selected_previous_relayer(
         "is_previous_selected_relayer", [round_num, addr.hex(), is_initial])[0]
 
 
-def fetch_latest_round(manager: EventBridge, target_chain_index: ChainIndex) -> int:
+def fetch_latest_round(manager: EventBridge, target_chain_index: ChainIdx) -> int:
     return manager.world_call(target_chain_index, "relayer_authority", "latest_round", [])[0]  # unzip
 
 
 def fetch_round_info(manager: EventBridge) -> (int, int, int):
-    resp = manager.world_call(ChainIndex.BIFROST, "authority", "round_info", [])
+    resp = manager.world_call(ChainIdx.BIFROST, "authority", "round_info", [])
     current_rnd_idx, fir_session_idx, current_session_index = resp[:3]
     first_rnd_block, first_session_block, current_height, round_length, session_length = resp[3:]
     return current_height, current_rnd_idx, round_length
 
 
-def fetch_sorted_relayer_list(manager: EventBridge, target_chain_index: ChainIndex, is_initial: bool = True) -> list:
+def fetch_sorted_relayer_list(manager: EventBridge, target_chain_index: ChainIdx, is_initial: bool = True) -> list:
     validator_tuple = manager.world_call(target_chain_index, "relayer_authority", "selected_relayers", [is_initial])[0]
     validator_list = list(validator_tuple)
     validator_list_lower = [addr.lower() for addr in validator_list]
@@ -90,7 +90,7 @@ def fetch_sorted_relayer_list(manager: EventBridge, target_chain_index: ChainInd
 
 
 def fetch_sorted_previous_relayer_list(
-        manager: EventBridge, target_chain_index: ChainIndex,
+        manager: EventBridge, target_chain_index: ChainIdx,
         rnd: int, is_initial: bool = True) -> list:
     validator_tuple = manager.world_call(target_chain_index, "relayer_authority", "previous_selected_relayers", [rnd, is_initial])[0]  # unzip
     validator_list = list(validator_tuple)
@@ -107,12 +107,12 @@ def fetch_lowest_validator_round(manager: EventBridge) -> int:
     return bottom_round
 
 
-def fetch_relayer_num(manager: EventBridge, target_chain_index: ChainIndex, is_initial: bool = True) -> int:
+def fetch_relayer_num(manager: EventBridge, target_chain_index: ChainIdx, is_initial: bool = True) -> int:
     validator_tuple = fetch_sorted_relayer_list(manager, target_chain_index, is_initial)
     return len(validator_tuple)
 
 
-def fetch_quorum(manager: EventBridge, target_chain_index: ChainIndex, rnd: int = None, is_initial: bool = True) -> int:
+def fetch_quorum(manager: EventBridge, target_chain_index: ChainIdx, rnd: int = None, is_initial: bool = True) -> int:
     if rnd is None:
         majority = manager.world_call(target_chain_index, "relayer_authority", "majority", [is_initial])[0]
     else:
@@ -128,25 +128,25 @@ def fetch_quorum(manager: EventBridge, target_chain_index: ChainIndex, rnd: int 
 
 def fetch_socket_rbc_sigs(manager: EventBridge, request_id: tuple, chain_event_status: ChainEventStatus):
     params = [request_id, int(chain_event_status.formatted_hex(), 16)]
-    sigs = manager.world_call(ChainIndex.BIFROST, "socket", "get_signatures", params)
+    sigs = manager.world_call(ChainIdx.BIFROST, "socket", "get_signatures", params)
     return sigs[0]
 
 
 def fetch_socket_vsp_sigs(manager: EventBridge, rnd: int):
-    result = manager.world_call(ChainIndex.BIFROST, "socket", "get_round_signatures", [rnd])
+    result = manager.world_call(ChainIdx.BIFROST, "socket", "get_round_signatures", [rnd])
     return result[0]
 
 
-def fetch_oracle_latest_round(manager: EventBridge, oracle_id: ConsensusOracleId):
+def fetch_oracle_latest_round(manager: EventBridge, oracle_id: Oracle):
     oracle_id_bytes = oracle_id.formatted_bytes()
-    return manager.world_call(ChainIndex.BIFROST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
+    return manager.world_call(ChainIdx.BIFROST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
 
 
-def fetch_price_from_oracle(manager: EventBridge, token: BridgeIndex) -> EthAmount:
-    oid = AggOracleId.from_token_name(token.token_name())
-    result = manager.world_call(ChainIndex.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+def fetch_price_from_oracle(manager: EventBridge, token: Bridge) -> EthAmount:
+    oid = Oracle.from_token_name(token.token_name())
+    result = manager.world_call(ChainIdx.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
 
-    if token == BridgeIndex.USDT_ETHEREUM or token == BridgeIndex.USDC_ETHEREUM:
+    if token == Bridge.USDT_ETHEREUM or token == Bridge.USDC_ETHEREUM:
         decimal = 6
     else:
         decimal = 18
@@ -155,35 +155,35 @@ def fetch_price_from_oracle(manager: EventBridge, token: BridgeIndex) -> EthAmou
 
 
 def fetch_btc_hash_from_oracle(manager: EventBridge) -> EthHashBytes:
-    oid = ConsensusOracleId.BTC_HASH
-    result = manager.world_call(ChainIndex.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+    oid = Oracle.BTC_HASH
+    result = manager.world_call(ChainIdx.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
     return EthHashBytes(result)
 
 
 def is_pulsed_hear_beat(manager: EventBridge) -> bool:
     """ Check if the relayer has ever sent a heartbeat transaction in this session."""
     relayer_addr = manager.active_account.address
-    return manager.world_call(ChainIndex.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
+    return manager.world_call(ChainIdx.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
 
 
 # TODO why only ConsensusType?
 def fetch_submitted_oracle_feed(
         manager: EventBridge,
-        oracle_id: ConsensusOracleId,
+        oracle_id: Oracle,
         _round: int,
         validator_addr: EthAddress = None) -> EthHashBytes:
     if validator_addr is None:
         validator_addr = manager.active_account.address
     oracle_id_bytes = oracle_id.formatted_bytes()
     params = [oracle_id_bytes, validator_addr.hex(), _round]
-    result = manager.world_call(ChainIndex.BIFROST, "oracle", "get_consensus_feed", params)[0]
+    result = manager.world_call(ChainIdx.BIFROST, "oracle", "get_consensus_feed", params)[0]
     return EthHashBytes(result)
 
 
 # TODO why only ConsensusType?
 def is_submitted_oracle_feed(
         manager: EventBridge,
-        oracle_id: ConsensusOracleId,
+        oracle_id: Oracle,
         _round: int,
         validator_addr: EthAddress = None) -> bool:
     """ Check whether the external data of the round has been transmitted. """
