@@ -2,7 +2,7 @@ import json
 import unittest
 from typing import Union, List, cast
 
-from chainpy.eth.ethtype.consts import EnumInterface, ChainIdx
+from chainpy.eth.ethtype.consts import EnumInterface, Chain
 
 BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS = 6
 BOOTSTRAP_OFFSET_ROUNDS = 5
@@ -75,6 +75,7 @@ def parser(hex_str: str, element_types: List[Union[int, type]]) -> List[Union[in
 
 
 class Symbol(EnumInterface):
+    NONE = 0x00
     BFC  = 0x01
     BIFI = 0x2
     BTC  = 0x3
@@ -101,20 +102,24 @@ class Symbol(EnumInterface):
     def components() -> List[str]:
         return []
 
-    def is_coin_on(self, chain_index: ChainIdx) -> bool:
-        if self == Symbol.BFC and chain_index == ChainIdx.BIFROST:
+    def is_coin_on(self, chain_index: Chain) -> bool:
+        if self == Symbol.BFC and chain_index == Chain.BIFROST:
             return True
-        if self == Symbol.BTC and chain_index == ChainIdx.BITCOIN:
+        if self == Symbol.BTC and chain_index == Chain.BITCOIN:
             return True
-        if self == Symbol.ETH and chain_index == ChainIdx.ETHEREUM:
+        if self == Symbol.ETH and chain_index == Chain.ETHEREUM:
             return True
-        if self == Symbol.BNB and chain_index == ChainIdx.ETHEREUM:
+        if self == Symbol.BNB and chain_index == Chain.ETHEREUM:
             return True
-        if self == Symbol.MATIC and chain_index == ChainIdx.POLYGON:
+        if self == Symbol.MATIC and chain_index == Chain.POLYGON:
             return True
-        if self == Symbol.KLAY and chain_index == ChainIdx.KLAYTN:
+        if self == Symbol.KLAY and chain_index == Chain.KLAYTN:
             return True
         return False
+
+    @property
+    def decimal(self):
+        return 6 if self == Symbol.USDC or self == Symbol.USDT else 18
 
 
 ERC20_ADDRESS_BSIZE = 4
@@ -129,6 +134,18 @@ AVAX_ON_BIFROST_ERC20_ADDRESS = "0x00000000"
 MATIC_ON_BIFROST_ERC20_ADDRESS = "0x00000000"
 USDC_ON_BIFROST_ERC20_ADDRESS = "0x00000000"
 BUSD_ON_BIFROST_ERC20_ADDRESS = "0x00000000"
+
+
+# unified tokens on the bifrost network
+UNIFIED_BTC_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_BFC_ON_ETHEREUM_ERC20_ADDRESS = "0x00000001"
+UNIFIED_BIFI_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_ETH_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_BNB_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_AVAX_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_MATIC_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_USDC_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
+UNIFIED_BUSD_ON_BIFROST_ERC20_ADDRESS = "0x00000001"
 
 # tokens on the ethereum
 BTC_ON_ETHEREUM_ERC20_ADDRESS = "0x00000000"
@@ -150,37 +167,46 @@ USDC_ON_AVALANCHE_ERC20_ADDRESS = "0x00000000"
 
 
 class Asset(EnumInterface):
-    BTC_ON_BITCOIN = concat_items_as_int(Symbol.BTC, ChainIdx.BITCOIN, 0xffffffff)
-    BTC_ON_BIFROST = concat_items_as_int(Symbol.BTC, ChainIdx.BIFROST, BTC_ON_BIFROST_ERC20_ADDRESS)
-    BTC_ON_ETHEREUM = concat_items_as_int(Symbol.BTC, ChainIdx.ETHEREUM, BTC_ON_ETHEREUM_ERC20_ADDRESS)
+    NONE = 0
+    BTC_ON_BITCOIN = concat_items_as_int(Symbol.BTC, Chain.BITCOIN, 0xffffffff)
+    BTC_ON_BIFROST = concat_items_as_int(Symbol.BTC, Chain.BIFROST, BTC_ON_BIFROST_ERC20_ADDRESS)
+    BTC_ON_ETHEREUM = concat_items_as_int(Symbol.BTC, Chain.ETHEREUM, BTC_ON_ETHEREUM_ERC20_ADDRESS)
+    UNIFIED_BTC_ON_BIFROST = concat_items_as_int(Symbol.BTC, Chain.BIFROST, UNIFIED_BTC_ON_BIFROST_ERC20_ADDRESS)
 
-    BFC_ON_BIFROST = concat_items_as_int(Symbol.BFC, ChainIdx.BIFROST, 0xffffffff)
-    BFC_ON_ETHEREUM = concat_items_as_int(Symbol.BFC, ChainIdx.ETHEREUM, BFC_ON_ETHEREUM_ERC20_ADDRESS)
+    BFC_ON_BIFROST = concat_items_as_int(Symbol.BFC, Chain.BIFROST, 0xffffffff)
+    BFC_ON_ETHEREUM = concat_items_as_int(Symbol.BFC, Chain.ETHEREUM, BFC_ON_ETHEREUM_ERC20_ADDRESS)
+    UNIFIED_BFC_ON_BIFROST = concat_items_as_int(Symbol.BTC, Chain.BIFROST, UNIFIED_BFC_ON_ETHEREUM_ERC20_ADDRESS)
 
-    BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, ChainIdx.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
-    UNIFIED_BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, ChainIdx.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
-    BIFI_ON_ETHEREUM = concat_items_as_int(Symbol.BIFI, ChainIdx.ETHEREUM, BIFI_ON_ETHEREUM_ERC20_ADDRESS)
+    BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, Chain.BIFROST, BIFI_ON_BIFROST_ERC20_ADDRESS)
+    BIFI_ON_ETHEREUM = concat_items_as_int(Symbol.BIFI, Chain.ETHEREUM, BIFI_ON_ETHEREUM_ERC20_ADDRESS)
+    UNIFIED_BIFI_ON_BIFROST = concat_items_as_int(Symbol.BIFI, Chain.BIFROST, UNIFIED_BIFI_ON_BIFROST_ERC20_ADDRESS)
 
-    ETH_ON_BIFROST = concat_items_as_int(Symbol.ETH, ChainIdx.BIFROST, ETH_ON_BIFROST_ERC20_ADDRESS)
-    ETH_ON_ETHEREUM = concat_items_as_int(Symbol.ETH, ChainIdx.ETHEREUM, 0xffffffff)
+    ETH_ON_BIFROST = concat_items_as_int(Symbol.ETH, Chain.BIFROST, ETH_ON_BIFROST_ERC20_ADDRESS)
+    ETH_ON_ETHEREUM = concat_items_as_int(Symbol.ETH, Chain.ETHEREUM, 0xffffffff)
+    UNIFIED_ETH_ON_BIFROST = concat_items_as_int(Symbol.ETH, Chain.BIFROST, UNIFIED_ETH_ON_BIFROST_ERC20_ADDRESS)
 
-    BNB_ON_BIFROST = concat_items_as_int(Symbol.BNB, ChainIdx.BIFROST, BNB_ON_BIFROST_ERC20_ADDRESS)
-    BNB_ON_BINANCE = concat_items_as_int(Symbol.BNB, ChainIdx.BINANCE, 0xffffffff)
+    BNB_ON_BIFROST = concat_items_as_int(Symbol.BNB, Chain.BIFROST, BNB_ON_BIFROST_ERC20_ADDRESS)
+    BNB_ON_BINANCE = concat_items_as_int(Symbol.BNB, Chain.BINANCE, 0xffffffff)
+    UNIFIED_BNB_ON_BIFROST = concat_items_as_int(Symbol.BNB, Chain.BIFROST, UNIFIED_BNB_ON_BIFROST_ERC20_ADDRESS)
 
-    AVAX_ON_BIFROST = concat_items_as_int(Symbol.AVAX, ChainIdx.BIFROST, AVAX_ON_BIFROST_ERC20_ADDRESS)
-    AVAX_ON_AVALANCHE = concat_items_as_int(Symbol.AVAX, ChainIdx.AVALANCHE, 0xffffffff)
+    AVAX_ON_BIFROST = concat_items_as_int(Symbol.AVAX, Chain.BIFROST, AVAX_ON_BIFROST_ERC20_ADDRESS)
+    AVAX_ON_AVALANCHE = concat_items_as_int(Symbol.AVAX, Chain.AVALANCHE, 0xffffffff)
+    UNIFIED_AVAX_ON_BIFROST = concat_items_as_int(Symbol.AVAX, Chain.BIFROST, UNIFIED_AVAX_ON_BIFROST_ERC20_ADDRESS)
 
-    MATIC_ON_BIFROST = concat_items_as_int(Symbol.MATIC, ChainIdx.BIFROST, MATIC_ON_BIFROST_ERC20_ADDRESS)
-    MATIC_ON_POLYGON = concat_items_as_int(Symbol.MATIC, ChainIdx.BIFROST, 0xffffffff)
+    MATIC_ON_BIFROST = concat_items_as_int(Symbol.MATIC, Chain.BIFROST, MATIC_ON_BIFROST_ERC20_ADDRESS)
+    MATIC_ON_POLYGON = concat_items_as_int(Symbol.MATIC, Chain.BIFROST, 0xffffffff)
+    UNIFIED_MATIC_ON_BIFROST = concat_items_as_int(Symbol.MATIC, Chain.BIFROST, UNIFIED_MATIC_ON_BIFROST_ERC20_ADDRESS)
 
-    USDC_ON_BIFROST = concat_items_as_int(Symbol.USDC, ChainIdx.BIFROST, USDC_ON_BIFROST_ERC20_ADDRESS)
-    USDC_ON_ETHEREUM = concat_items_as_int(Symbol.USDC, ChainIdx.ETHEREUM, USDC_ON_ETHEREUM_ERC20_ADDRESS)
-    USDC_ON_BINANCE = concat_items_as_int(Symbol.USDC, ChainIdx.BINANCE, USDC_ON_BINANCE_ERC20_ADDRESS)
-    USDC_ON_AVALANCHE = concat_items_as_int(Symbol.USDC, ChainIdx.AVALANCHE, USDC_ON_AVALANCHE_ERC20_ADDRESS)
-    USDC_ON_POLYGON = concat_items_as_int(Symbol.USDC, ChainIdx.POLYGON, USDC_ON_POLYGON_ERC20_ADDRESS)
+    USDC_ON_BIFROST = concat_items_as_int(Symbol.USDC, Chain.BIFROST, USDC_ON_BIFROST_ERC20_ADDRESS)
+    USDC_ON_ETHEREUM = concat_items_as_int(Symbol.USDC, Chain.ETHEREUM, USDC_ON_ETHEREUM_ERC20_ADDRESS)
+    USDC_ON_BINANCE = concat_items_as_int(Symbol.USDC, Chain.BINANCE, USDC_ON_BINANCE_ERC20_ADDRESS)
+    USDC_ON_AVALANCHE = concat_items_as_int(Symbol.USDC, Chain.AVALANCHE, USDC_ON_AVALANCHE_ERC20_ADDRESS)
+    USDC_ON_POLYGON = concat_items_as_int(Symbol.USDC, Chain.POLYGON, USDC_ON_POLYGON_ERC20_ADDRESS)
+    UNIFIED_USDC_ON_BIFROST = concat_items_as_int(Symbol.USDC, Chain.BIFROST, UNIFIED_USDC_ON_BIFROST_ERC20_ADDRESS)
 
-    BUSD_ON_BIFROST = concat_items_as_int(Symbol.BUSD, ChainIdx.BIFROST, BUSD_ON_BIFROST_ERC20_ADDRESS)
-    BUSD_ON_BINANCE = concat_items_as_int(Symbol.BUSD, ChainIdx.BINANCE, BUSD_ON_BINANCE_ERC20_ADDRESS)
+    BUSD_ON_BIFROST = concat_items_as_int(Symbol.BUSD, Chain.BIFROST, BUSD_ON_BIFROST_ERC20_ADDRESS)
+    BUSD_ON_BINANCE = concat_items_as_int(Symbol.BUSD, Chain.BINANCE, BUSD_ON_BINANCE_ERC20_ADDRESS)
+    UNIFIED_BUSD_ON_BIFROST = concat_items_as_int(Symbol.BUSD, Chain.BIFROST, UNIFIED_BUSD_ON_BIFROST_ERC20_ADDRESS)
 
     @staticmethod
     def is_composed() -> bool:
@@ -188,21 +214,25 @@ class Asset(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [Symbol.__name__, ChainIdx.__name__, "ADDRESS-4"]
+        return [Symbol.str_with_size(), Chain.str_with_size(), "ADDRESS-4"]
 
-    def analyze(self) -> (Symbol, ChainIdx, str):
+    def analyze(self) -> (Symbol, Chain, str):
         """ symbol, related chain and erc20 address """
-        return parser(self.formatted_hex(), [Symbol, ChainIdx, ERC20_ADDRESS_BSIZE])
+        return parser(self.formatted_hex(), [Symbol, Chain, ERC20_ADDRESS_BSIZE])
 
     @staticmethod
     def size():
-        return Symbol.size() + ChainIdx.size() + ERC20_ADDRESS_BSIZE
+        return Symbol.size() + Chain.size() + ERC20_ADDRESS_BSIZE
 
     def symbol(self) -> Symbol:
         return cast(Symbol, self.analyze()[0])
 
-    def is_coin_on(self, chain_index: ChainIdx) -> bool:
+    def is_coin_on(self, chain_index: Chain) -> bool:
         return self.symbol().is_coin_on(chain_index)
+
+    @property
+    def decimal(self) -> int:
+        return self.symbol().decimal
 
 
 class Bridge(EnumInterface):
@@ -232,7 +262,7 @@ class Bridge(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [Asset.__name__, Asset.__name__, "DISTINGUISH_BYTE-1"]
+        return [Asset.str_with_size(), Asset.str_with_size(), "DISTINGUISH_BYTE-1"]
 
     @staticmethod
     def size() -> int:
@@ -243,10 +273,14 @@ class Bridge(EnumInterface):
         return parser(self.formatted_hex(), [Asset, Asset, DISTINGUISH_NUM_BSIZE])
 
     def symbol(self) -> Symbol:
-        return cast(self.analyze()[0], Symbol).symbol()
+        return cast(Asset, self.analyze()[0]).symbol()
 
-    def is_coin_on(self, chain_index: ChainIdx) -> bool:
+    def is_coin_on(self, chain_index: Chain) -> bool:
         return self.symbol().is_coin_on(chain_index)
+
+    @property
+    def decimal(self) -> int:
+        return self.symbol().decimal
 
 
 class OPCode(EnumInterface):
@@ -257,12 +291,12 @@ class OPCode(EnumInterface):
     UNIFY_SPLIT = 0x04
     DEPOSIT = 0x05
     WITHDRAW = 0x06
-    BORROW = 0x7
-    REPAY = 0x8
-    X_OPEN = 0x9
-    X_END = 0xa
-    SWAP = 0xb
-    CALL = 0xc
+    BORROW = 0x07
+    REPAY = 0x08
+    X_OPEN = 0x09
+    X_END = 0x0a
+    SWAP = 0x0b
+    CALL = 0x0c
 
     @staticmethod
     def size():
@@ -326,7 +360,10 @@ class RBCMethodV1(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return ["LENGTH(1B)", RBCMethodDirection.__name__,  "DYNAMIC_SIZE_ARRAY[{}]".format(OPCode.__name__)]
+        return [
+            "LENGTH-1",
+            RBCMethodDirection.str_with_size(),
+            "DYNAMIC_SIZE_ARRAY[{}]".format(OPCode.str_with_size())]
 
     def analyze(self) -> (int, List[OPCode]):
         self_hex = self.formatted_hex().replace("0x", "")
@@ -357,6 +394,7 @@ class RBCMethodV1(EnumInterface):
 
 
 class OracleType(EnumInterface):
+    NONE = 0x00
     AGGREGATED = 0x01
     CONSENSUS = 0x02
 
@@ -375,6 +413,7 @@ class OracleType(EnumInterface):
 
 
 class OracleSourceType(EnumInterface):
+    NONE = 0x00
     ASSET_PRICE = 0x01
     BLOCK_HASH = 0x02
 
@@ -394,18 +433,18 @@ class OracleSourceType(EnumInterface):
 
 class Oracle(EnumInterface):
     NONE = 0
-    BFC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BFC_ON_ETHEREUM)
-    BIFI_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BIFI_ON_ETHEREUM)
-    BTC_PRICE_ON_BITCOIN = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BTC_ON_BITCOIN)
-    ETH_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.ETH_ON_ETHEREUM)
-    BNB_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BNB_ON_BINANCE)
-    MATIC_PRICE_ON_POLYGON = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.MATIC_ON_POLYGON)
-    AVAX_PRICE_ON_AVALANCHE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.AVAX_ON_AVALANCHE)
+    BFC_BIFROST_ETHEREUM_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.BFC_BIFROST_ETHEREUM)
+    BIFI_BIFROST_ETHEREUM_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.BIFI_BIFROST_ETHEREUM)
+    BTC_BITCOIN_BIFROST_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.BTC_BITCOIN_BIFROST)
+    ETH_BIFROST_ETHEREUM_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.ETH_BIFROST_ETHEREUM)
+    BNB_BIFROST_BINANCE_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.BNB_BIFROST_BINANCE)
+    MATIC_BIFROST_POLYGON_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.MATIC_BIFROST_POLYGON)
+    AVAX_BIFROST_AVALANCHE_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.AVAX_BIFROST_AVALANCHE)
 
-    USDC_PRICE_ON_ETHEREUM = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.USDC_ON_ETHEREUM)
-    BUSD_PRICE_ON_BINANCE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Asset.BUSD_ON_BINANCE)
+    USDC_BIFROST_ETHEREUM_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.USDC_BIFROST_ETHEREUM)
+    BUSD_BIFROST_ETHEREUM_PRICE = concat_items_as_int(OracleType.AGGREGATED, OracleSourceType.ASSET_PRICE, Bridge.BUSD_BIFROST_ETHEREUM)
 
-    BITCOIN_BLOCK_HASH = concat_items_as_int(OracleType.CONSENSUS, OracleSourceType.BLOCK_HASH, Asset.BTC_ON_BITCOIN)
+    BITCOIN_BLOCK_HASH = concat_items_as_int(OracleType.CONSENSUS, OracleSourceType.BLOCK_HASH, Bridge.BTC_BITCOIN_BIFROST)
 
     @staticmethod
     def is_composed() -> bool:
@@ -413,26 +452,27 @@ class Oracle(EnumInterface):
 
     @staticmethod
     def components() -> List[str]:
-        return [OracleType.__name__, OracleSourceType.__name__, Asset.__name__]
+        return [OracleType.str_with_size(), OracleSourceType.str_with_size(), Bridge.str_with_size()]
 
     def analyze(self):
-        return parser(self.formatted_hex(), [OracleType, OracleSourceType, Asset])
+        return parser(self.formatted_hex(), [OracleType, OracleSourceType, Bridge])
 
     @staticmethod
     def size() -> int:
-        return OracleType.size() + OracleSourceType.size() + Asset.size()
+        return OracleType.size() + OracleSourceType.size() + Bridge.size()
 
     def formatted_hex(self) -> str:
         if self == self.__class__.NONE:
             return "0x" + "00" * self.size()
-        zero_pad = "00" * (self.size() - OracleType.size() - OracleSourceType.size() - Asset.size())
+        zero_pad = "00" * (self.size() - OracleType.size() - OracleSourceType.size() - Bridge.size())
         return to_even_hex(self.value) + zero_pad
 
     def formatted_bytes(self) -> bytes:
         return bytes.fromhex(self.formatted_hex().replace("0x", ""))
 
-    # def from_bridge(self, bridge: Bridge):
-
+    @classmethod
+    def from_bridge(cls, bridge: Bridge):
+        return Oracle[bridge.name + "_PRICE"]
 
 
 class ChainEventStatus(EnumInterface):
@@ -477,18 +517,18 @@ class TestEnum(unittest.TestCase):
 
     def test_print_enum(self):
         enum_dict = {}
-        enum_dict["ChainIdx"] = TestEnum.generate_dict_for_index(ChainIdx)
-        enum_dict["SymbolIdx"] = TestEnum.generate_dict_for_index(Symbol)
-        enum_dict["AssetIdx"] = TestEnum.generate_dict_for_index(Asset)
-        enum_dict["BridgeIndex"] = TestEnum.generate_dict_for_index(Bridge)
+        enum_dict["Chain"] = TestEnum.generate_dict_for_index(Chain)
+        enum_dict["Symbol"] = TestEnum.generate_dict_for_index(Symbol)
+        enum_dict["Asset"] = TestEnum.generate_dict_for_index(Asset)
+        enum_dict["Bridge"] = TestEnum.generate_dict_for_index(Bridge)
 
         enum_dict["OPCode"] = TestEnum.generate_dict_for_index(OPCode)
         enum_dict["RBCMethodDirection"] = TestEnum.generate_dict_for_index(RBCMethodDirection)
-        enum_dict["RBCMethodIndex"] = TestEnum.generate_dict_for_index(RBCMethodV1)
+        enum_dict["RBCMethodV1"] = TestEnum.generate_dict_for_index(RBCMethodV1)
 
         enum_dict["OracleType"] = TestEnum.generate_dict_for_index(OracleType)
         enum_dict["OracleSourceType"] = TestEnum.generate_dict_for_index(OracleSourceType)
-        enum_dict["OracleIdx"] = TestEnum.generate_dict_for_index(Oracle)
+        enum_dict["Oracle"] = TestEnum.generate_dict_for_index(Oracle)
         enum_dict["ChainEventStatus"] = TestEnum.generate_dict_for_index(ChainEventStatus)
 
         print(json.dumps(enum_dict, indent=4))

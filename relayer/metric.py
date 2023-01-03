@@ -3,7 +3,7 @@ from typing import List
 from prometheus_client import Counter, Gauge
 
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import ChainIdx
+from chainpy.eth.ethtype.consts import Chain
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
 from rbclib.consts import ChainEventStatus
@@ -35,7 +35,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
     @staticmethod
     def init_prometheus_exporter_on_relayer(
-            supported_chains: List[ChainIdx],
+            supported_chains: List[Chain],
             port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
         PrometheusExporter.init_prometheus_exporter(port)
 
@@ -53,7 +53,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
             PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name).inc(0)
 
     @staticmethod
-    def exporting_request_metric(_chain_index: ChainIdx, _status: ChainEventStatus):
+    def exporting_request_metric(_chain_index: Chain, _status: ChainEventStatus):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
 
@@ -105,7 +105,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
         PrometheusExporterRelayer.BTC_HEIGHT.set(height)
 
     @staticmethod
-    def exporting_external_chain_rnd(chain_index: ChainIdx, rnd: int):
+    def exporting_external_chain_rnd(chain_index: Chain, rnd: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
         PrometheusExporterRelayer.CHAIN_ROUNDS.labels(chain_index.name.lower()).set(rnd)
