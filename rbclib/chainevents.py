@@ -84,10 +84,16 @@ class RbcEvent(ChainEventABC):
     Data class for event from socket contract.
     """
     CALL_DELAY_SEC = 600
+    AGGREGATED_DELAY_SEC = 30
     EVENT_NAME = "Socket"
 
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
+    def __init__(self,
+                 detected_event: DetectedEvent,
+                 time_lock: int,
+                 manager: EventBridge,
+                 is_fast_relayer: bool = False):
         super().__init__(detected_event, time_lock, manager)
+        self.__is_fast_relayer = is_fast_relayer
 
     def __cmp__(self, other):
         return self.status.value < other.status.value
@@ -100,6 +106,11 @@ class RbcEvent(ChainEventABC):
         status_name = ChainEventStatus(status_data.int()).name.capitalize()
 
         casting_type = eval("Chain{}Event".format(status_name))
+
+        # The normal relayer processes the ACCEPTED or REJECTED event after a certain period of time.
+        if casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent:
+            time_lock += cls.AGGREGATED_DELAY_SEC * 1000
+
         return casting_type(detected_event, time_lock, manager)
 
     @property
@@ -250,7 +261,7 @@ class RbcEvent(ChainEventABC):
             return False
 
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        return relayer_index is not None
+        return relayer_index is not None or self.__is_fast_relayer
 
     def decoded_dict(self):
         method_params = self.method_params

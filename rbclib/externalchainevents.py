@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from chainpy.eth.managers.eventobj import DetectedEvent
-from rbclib.chainevents import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX
+from rbclib.chainevents import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, ChainAcceptedEvent, ChainRejectedEvent
 from rbclib.consts import ChainEventStatus
 
 if TYPE_CHECKING:
@@ -19,9 +19,11 @@ class ExternalRbcEvents(RbcEvent):
         # parse event-status from event data (fast, but not expandable)
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
         status = ChainEventStatus(status_data.int())
-        if status != ChainEventStatus.ACCEPTED and status != ChainEventStatus.REJECTED:
+        if status == ChainEventStatus.ACCEPTED and status == ChainEventStatus.REJECTED:
+            status_name = status.name.capitalize()
+            casting_type = eval("Chain{}Event".format(status_name))
+            return casting_type(detected_event, time_lock, relayer, True)
+        else:
             return None
 
-        status_name = status.name.capitalize()
-        casting_type = eval("Chain{}Event".format(status_name))
-        return casting_type(detected_event, time_lock, relayer)
+    # def summary(self) -> str:
