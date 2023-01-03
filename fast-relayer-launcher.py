@@ -48,7 +48,7 @@ def main(_config: dict):
     relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
 
     if prometheus_on:
-        PrometheusExporterRelayer.init_prometheus_exporter_on_relayer()
+        PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
     relayer.run_relayer()
 
