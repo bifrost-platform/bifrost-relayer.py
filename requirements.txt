@@ -1,1 +1,1 @@
-git+https://github.com/bifrost-platform/bifrost-python-lib.git@enum
+git+https://github.com/bifrost-platform/bifrost-python-lib.git@enum2
