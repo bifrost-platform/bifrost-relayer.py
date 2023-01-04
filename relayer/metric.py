@@ -6,7 +6,7 @@ from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.consts import Chain
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
-from rbclib.consts import ChainEventStatus
+from bridgeconst.consts import ChainEventStatus
 
 HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
 RUNNING_SESSIONS_QUERY_NAME = "relayer_running_sessions"

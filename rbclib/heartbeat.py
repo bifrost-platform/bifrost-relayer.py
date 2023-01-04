@@ -48,7 +48,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         if not is_pulsed_hear_beat(self.relayer):
-            return Chain.BIFROST, "relayer_authority", "heartbeat", []
+            return Chain.BFC_TEST, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
 
@@ -61,7 +61,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BIFROST,
+            related_chain=Chain.BFC_TEST,
             log_data="HeartBeat({})".format(True)
         )
         return None
@@ -71,7 +71,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BIFROST,
+            related_chain=Chain.BFC_TEST,
             log_data="HeartBeat({})".format(False)
         )
         return None
@@ -81,7 +81,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BIFROST,
+            related_chain=Chain.BFC_TEST,
             log_data="HeartBeat({})".format(None)
         )
         return None
