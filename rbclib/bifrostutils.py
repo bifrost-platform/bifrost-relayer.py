@@ -3,7 +3,7 @@ from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
-from rbclib.consts import Oracle, Bridge, ChainEventStatus
+from bridgeconst.consts import Oracle, ChainEventStatus, Symbol
 
 
 def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, front_height: int = 0,
@@ -18,7 +18,7 @@ def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, f
     if front_time >= target_time:
         return front_height
 
-    if chain_manager.chain_index != Chain.BIFROST:
+    if chain_manager.chain_index != Chain.BFC_TEST:
         target_time -= 30000
     return binary_search(chain_manager, front_height, front_time, current_height, current_time, target_time)
 
@@ -76,7 +76,7 @@ def fetch_latest_round(manager: EventBridge, target_chain_index: Chain) -> int:
 
 
 def fetch_round_info(manager: EventBridge) -> (int, int, int):
-    resp = manager.world_call(Chain.BIFROST, "authority", "round_info", [])
+    resp = manager.world_call(Chain.BFC_TEST, "authority", "round_info", [])
     current_rnd_idx, fir_session_idx, current_session_index = resp[:3]
     first_rnd_block, first_session_block, current_height, round_length, session_length = resp[3:]
     return current_height, current_rnd_idx, round_length
@@ -142,22 +142,22 @@ def fetch_oracle_latest_round(manager: EventBridge, oracle_id: Oracle):
     return manager.world_call(Chain.BIFROST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
 
 
-def fetch_price_from_oracle(manager: EventBridge, bridge: Bridge) -> EthAmount:
-    oid = Oracle.from_bridge(bridge)
-    result = manager.world_call(Chain.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
-    return EthAmount(result, bridge.decimal)
+def fetch_price_from_oracle(manager: EventBridge, symbol: Symbol) -> EthAmount:
+    oid = Oracle.price_oracle_from_symbol(symbol)
+    result = manager.world_call(Chain.BFC_TEST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+    return EthAmount(result, symbol.decimal)
 
 
 def fetch_btc_hash_from_oracle(manager: EventBridge) -> EthHashBytes:
     oid = Oracle.BITCOIN_BLOCK_HASH
-    result = manager.world_call(Chain.BIFROST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
+    result = manager.world_call(Chain.BFC_TEST, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
     return EthHashBytes(result)
 
 
 def is_pulsed_hear_beat(manager: EventBridge) -> bool:
     """ Check if the relayer has ever sent a heartbeat transaction in this session."""
     relayer_addr = manager.active_account.address
-    return manager.world_call(Chain.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
+    return manager.world_call(Chain.BFC_TEST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
 
 
 # TODO why only ConsensusType?
@@ -170,7 +170,7 @@ def fetch_submitted_oracle_feed(
         validator_addr = manager.active_account.address
     oracle_id_bytes = oracle_id.formatted_bytes()
     params = [oracle_id_bytes, validator_addr.hex(), _round]
-    result = manager.world_call(Chain.BIFROST, "oracle", "get_consensus_feed", params)[0]
+    result = manager.world_call(Chain.BFC_TEST, "oracle", "get_consensus_feed", params)[0]
     return EthHashBytes(result)
 
 

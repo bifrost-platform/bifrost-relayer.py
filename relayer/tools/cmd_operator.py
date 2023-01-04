@@ -6,7 +6,7 @@ from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.bifrostutils import fetch_submitted_oracle_feed, fetch_btc_hash_from_oracle, fetch_price_from_oracle, \
     fetch_oracle_latest_round, fetch_sorted_relayer_list
-from rbclib.consts import Oracle
+from bridgeconst.consts import Oracle
 from relayer.tools.consts import ADMIN_RELAYERS
 from relayer.tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
     fetch_and_display_rounds, Manager, RelayerWithVersion, get_token_from_console

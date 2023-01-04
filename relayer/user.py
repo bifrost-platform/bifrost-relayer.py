@@ -5,7 +5,7 @@ from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
 from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from rbclib.consts import RBCMethodV1, Bridge, Asset
+from bridgeconst.consts import RBCMethodV1, Asset
 
 
 class UserSubmit:
@@ -141,12 +141,12 @@ class User(MultiChainManager):
         return tx_hash
 
     def round_up(self, chain: Chain, is_initial: bool = True):
-        current_bif_round = self.world_call(Chain.BIFROST, "relayer_authority", "latest_round", [])[0]
+        current_bif_round = self.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
         current_tar_round = self.world_call(chain, "relayer_authority", "latest_round", [])[0]
 
         if current_bif_round == current_tar_round + 1:
             validator_tuple = self.world_call(
-                Chain.BIFROST,
+                Chain.BFC_TEST,
                 "relayer_authority",
                 "selected_relayers",
                 [is_initial]
@@ -155,7 +155,7 @@ class User(MultiChainManager):
         elif current_bif_round > current_tar_round + 1:
             try:
                 validator_tuple = self.world_call(
-                    Chain.BIFROST,
+                    Chain.BFC_TEST,
                     "relayer_authority",
                     "previous_selected_relayers",
                     [current_bif_round + 1, is_initial]
@@ -163,7 +163,7 @@ class User(MultiChainManager):
             except Exception as e:
                 if str(e) == 'Not handled error: evm error: Other("Out of round index")':
                     validator_tuple = self.world_call(
-                        Chain.BIFROST,
+                        Chain.BFC_TEST,
                         "relayer_authority",
                         "selected_relayers",
                         [is_initial]

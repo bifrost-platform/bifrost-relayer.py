@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 from chainpy.eth.managers.eventobj import DetectedEvent
-from rbclib.chainevents import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, ChainAcceptedEvent, ChainRejectedEvent
-from rbclib.consts import ChainEventStatus
+from rbclib.chainevents import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, \
+    ChainAcceptedEvent, ChainRejectedEvent  # do not remove!
+from bridgeconst.consts import ChainEventStatus
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer

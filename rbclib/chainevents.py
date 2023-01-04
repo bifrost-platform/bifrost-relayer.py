@@ -7,7 +7,8 @@ from chainpy.eventbridge.eventbridge import EventBridge
 from relayer.metric import PrometheusExporterRelayer
 from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
     fetch_sorted_previous_relayer_list, fetch_latest_round
-from .consts import RBCMethodV1, Bridge, ChainEventStatus, BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
+from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset
+from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
 from chainpy.eventbridge.chaineventabc import ChainEventABC
@@ -185,10 +186,10 @@ class RbcEvent(ChainEventABC):
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
-        return self.src_chain_index != Chain.BIFROST
+        return self.src_chain_index != Chain.BFC_TEST
 
     def is_outbound(self) -> bool:
-        return self.src_chain_index == Chain.BIFROST
+        return self.src_chain_index == Chain.BFC_TEST
 
     def req_id(self, obj_flag: bool = False) -> Tuple[Union[int, Chain], int, int]:
         unzipped_decoded_data = self.decoded_data[0]
@@ -243,13 +244,13 @@ class RbcEvent(ChainEventABC):
 
     @property
     def method_params(self) -> Tuple[
-        Bridge, Bridge, EthAddress, EthAddress, EthAmount, EthHexBytes
+        Asset, Asset, EthAddress, EthAddress, EthAmount, EthHexBytes
     ]:
         unzipped_decoded_data = self.decoded_data[0]
         params_tuple = unzipped_decoded_data[3]
         return (
-            Bridge(params_tuple[0]),
-            Bridge(params_tuple[1]),
+            Asset(params_tuple[0]),
+            Asset(params_tuple[1]),
             EthAddress(params_tuple[2]),
             EthAddress(params_tuple[3]),
             EthAmount(params_tuple[4]),
@@ -360,7 +361,7 @@ class RbcEvent(ChainEventABC):
         return data[:start] + EthHashBytes(event_status.value) + data[end:]
 
     def is_primary_relayer(self):
-        total_validator_num = fetch_relayer_num(self.relayer, Chain.BIFROST)
+        total_validator_num = fetch_relayer_num(self.relayer, Chain.BFC_TEST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
@@ -387,7 +388,7 @@ class RbcEvent(ChainEventABC):
         data_with_next_status = self.change_status_of_data(self.detected_event, next_status)
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainRequestedEvent(RbcEvent):
@@ -407,13 +408,14 @@ class ChainRequestedEvent(RbcEvent):
             return NoneParams
 
         if self.is_inbound():
-            return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()  # TODO inbound forced fail
+            # TODO inbound forced fail
+            return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()
         else:
             # generate signature if it's needed
             status_changed_data = RbcEvent.change_status_of_data(self.detected_event, ChainEventStatus.ACCEPTED)
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
             submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-            return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+            return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():
@@ -423,7 +425,7 @@ class ChainRequestedEvent(RbcEvent):
         voting_num = voting_list[self.status.value]
 
         # get quorum
-        quorum = fetch_quorum(self.relayer, Chain.BIFROST, self.rnd)
+        quorum = fetch_quorum(self.relayer, Chain.BFC_TEST, self.rnd)
         if quorum == 0:
             return None
 
@@ -432,7 +434,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=Chain.BIFROST,
+                related_chain=Chain.BFC_TEST,
                 log_data="voting-num({})".format(voting_num)
             )
             ret = None
@@ -441,7 +443,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=Chain.BIFROST,
+                related_chain=Chain.BFC_TEST,
                 log_data="voting-num({}):change-status".format(voting_num)
             )
             ret = self.handle_tx_result_fail()
@@ -496,7 +498,7 @@ class ChainFailedEvent(RbcEvent):
         msg_to_sign = self.detected_event.data
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return Chain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainExecutedEvent(RbcEvent):
@@ -700,7 +702,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, 0, manager)
         self.updating_chains = self.relayer.supported_chain_list
-        self.updating_chains.remove(Chain.BIFROST)
+        self.updating_chains.remove(Chain.BFC_TEST)
         self.selected_chain = None
         self.aggregated = True
 
@@ -781,7 +783,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             return NoneParams
 
         # code branch: primary(send) vs secondary(call)
-        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, Chain.BIFROST, self.round - 1)
+        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, Chain.BFC_TEST, self.round - 1)
 
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         previous_validator_set_size = len(previous_validator_list)
@@ -839,7 +841,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
     def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
         # Announcing the start of the event collection
         event_name = ValidatorSetUpdatedEvent.EVENT_NAME
-        target_chain = Chain.BIFROST
+        target_chain = Chain.BFC_TEST
         formatted_log(
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
@@ -865,7 +867,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Unchecked{}Log".format(event_name),
-            related_chain=Chain.BIFROST,
+            related_chain=Chain.BFC_TEST,
             log_data="{}".format(
                 latest_event_object.summary() if latest_event_object is not None else ""
             )
@@ -888,7 +890,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         return {
             "event_status": self.status,
             "validator_round": self.round,
-            "validator_list": [EthAddress(addr) for addr in decoded_roundup_event[1][1]], # self.sorted_validator_list?
+            "validator_list": [EthAddress(addr) for addr in decoded_roundup_event[1][1]],  # self.sorted_validator_list?
             "signing_msg_hash": sig_msg,
             "signatures": [[EthHashBytes(sig[0]), EthHashBytes(sig[1]), EthHexBytes(sig[2])] for sig in sigs]
         }

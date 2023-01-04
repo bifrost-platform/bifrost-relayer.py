@@ -65,7 +65,7 @@ class Relayer(EventBridge):
         )
 
     def _register_relayer_index(self, rnd: int):
-        sorted_validator_list = fetch_sorted_previous_relayer_list(self, Chain.BIFROST, rnd)
+        sorted_validator_list = fetch_sorted_previous_relayer_list(self, Chain.BFC_TEST, rnd)
         relayer_lower_list = [relayer_addr.lower() for relayer_addr in sorted_validator_list]
         sorted_relayer_list = sorted(relayer_lower_list)
 
@@ -79,7 +79,7 @@ class Relayer(EventBridge):
     def wait_until_node_sync(self):
         while True:
             # wait node's block synchronization
-            chain_manager = self.get_chain_manager_of(Chain.BIFROST)
+            chain_manager = self.get_chain_manager_of(Chain.BFC_TEST)
             try:
                 result = chain_manager.send_request("system_health", [])["isSyncing"]
             except Exception as e:
@@ -97,7 +97,7 @@ class Relayer(EventBridge):
         self.wait_until_node_sync()
 
         # check whether this relayer belongs to current validator list
-        self.current_rnd = fetch_latest_round(self, Chain.BIFROST)
+        self.current_rnd = fetch_latest_round(self, Chain.BFC_TEST)
         round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.current_rnd)
         for i in range(round_history_limit):
             self._register_relayer_index(self.current_rnd - i)
@@ -105,13 +105,13 @@ class Relayer(EventBridge):
         # determine timestamp which bootstrap starts from
         current_height, _, round_length = fetch_round_info(self)
         bootstrap_start_height = max(current_height - round_length * BOOTSTRAP_OFFSET_ROUNDS, 1)
-        bootstrap_start_time = self.get_chain_manager_of(Chain.BIFROST).\
+        bootstrap_start_time = self.get_chain_manager_of(Chain.BFC_TEST).\
             eth_get_block_by_height(bootstrap_start_height).timestamp
 
         # determine heights of each chain which bootstrap starts from
         for chain_index in self.supported_chain_list:
             chain_manager = self.get_chain_manager_of(chain_index)
-            if chain_index == Chain.BIFROST:
+            if chain_index == Chain.BFC_TEST:
                 chain_manager.latest_height = bootstrap_start_height
             else:
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
