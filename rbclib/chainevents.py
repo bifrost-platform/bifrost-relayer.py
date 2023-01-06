@@ -11,13 +11,12 @@ from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset
 from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import *
+from bridgeconst.consts import Chain
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from chainpy.eventbridge.utils import timestamp_msec
-
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
 
@@ -130,9 +129,16 @@ class RbcEvent(ChainEventABC):
 
     def summary(self) -> str:
         """ returns summary string for logger. """
-        req_id = self.req_id(True)
+        req_id = self.req_id()
         request_id_str = [req_id[0].name, req_id[1], req_id[2]]
         return "{}:{}".format(request_id_str, self.status.name)
+
+    def check_my_event(self) -> bool:
+        if self.src_chain not in self.manager.supported_chain_list:
+            return False
+
+        relayer_index = self.relayer.get_value_by_key(self.rnd)
+        return relayer_index is not None or self.__is_fast_relayer
 
     def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ builds and returns call transaction parameters related to this event. """
@@ -173,7 +179,7 @@ class RbcEvent(ChainEventABC):
         if not self.check_my_event():
             return None
 
-        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain, self.status)
 
         # do nothing
         return None
@@ -186,61 +192,54 @@ class RbcEvent(ChainEventABC):
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
-        return self.src_chain_index != Chain.BFC_TEST
+        return self.src_chain != Chain.BFC_TEST
 
     def is_outbound(self) -> bool:
-        return self.src_chain_index == Chain.BFC_TEST
+        return self.src_chain == Chain.BFC_TEST
 
-    def req_id(self, obj_flag: bool = False) -> Tuple[Union[int, Chain], int, int]:
+    def req_id(self) -> Tuple[Union[int, Chain], int, int]:
         unzipped_decoded_data = self.decoded_data[0]
         req_id_tuple = unzipped_decoded_data[0]
-        if not obj_flag:
-            return req_id_tuple
         return Chain(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
 
-    @property
-    def req_id_str(self) -> str:
-        req_id_tuple = self.req_id(False)
-        req_id_bytes = EthHashBytes(req_id_tuple[0]) + EthHashBytes(req_id_tuple[1]) + EthHashBytes(req_id_tuple[2])
-        return req_id_bytes.hex()
+    def req_id_hexes(self) -> Tuple[str, str, str]:
+        chain, rnd, seq = self.req_id()
+        return chain.formatted_hex(), hex(rnd), hex(seq)
 
     @property
-    def src_chain_index(self) -> Chain:
-        return self.req_id(True)[0]
+    def req_id_concat_bytes(self) -> EthHexBytes:
+        req_id_tuple = self.req_id_hexes()
+        return EthHashBytes(req_id_tuple[0]) + EthHashBytes(req_id_tuple[1]) + EthHashBytes(req_id_tuple[2])
+
+    @property
+    def src_chain(self) -> Chain:
+        return self.req_id()[0]
 
     @property
     def rnd(self) -> int:
-        return self.req_id(True)[1]
+        return self.req_id()[1]
 
     @property
     def seq(self) -> int:
-        return self.req_id(True)[2]
+        return self.req_id()[2]
 
     @property
     def status(self) -> ChainEventStatus:
         unzipped_decoded_data = self.decoded_data[0]
         return ChainEventStatus(unzipped_decoded_data[1])
 
-    @property
-    def unique_id_str(self) -> str:
-        req_id_tuple = self.req_id(False)
-        req_id_bytes = EthHashBytes(req_id_tuple[0]) + EthHashBytes(req_id_tuple[1]) + EthHashBytes(req_id_tuple[2])
-        return (req_id_bytes + EthHashBytes(self.status.value)).hex()
-
-    def inst(self, obj_flag: bool = False) -> Tuple[Union[Chain, int], Union[RBCMethodV1, int]]:
+    def inst(self) -> Tuple[Union[Chain, int], Union[RBCMethodV1, int]]:
         unzipped_decoded_data = self.decoded_data[0]
         inst_id_tuple = unzipped_decoded_data[2]
-        if not obj_flag:
-            return inst_id_tuple
         return Chain(inst_id_tuple[0]), RBCMethodV1(inst_id_tuple[1])
 
     @property
-    def dst_chain_index(self) -> Chain:
-        return self.inst(True)[0]
+    def dst_chain(self) -> Chain:
+        return self.inst()[0]
 
     @property
-    def method_index(self) -> RBCMethodV1:
-        return self.inst(True)[1]
+    def rbc_method(self) -> RBCMethodV1:
+        return self.inst()[1]
 
     @property
     def method_params(self) -> Tuple[
@@ -257,38 +256,34 @@ class RbcEvent(ChainEventABC):
             EthHexBytes(params_tuple[5])
         )
 
-    def check_my_event(self) -> bool:
-        if self.src_chain_index not in self.manager.supported_chain_list:
-            return False
-
-        relayer_index = self.relayer.get_value_by_key(self.rnd)
-        return relayer_index is not None or self.__is_fast_relayer
-
     def decoded_dict(self):
         method_params = self.method_params
         return {
             "req_id": {
-                "src_chain": self.src_chain_index,
+                "src_chain": self.src_chain,
                 "round": self.rnd,
                 "seq_num": self.seq
             },
             "event_status": self.status,
             "instruction": {
-                "dst_chain": self.dst_chain_index,
-                "method": self.method_index
+                "dst_chain": self.dst_chain,
+                "method": self.rbc_method
             },
             "action_params": {
-                "token_idx1": method_params[0],
-                "token_idx2": method_params[1],
-                "from_addr": method_params[2],
-                "to_addr": method_params[3],
+                "asset1": method_params[0],
+                "asset2": method_params[1],
+                "from": method_params[2],
+                "to": method_params[3],
                 "amount": method_params[4],
-                "reserved": method_params[5],
+                "variants": method_params[5],
             }
         }
 
     @staticmethod
     def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['RbcEvent']:
+        if manager.__class__.__name__ != "Relayer":
+            raise Exception("Relayer only as a manger")
+
         # Announcing the start of the event collection
         formatted_log(
             bootstrap_logger,
@@ -337,7 +332,7 @@ class RbcEvent(ChainEventABC):
         # request_id_str -> event_obj with last status
         event_with_last_status_of_each_rid = dict()
         for event_obj in event_objs:
-            request_id_str = event_obj.req_id_str
+            request_id_str = event_obj.req_id_concat_bytes.hex()
             # store new event object with the rid
             if request_id_str not in event_with_last_status_of_each_rid:
                 event_with_last_status_of_each_rid[request_id_str] = [event_obj]
@@ -392,7 +387,7 @@ class RbcEvent(ChainEventABC):
 
 
 class ChainRequestedEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.REQUESTED:
             raise Exception("Event status not matches")
@@ -400,7 +395,7 @@ class ChainRequestedEvent(RbcEvent):
     def build_call_transaction_params(self):
         if not self.check_my_event():
             return NoneParams
-        return self.dst_chain_index, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id(False)]
+        return self.dst_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id_hexes()]
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, list]:
         """ A method to build a transaction which handles the event """
@@ -454,7 +449,7 @@ class ChainRequestedEvent(RbcEvent):
         if not self.check_my_event():
             return None
 
-        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain, self.status)
 
         # find out chain to call
         if self.is_inbound():
@@ -481,7 +476,7 @@ class ChainFailedEvent(RbcEvent):
     def __init__(self,
                  detected_event: DetectedEvent,
                  time_lock: int,
-                 manager: "Relayer"):
+                 manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.FAILED:
             raise Exception("Event status not matches")
@@ -502,7 +497,7 @@ class ChainFailedEvent(RbcEvent):
 
 
 class ChainExecutedEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.EXECUTED:
             raise Exception("Event status not matches")
@@ -520,7 +515,7 @@ class ChainExecutedEvent(RbcEvent):
 
 
 class ChainRevertedEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.REVERTED:
             raise Exception("Event status not matches")
@@ -538,7 +533,7 @@ class ChainRevertedEvent(RbcEvent):
 
 
 class ChainAcceptedEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.ACCEPTED:
             raise Exception("Event status not matches")
@@ -549,7 +544,7 @@ class ChainAcceptedEvent(RbcEvent):
             return NoneParams
 
         if self.is_primary_relayer() or not self.aggregated:
-            chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
+            chain_to_send = self.src_chain if self.is_inbound() else self.dst_chain
             return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
 
         else:
@@ -562,7 +557,7 @@ class ChainAcceptedEvent(RbcEvent):
     def build_call_transaction_params(self):
         if not self.check_my_event():
             return NoneParams
-        target_chain = self.src_chain_index if self.is_inbound() else self.dst_chain_index
+        target_chain = self.src_chain if self.is_inbound() else self.dst_chain
         return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id()]
 
     def handle_call_result(self, result: tuple):
@@ -583,7 +578,7 @@ class ChainAcceptedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=self.src_chain_index if self.is_inbound() else self.dst_chain_index,
+                related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
                 log_data="{}-thRelayer:expected({}):actual({})".format(
                     self.relayer.get_latest_value(),
                     expected_status.name,
@@ -610,7 +605,7 @@ class ChainAcceptedEvent(RbcEvent):
 
 
 class ChainRejectedEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.REJECTED:
             raise Exception("Event status not matches")
@@ -621,7 +616,7 @@ class ChainRejectedEvent(RbcEvent):
             return NoneParams
 
         if self.is_primary_relayer() or not self.aggregated:
-            chain_to_send = self.src_chain_index if self.is_inbound() else self.dst_chain_index
+            chain_to_send = self.src_chain if self.is_inbound() else self.dst_chain
             return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
 
         else:
@@ -634,7 +629,7 @@ class ChainRejectedEvent(RbcEvent):
     def build_call_transaction_params(self):
         if not self.check_my_event():
             return NoneParams
-        target_chain = self.src_chain_index if self.is_inbound() else self.dst_chain_index
+        target_chain = self.src_chain if self.is_inbound() else self.dst_chain
         return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id()]
 
     def handle_call_result(self, result: tuple):
@@ -654,7 +649,7 @@ class ChainRejectedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=self.src_chain_index if self.is_inbound() else self.dst_chain_index,
+                related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
                 log_data="{}-thRelayer:SwitchPrimary:expected({}):actual({})".format(
                     self.relayer.get_latest_value(),
                     expected_status.name,
@@ -670,25 +665,25 @@ class ChainRejectedEvent(RbcEvent):
 
 
 class _FinalStatusEvent(RbcEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
             return NoneParams
-        PrometheusExporterRelayer.exporting_request_metric(self.src_chain_index, self.status)
+        PrometheusExporterRelayer.exporting_request_metric(self.src_chain, self.status)
         return NoneParams
 
 
 class ChainCommittedEvent(_FinalStatusEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.COMMITTED:
             raise Exception("Event status not matches")
 
 
 class ChainRollbackedEvent(_FinalStatusEvent):
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.ROLLBACKED:
             raise Exception("Event status not matches")
@@ -698,7 +693,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
     CALL_DELAY_SEC = 200
     EVENT_NAME = "RoundUp"
 
-    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: "Relayer"):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, 0, manager)
         self.updating_chains = self.relayer.supported_chain_list
@@ -707,13 +702,27 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         self.aggregated = True
 
     @classmethod
-    def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: "Relayer"):
+    def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         return cls(detected_event, 0, relayer)
 
     @property
-    def relayer(self) -> "Relayer":
+    def relayer(self) -> "EventBridge":
         return self.manager
+
+    @property
+    def status(self) -> ChainEventStatus:
+        return ChainEventStatus(self.decoded_data[0])
+
+    @property
+    def round(self) -> int:
+        return self.decoded_data[1][0]
+
+    @property
+    def sorted_validator_list(self) -> list:
+        validator_list = self.decoded_data[1][1]
+        validator_obj_list = [EthAddress(addr) for addr in validator_list]
+        return sorted(validator_obj_list)
 
     def clone(self, selected_chain: Chain):
         clone_obj = self.__class__(self.detected_event, self.time_lock, self.relayer)
@@ -740,20 +749,6 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
                 related_chain=Chain.NONE,
                 log_data="from({}):to({})".format(prev_index, new_index)
             )
-
-    @property
-    def status(self) -> ChainEventStatus:
-        return ChainEventStatus(self.decoded_data[0])
-
-    @property
-    def round(self) -> int:
-        return self.decoded_data[1][0]
-
-    @property
-    def sorted_validator_list(self) -> list:
-        validator_list = self.decoded_data[1][1]
-        validator_obj_list = [EthAddress(addr) for addr in validator_list]
-        return sorted(validator_obj_list)
 
     def is_previous_relayer(self):
         return self.relayer.has_key(self.round - 1)
@@ -838,7 +833,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         return "{}:{}".format(self.detected_event.event_name, self.round)
 
     @staticmethod
-    def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
+    def bootstrap(manager: EventBridge, _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
         # Announcing the start of the event collection
         event_name = ValidatorSetUpdatedEvent.EVENT_NAME
         target_chain = Chain.BFC_TEST
