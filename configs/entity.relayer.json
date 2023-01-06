@@ -9,14 +9,11 @@
         },
         "asset_prices": {
             "names": [
-                "ETH_BIFROST_ETHEREUM",
-                "BFC_BIFROST_ETHEREUM",
-                "MATIC_BIFROST_POLYGON",
-                "BNB_BIFROST_BINANCE",
-                "AVAX_BIFROST_AVALANCHE",
-                "USDC_BIFROST_ETHEREUM",
-                "BUSD_BIFROST_ETHEREUM",
-                "BIFI_BIFROST_ETHEREUM"
+                "ETH_ON_ETH_MAIN",
+                "BFC_ON_ETH_MAIN",
+                "BNB_ON_BNB_MAIN",
+                "USDC_ON_ETH_MAIN",
+                "BIFI_ON_ETH_MAIN"
             ],
             "source_names": [
                 "Coingecko",
@@ -31,8 +28,8 @@
             }
         }
     },
-     "bifrost": {
-        "chain_name": "BIFROST",
+     "BFC_TEST": {
+        "chain_name": "BFC_TEST",
         "block_period_sec": 3,
         "url_with_access_key": "",
         "bootstrap_latest_height": 2883,
@@ -71,8 +68,8 @@
             }
         ]
     },
-    "ethereum": {
-        "chain_name": "ETHEREUM",
+    "ETH_GOERLI": {
+        "chain_name": "ETH_GOERLI",
         "block_period_sec": 13,
         "url_with_access_key": "",
         "bootstrap_latest_height": 7749286,
@@ -102,8 +99,8 @@
             }
         ]
     },
-    "binance": {
-        "chain_name": "BINANCE",
+    "BNB_TEST": {
+        "chain_name": "BNB_TEST",
         "block_period_sec": 3,
         "url_with_access_key": "",
         "bootstrap_latest_height": 23601374,
@@ -130,8 +127,8 @@
             }
         ]
     },
-    "polygon": {
-        "chain_name": "POLYGON",
+    "MATIC_MUMBAI": {
+        "chain_name": "MATIC_MUMBAI",
         "block_period_sec": 5,
         "url_with_access_key": "",
         "bootstrap_latest_height": 28557743,
@@ -163,10 +160,10 @@
         "account_name": "default",
         "secret_hex": "",
         "supporting_chains": [
-            "BIFROST",
-            "ETHEREUM",
-            "BINANCE",
-            "POLYGON"
+            "BFC_TEST",
+            "ETH_GOERLI",
+            "BNB_TEST",
+            "MATIC_MUMBAI"
         ]
     },
     "multichain_config": {
