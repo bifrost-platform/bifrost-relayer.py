@@ -1,6 +1,5 @@
 import argparse
 import enum
-import json
 import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
@@ -112,7 +111,7 @@ if __name__ == "__main__":
         config = {
             "config_path": DEFAULT_RELAYER_CONFIG_PATH,
             "private_config_path": DEFAULT_PRIVATE_CONFIG_PATH,
-            "no_heartbeat": True,
+            "no_heartbeat": False,
             "private_key": None,
             "prometheus": True,
             "fast_relayer": False,

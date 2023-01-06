@@ -200,16 +200,12 @@ class RbcEvent(ChainEventABC):
     def req_id(self) -> Tuple[Union[int, Chain], int, int]:
         unzipped_decoded_data = self.decoded_data[0]
         req_id_tuple = unzipped_decoded_data[0]
-        return Chain(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
-
-    def req_id_hexes(self) -> Tuple[str, str, str]:
-        chain, rnd, seq = self.req_id()
-        return chain.formatted_hex(), hex(rnd), hex(seq)
+        return Chain.from_bytes(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
 
     @property
     def req_id_concat_bytes(self) -> EthHexBytes:
-        req_id_tuple = self.req_id_hexes()
-        return EthHashBytes(req_id_tuple[0]) + EthHashBytes(req_id_tuple[1]) + EthHashBytes(req_id_tuple[2])
+        chain, rnd, seq = self.req_id()
+        return EthHexBytes(chain.formatted_bytes()) + EthHexBytes(rnd, 16) + EthHexBytes(seq, 16)
 
     @property
     def src_chain(self) -> Chain:
@@ -231,7 +227,7 @@ class RbcEvent(ChainEventABC):
     def inst(self) -> Tuple[Union[Chain, int], Union[RBCMethodV1, int]]:
         unzipped_decoded_data = self.decoded_data[0]
         inst_id_tuple = unzipped_decoded_data[2]
-        return Chain(inst_id_tuple[0]), RBCMethodV1(inst_id_tuple[1])
+        return Chain.from_bytes(inst_id_tuple[0]), RBCMethodV1.from_bytes(inst_id_tuple[1])
 
     @property
     def dst_chain(self) -> Chain:
@@ -248,8 +244,8 @@ class RbcEvent(ChainEventABC):
         unzipped_decoded_data = self.decoded_data[0]
         params_tuple = unzipped_decoded_data[3]
         return (
-            Asset(params_tuple[0]),
-            Asset(params_tuple[1]),
+            Asset.from_bytes(params_tuple[0]),
+            Asset.from_bytes(params_tuple[1]),
             EthAddress(params_tuple[2]),
             EthAddress(params_tuple[3]),
             EthAmount(params_tuple[4]),
@@ -365,7 +361,8 @@ class RbcEvent(ChainEventABC):
 
     def aggregated_relay(self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus):
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        sigs = fetch_socket_rbc_sigs(self.relayer, self.req_id(), chain_event_status)
+        chain, rnd, seq = self.req_id()
+        sigs = fetch_socket_rbc_sigs(self.relayer, (chain.formatted_bytes(), rnd, seq), chain_event_status)
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
 
         msg = "Aggregated" if is_primary_relay else "Total"
@@ -395,7 +392,8 @@ class ChainRequestedEvent(RbcEvent):
     def build_call_transaction_params(self):
         if not self.check_my_event():
             return NoneParams
-        return self.dst_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id_hexes()]
+        chain, rnd, seq = self.req_id()
+        return self.dst_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, list]:
         """ A method to build a transaction which handles the event """
@@ -558,7 +556,8 @@ class ChainAcceptedEvent(RbcEvent):
         if not self.check_my_event():
             return NoneParams
         target_chain = self.src_chain if self.is_inbound() else self.dst_chain
-        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id()]
+        chain, rnd, seq = self.req_id()
+        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
 
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():
@@ -630,7 +629,8 @@ class ChainRejectedEvent(RbcEvent):
         if not self.check_my_event():
             return NoneParams
         target_chain = self.src_chain if self.is_inbound() else self.dst_chain
-        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [self.req_id()]
+        chain, rnd, seq = self.req_id()
+        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
 
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():

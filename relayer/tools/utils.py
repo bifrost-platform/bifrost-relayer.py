@@ -5,7 +5,7 @@ from typing import Union, List, Any
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
-from bridgeconst.consts import Chain, Asset
+from bridgeconst.consts import Chain, Asset, RBCMethodDirection
 from bridgeconst.testbridgespec import SUPPORTING_ASSETS
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
@@ -139,10 +139,15 @@ def get_asset_from_console(chain_index: Chain = None, token_only: bool = False) 
 
 def get_chain_and_asset_from_console(
         manager: MultiChainManager,
+        direction: RBCMethodDirection,
         token_only: bool = False,
         not_included_bifrost: bool = False) -> (Chain, Asset):
     chain_index = get_chain_from_console(manager, not_included_bifrost)
-    token_index = get_asset_from_console(chain_index, token_only)
+
+    if direction == RBCMethodDirection.INBOUND:
+        token_index = get_asset_from_console(chain_index, token_only)
+    else:
+        token_index = get_asset_from_console(Chain.BFC_TEST, token_only)
     return chain_index, token_index
 
 

@@ -1,7 +1,6 @@
 from relayer.tools.cmd_admin import admin_cmd
 from relayer.tools.cmd_nominator import nominator_cmd
 from relayer.tools.cmd_operator import operator_cmd
-from relayer.tools.cmd_relayer_manager import relayer_manager
 from relayer.tools.cmd_user import user_cmd
 from relayer.tools.utils import get_option_from_console
 

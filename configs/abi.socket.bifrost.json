@@ -145,7 +145,7 @@
                             {
                                 "internalType": "ChainIndex",
                                 "name": "chain",
-                                "type": "uint64"
+                                "type": "bytes4"
                             },
                             {
                                 "internalType": "uint64",
@@ -172,12 +172,12 @@
                             {
                                 "internalType": "ChainIndex",
                                 "name": "chain",
-                                "type": "uint64"
+                                "type": "bytes4"
                             },
                             {
                                 "internalType": "RBCmethod",
                                 "name": "method",
-                                "type": "uint64"
+                                "type": "bytes16"
                             }
                         ],
                         "internalType": "struct Socket_Struct.Instruction",
@@ -189,12 +189,12 @@
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX0",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX1",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "address",
@@ -448,7 +448,7 @@
                     {
                         "internalType": "ChainIndex",
                         "name": "chain",
-                        "type": "uint64"
+                        "type": "bytes4"
                     },
                     {
                         "internalType": "uint64",
@@ -489,7 +489,7 @@
                     {
                         "internalType": "ChainIndex",
                         "name": "chain",
-                        "type": "uint64"
+                        "type": "bytes4"
                     },
                     {
                         "internalType": "uint64",
@@ -578,7 +578,7 @@
                     {
                         "internalType": "ChainIndex",
                         "name": "chain",
-                        "type": "uint64"
+                        "type": "bytes4"
                     },
                     {
                         "internalType": "uint64",
@@ -639,7 +639,7 @@
     {
         "inputs": [
             {
-                "internalType": "Oracle_Manager_Struct.Oracle_ID[]",
+                "internalType": "Oracle_ID[]",
                 "name": "oids",
                 "type": "bytes32[]"
             },
@@ -663,7 +663,7 @@
     {
         "inputs": [
             {
-                "internalType": "Oracle_Manager_Struct.Oracle_ID[]",
+                "internalType": "Oracle_ID[]",
                 "name": "oids",
                 "type": "bytes32[]"
             },
@@ -770,7 +770,7 @@
                                     {
                                         "internalType": "ChainIndex",
                                         "name": "chain",
-                                        "type": "uint64"
+                                        "type": "bytes4"
                                     },
                                     {
                                         "internalType": "uint64",
@@ -797,12 +797,12 @@
                                     {
                                         "internalType": "ChainIndex",
                                         "name": "chain",
-                                        "type": "uint64"
+                                        "type": "bytes4"
                                     },
                                     {
                                         "internalType": "RBCmethod",
                                         "name": "method",
-                                        "type": "uint64"
+                                        "type": "bytes16"
                                     }
                                 ],
                                 "internalType": "struct Socket_Struct.Instruction",
@@ -814,12 +814,12 @@
                                     {
                                         "internalType": "Asset_Index",
                                         "name": "tokenIDX0",
-                                        "type": "uint128"
+                                        "type": "bytes32"
                                     },
                                     {
                                         "internalType": "Asset_Index",
                                         "name": "tokenIDX1",
-                                        "type": "uint128"
+                                        "type": "bytes32"
                                     },
                                     {
                                         "internalType": "address",
@@ -1269,7 +1269,7 @@
             {
                 "internalType": "ChainIndex",
                 "name": "_this",
-                "type": "uint64"
+                "type": "bytes4"
             }
         ],
         "name": "set_chain",
@@ -1349,7 +1349,7 @@
             {
                 "internalType": "ChainIndex",
                 "name": "",
-                "type": "uint64"
+                "type": "bytes4"
             }
         ],
         "stateMutability": "view",
@@ -1375,7 +1375,7 @@
                     {
                         "internalType": "ChainIndex",
                         "name": "chain",
-                        "type": "uint64"
+                        "type": "bytes4"
                     },
                     {
                         "internalType": "uint64",
@@ -1399,12 +1399,12 @@
                             {
                                 "internalType": "ChainIndex",
                                 "name": "chain",
-                                "type": "uint64"
+                                "type": "bytes4"
                             },
                             {
                                 "internalType": "RBCmethod",
                                 "name": "method",
-                                "type": "uint64"
+                                "type": "bytes16"
                             }
                         ],
                         "internalType": "struct Socket_Struct.Instruction",
@@ -1416,12 +1416,12 @@
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX0",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX1",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "address",
@@ -1493,12 +1493,12 @@
                             {
                                 "internalType": "ChainIndex",
                                 "name": "chain",
-                                "type": "uint64"
+                                "type": "bytes4"
                             },
                             {
                                 "internalType": "RBCmethod",
                                 "name": "method",
-                                "type": "uint64"
+                                "type": "bytes16"
                             }
                         ],
                         "internalType": "struct Socket_Struct.Instruction",
@@ -1510,12 +1510,12 @@
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX0",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "Asset_Index",
                                 "name": "tokenIDX1",
-                                "type": "uint128"
+                                "type": "bytes32"
                             },
                             {
                                 "internalType": "address",
