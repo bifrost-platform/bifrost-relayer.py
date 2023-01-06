@@ -2,13 +2,14 @@ import logging
 from typing import Optional, TYPE_CHECKING
 import eth_abi
 
+from bridgeconst.consts import Chain, Oracle, Asset
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
+from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import formatted_log
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.btc.managers.simplerpccli import SimpleBtcClient
-from chainpy.eth.ethtype.consts import Chain
 from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
@@ -17,7 +18,7 @@ from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, f
     fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
-from bridgeconst.consts import Oracle, Symbol
+
 from .utils import log_invalid_flow
 
 if TYPE_CHECKING:
@@ -34,23 +35,23 @@ ROUND_UP_FUNCTION_NAME = "round_control_poll"
 
 class PriceUpOracle(PeriodicEventABC):
     COLLECTION_PERIOD_SEC = 0  # means none
-    COIN_IDS = []  # means none
+    ASSETS = []  # means none
     URL_DICT = dict()
     SOURCE_NAMES = []
 
     def __init__(self,
-                 relayer: "Relayer",
+                 manager: EventBridge,
                  period_sec: int = 0,
                  time_lock: int = timestamp_msec(),
                  price_cli: PriceOracleAgg = None
                  ):
-        if self.__class__.COLLECTION_PERIOD_SEC == 0 or not self.__class__.COIN_IDS:
+        if self.__class__.COLLECTION_PERIOD_SEC == 0 or not self.__class__.ASSETS:
             raise Exception("call \"PriceUpOracle.setup() first\"")
 
         if period_sec == 0:
             period_sec = self.__class__.COLLECTION_PERIOD_SEC
 
-        super().__init__(relayer, period_sec, time_lock)
+        super().__init__(manager, period_sec, time_lock)
 
         if price_cli is not None:
             self.__cli = price_cli
@@ -63,13 +64,13 @@ class PriceUpOracle(PeriodicEventABC):
 
     @staticmethod
     def setup(coin_names: list, source_names: list, url_dict: dict, collection_period_sec: int):
-        PriceUpOracle.COIN_IDS = coin_names
+        PriceUpOracle.ASSETS = coin_names
         PriceUpOracle.COLLECTION_PERIOD_SEC = collection_period_sec
         PriceUpOracle.URL_DICT = url_dict
         PriceUpOracle.SOURCE_NAMES = source_names
 
     @property
-    def relayer(self) -> "Relayer":
+    def relayer(self) -> EventBridge:
         return self.manager
 
     def clone_next(self):
@@ -89,7 +90,7 @@ class PriceUpOracle(PeriodicEventABC):
             return NoneParams
 
         # dictionary of prices (key: coin id)
-        symbols = [Symbol[coin_id] for coin_id in self.__class__.COIN_IDS]
+        symbols = [Asset[asset_name].symbol for asset_name in self.__class__.ASSETS]
         symbols_str = [symbol.name for symbol in symbols]
         collected_prices = self.__cli.get_current_weighted_price(symbols_str)
 
@@ -134,7 +135,7 @@ class BtcHashUpOracle(PeriodicEventABC):
     COLLECTION_PERIOD_SEC = 0
 
     def __init__(self,
-                 relayer: "Relayer",
+                 manager: EventBridge,
                  period_sec: int = 0,
                  time_lock: int = timestamp_msec(),
                  btc_cli: SimpleBtcClient = None
@@ -146,7 +147,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         if period_sec == 0:
             period_sec = self.__class__.COLLECTION_PERIOD_SEC
 
-        super().__init__(relayer, period_sec, time_lock)
+        super().__init__(manager, period_sec, time_lock)
 
         if btc_cli is None:
             btc_cli = SimpleBtcClient(self.__class__.URL, 1, self.__class__.AUTH_ID, self.__class__.AUTH_PASSWD)
@@ -163,7 +164,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         BtcHashUpOracle.COLLECTION_PERIOD_SEC = collect_period_sec
 
     @property
-    def relayer(self) -> "Relayer":
+    def relayer(self) -> EventBridge:
         return self.manager
 
     def clone_next(self):
@@ -259,7 +260,7 @@ class AuthDownOracle(PeriodicEventABC):
     COLLECTION_PERIOD_SEC = 0
 
     def __init__(self,
-                 relayer: "Relayer",
+                 manager: EventBridge,
                  period_sec: int = 0,
                  time_lock: int = timestamp_msec(),
                  _round: int = None):
@@ -267,7 +268,7 @@ class AuthDownOracle(PeriodicEventABC):
             raise Exception("call \"AuthDownOracle.setup() first\"")
         if period_sec == 0:
             period_sec = self.__class__.COLLECTION_PERIOD_SEC
-        super().__init__(relayer, period_sec, time_lock)
+        super().__init__(manager, period_sec, time_lock)
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
             supported_chain_list.remove(Chain.BFC_TEST)
@@ -281,7 +282,7 @@ class AuthDownOracle(PeriodicEventABC):
         AuthDownOracle.COLLECTION_PERIOD_SEC = collect_period_sec
 
     @property
-    def relayer(self) -> "Relayer":
+    def relayer(self) -> EventBridge:
         return self.manager
 
     @property
