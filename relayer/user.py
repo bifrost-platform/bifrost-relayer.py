@@ -1,6 +1,6 @@
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
-from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
 from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
@@ -18,10 +18,10 @@ class UserSubmit:
                  asset0: Asset,
                  apply_addr: EthAddress,
                  amount: EthAmount):
-        inst_tuple = (dst_chain.value, method.value)
+        inst_tuple = (dst_chain.value, method.formatted_int())
         action_param_tuple = (
-            asset0.value,  # first token_index
-            Asset.NONE.value,  # second token_index
+            asset0.formatted_hex(),  # first token_index
+            Asset.NONE.formatted_hex(),  # second token_index
             apply_addr.with_checksum(),  # from address
             apply_addr.with_checksum(),  # to address
             amount.int(),
@@ -103,7 +103,7 @@ class User(MultiChainManager):
             amount
         )
         value = None
-        if asset.is_coin_on(src_chain):
+        if asset.is_coin():
             value = amount
 
         return self.world_build_transaction(src_chain, "vault", "request", [user_request.tuple()], value)

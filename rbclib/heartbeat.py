@@ -1,12 +1,12 @@
 import logging
 
-from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from typing import TYPE_CHECKING, Optional
+from bridgeconst.consts import Chain
 
-from relayer.metric import PrometheusExporterRelayer
 from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
-from chainpy.eth.ethtype.consts import Chain
+from relayer.metric import PrometheusExporterRelayer
+from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import formatted_log, Logger
