@@ -85,7 +85,7 @@ class RbcEvent(ChainEventABC):
     Data class for event from socket contract.
     """
     CALL_DELAY_SEC = 600
-    AGGREGATED_DELAY_SEC = 30
+    AGGREGATED_DELAY_SEC = 0
     EVENT_NAME = "Socket"
 
     def __init__(self,
