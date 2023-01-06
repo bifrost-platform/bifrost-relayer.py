@@ -3,10 +3,9 @@ from typing import List
 from prometheus_client import Counter, Gauge
 
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.consts import Chain
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
-from bridgeconst.consts import ChainEventStatus
+from bridgeconst.consts import ChainEventStatus, Chain
 
 HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
 RUNNING_SESSIONS_QUERY_NAME = "relayer_running_sessions"
@@ -41,7 +40,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
         for chain_index in supported_chains:
             """ add 2 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
-            chain_name = chain_index.name.lower()
+            chain_name = chain_index.name.upper()
             PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain_name).set(0)
 
         ignored = [

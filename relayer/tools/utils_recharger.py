@@ -1,7 +1,7 @@
 from typing import List
 
 from chainpy.eth.ethtype.chaindata import EthBlock
-from chainpy.eth.ethtype.consts import Chain
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from relayer.tools.consts import BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT
@@ -41,7 +41,7 @@ def _remove_duplicated_addr(addrs: List[EthAddress]) -> List[EthAddress]:
 
 
 def fetch_healthy_relayers(admin: User, history_block_num: int = 40) -> List[EthAddress]:
-    chain_manager = admin.get_chain_manager_of(Chain.BIFROST)
+    chain_manager = admin.get_chain_manager_of(Chain.BFC_TEST)
 
     # determine searching range
     start_block_num = chain_manager.eth_get_latest_block_number() - history_block_num
@@ -61,7 +61,7 @@ def recharge_coins(user: User, addrs: List[EthAddress]):
     for addr in addrs:
         for chain_index in user.supported_chain_list:
             # determine the limit amount
-            limit_amount = BIFNET_LIMIT_AMOUNT if chain_index == Chain.BIFROST else EXTERNAL_LIMIT_AMOUNT
+            limit_amount = BIFNET_LIMIT_AMOUNT if chain_index == Chain.BFC_TEST else EXTERNAL_LIMIT_AMOUNT
 
             # fetch a balance of the relayer
             relayer_balance = user.world_native_balance(chain_index, addr=addr)

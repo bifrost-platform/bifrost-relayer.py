@@ -1,18 +1,16 @@
 import copy
 import json
 
-from typing import Union, List, Any, Optional
-import requests
+from typing import Union, List, Any
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
-from chainpy.eth.ethtype.consts import Chain
+from bridgeconst.consts import Chain, Asset
+from bridgeconst.testbridgespec import SUPPORTING_ASSETS
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from rbclib.consts import Bridge
 from relayer.relayer import Relayer
-from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH, SUPPORTED_TOKEN_LIST, \
-    CONTROLLER_TO_DISCORD_ID, SCORE_SERVER_URL, KNOWN_RELAYER
+from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH
 from relayer.user import User
 
 KEY_JSON_PATH = "./configs/keys.json"
@@ -34,124 +32,6 @@ class Manager(User, Relayer):
             manager.set_account(hex(account.priv))
 
         return manager
-
-
-class RelayerWithVersion:
-    def __init__(self, addr: Union[EthAddress, str], version: int = None):
-        self.relayer = addr if isinstance(addr, EthAddress) else EthAddress(addr)
-        self.controller = None
-        self.discord = None
-        self.version = version
-
-    def __eq__(self, other):
-        if isinstance(other, RelayerWithVersion):
-            return self.relayer == other.relayer
-        elif isinstance(other, str):
-            return self.relayer.hex().lower() == other.lower()
-        elif isinstance(other, EthAddress):
-            return self.relayer == other
-        else:
-            raise Exception("other must be RelayerInfo or str or EthAddress, but {}".format(type(other)))
-
-    @classmethod
-    def from_resp(cls, result: dict):
-        return RelayerWithVersion(EthAddress(result["_id"]), int(result["version"][-1]))
-
-    @staticmethod
-    def fetch_relayers_once_with_version() -> List["RelayerWithVersion"]:
-        """ Fetch relayer addresses from the score server. and return addresses w/ duplicated"""
-        response_json = requests.get(SCORE_SERVER_URL).json()
-
-        ret = list()
-        for result in response_json["relayers"]:
-            if result["_id"] == "0x0":
-                continue
-
-            if result["_id"].lower() not in KNOWN_RELAYER:
-                continue
-
-            ret.append(RelayerWithVersion.from_resp(result))
-
-        return ret
-
-    @staticmethod
-    def remove_duplicated(rifs: List["RelayerWithVersion"]):
-        ret = list()
-        rif_clone = copy.deepcopy(rifs)
-        for rif in rif_clone:
-            if rif not in rifs:
-                ret.append(rif)
-        return ret
-
-    @staticmethod
-    def difference(
-            rifs: List["RelayerWithVersion"],
-            comparison: Union[List["RelayerWithVersion"], List[EthAddress]]
-    ) -> List["RelayerWithVersion"]:
-        ret = list()
-        for rif in rifs:
-            if rif not in comparison:
-                ret.append(rif)
-        return ret
-
-    @staticmethod
-    def remove_team_authority(rifs: List["RelayerWithVersion"]) -> List["RelayerWithVersion"]:
-        return RelayerWithVersion.difference(rifs, ADMIN_RELAYERS)
-
-    @staticmethod
-    def display_addrs(
-            manager: Manager, title: str, addrs: List["RelayerWithVersion"], not_admin: bool = True):
-
-        if len(addrs) == 0:
-            return
-
-        print(title)
-        print("-----------------------------------------------------" * 2)
-        j = 0
-        for i, addr in enumerate(addrs):
-            if not_admin and addr.is_team_relayer():
-                continue
-            if not addr.is_registered_relayer(manager):
-                continue
-
-            msg = "{:>2}: r({}) c({}) v({}) d({})".format(
-                j, addr.relayer.with_checksum(),
-                addr.get_controller_of(manager).with_checksum(),
-                addr.version if addr.version is not None else 0,
-                addr.get_discord_id(manager)
-            )
-            j += 1
-            print(msg)
-        print("-----------------------------------------------------" * 2)
-
-    def is_team_relayer(self):
-        return self.relayer.with_checksum() in ADMIN_RELAYERS
-
-    def get_controller_of(self, manager: Manager) -> EthAddress:
-        if self.controller is None:
-            result = manager.world_call(Chain.BIFROST, "relayer_authority", "relayer_pool", [])
-
-            relayers, controllers = result[0], result[1]
-            target_relayer = self.relayer.hex().lower()
-            if target_relayer in relayers:
-                idx = relayers.index(target_relayer)
-                self.controller = EthAddress(controllers[idx])
-            else:
-                self.controller = EthAddress.zero()
-        return self.controller
-
-    def get_discord_id(self, manager: Manager) -> Optional[str]:
-        if self.discord is None:
-            controller = self.get_controller_of(manager).with_checksum()
-            if controller in CONTROLLER_TO_DISCORD_ID.keys():
-                self.discord = CONTROLLER_TO_DISCORD_ID[controller]
-            else:
-                self.discord = None
-        return self.discord
-
-    def is_registered_relayer(self, manager: Manager) -> bool:
-        controller = self.get_controller_of(manager)
-        return controller != EthAddress.zero()
 
 
 TOKEN_NAME_LEN = 5
@@ -240,56 +120,44 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
     # remove BIFROST from the supported chain list
     supported_chain_list_clone = copy.deepcopy(manager.supported_chain_list)
     if not_included_bifrost:
-        supported_chain_list_clone.remove(Chain.BIFROST)
+        supported_chain_list_clone.remove(Chain.BFC_TEST)
 
     prompt = "select a chain"
     chain_index = get_option_from_console(prompt, supported_chain_list_clone)
     return chain_index
 
 
-# not tested
-def get_token_from_console(chain_index: Chain = None, token_only: bool = False) -> Bridge:
-    prompt = "select chain index number"
-    token_options = asset_list_of(chain_index)
+def get_asset_from_console(chain_index: Chain = None, token_only: bool = False) -> Asset:
+    prompt = "select a asset"
+    asset_options = asset_list_of(chain_index, token_only)
 
-    options = []
-    if token_only:
-        for opt in token_options:
-            if not opt.is_coin_on(chain_index):
-                options.append(opt)
+    if not asset_options:
+        return Asset.NONE
     else:
-        options = token_options
-
-    if not options:
-        return Bridge.NONE
-    else:
-        return get_option_from_console(prompt, options)
+        return get_option_from_console(prompt, asset_options)
 
 
-def get_chain_and_token_from_console(
+def get_chain_and_asset_from_console(
         manager: MultiChainManager,
         token_only: bool = False,
-        not_included_bifrost: bool = False) -> (Chain, Bridge):
+        not_included_bifrost: bool = False) -> (Chain, Asset):
     chain_index = get_chain_from_console(manager, not_included_bifrost)
-    token_index = get_token_from_console(chain_index, token_only)
+    token_index = get_asset_from_console(chain_index, token_only)
     return chain_index, token_index
 
 
-def asset_list_of(chain_index: Chain = None):
-    ret = []
-    if chain_index is None or chain_index == Chain.BIFROST:
-        return SUPPORTED_TOKEN_LIST
+def asset_list_of(chain: Chain = None, token_only: bool = False) -> List[Asset]:
+    if chain is None:
+        return SUPPORTING_ASSETS
 
-    for token_stream_index in SUPPORTED_TOKEN_LIST:
-        if token_stream_index.home_chain_index() == chain_index:
-            ret.append(token_stream_index)
-        if chain_index == Chain.ETHEREUM and token_stream_index == Bridge.BFC_BIFROST:
-            ret.append(token_stream_index)
-    return ret
-
-
-def determine_decimal(token_index: Bridge) -> int:
-    return 6 if token_index == Bridge.USDT_ETHEREUM or token_index == Bridge.USDC_ETHEREUM else 18
+    coins, tokens = [], []
+    for asset in SUPPORTING_ASSETS:
+        if asset.chain == chain:
+            if asset.is_coin():
+                coins.append(asset)
+            else:
+                tokens.append(asset)
+    return tokens if token_only else coins + tokens
 
 
 def fetch_and_display_rounds(manager: Union[User, Relayer]):

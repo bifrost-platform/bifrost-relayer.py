@@ -2,7 +2,7 @@ import json
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eth.ethtype.consts import Chain
+from bridgeconst.consts import Chain
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 
 from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \

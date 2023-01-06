@@ -3,56 +3,40 @@ from typing import List, Tuple
 
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthTransaction
-from chainpy.eth.ethtype.consts import Chain
+from bridgeconst.consts import Chain, RBCMethodV1, Asset, RBCMethodDirection
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
-from bridgeconst.consts import RBCMethodV1
-from relayer.tools.consts import EXECUTABLE_TOKEN_LIST
-from relayer.tools.utils import Manager, determine_decimal
+from relayer.tools.utils import Manager
 from relayer.user import User
 
 
 class RequestParams:
-    def __init__(self, target_chain: Chain, tx: EthTransaction, token_index: Bridge):
+    def __init__(self, target_chain: Chain, tx: EthTransaction, asset: Asset):
         self.chain = target_chain
         self.tx = tx
-        self.token_index = token_index
+        self.asset = asset
 
     def __repr__(self) -> str:
-        return "{}:{}".format(self.chain, self.token_index.name)
+        return "{}:{}".format(self.chain, self.asset.name)
 
 
-def _build_request(user: Manager, direction: str, token: Bridge) -> RequestParams:
-    decimal = determine_decimal(token)
-    if direction == "inbound":
-        home_chain = token.home_chain_index()
-        target_chain = Chain.ETHEREUM if home_chain == Chain.BIFROST else home_chain
-        amount = EthAmount(0.02)
-    else:
-        target_chain = Chain.BIFROST
-        amount = EthAmount(0.01)
+def _build_request(user: Manager, dst_chain: Chain, asset: Asset, rbc_method: RBCMethodV1) -> RequestParams:
+    direction = rbc_method.direction
+    if direction == RBCMethodDirection.IN_AND_OUTBOUND or direction == RBCMethodDirection.NONE:
+        raise Exception("Not supported direction: {}".format(direction.name))
 
-    if decimal != 18:
-        amount = EthAmount(3.0, decimal)
+    amount = EthAmount(0.02) if direction == RBCMethodDirection.INBOUND else EthAmount(0.01)
+    amount = EthAmount(3.0, asset.decimal) if asset.decimal != 18 else amount
 
-    tx = user.build_cross_action_tx(target_chain, Chain.BIFROST, token, RBCMethodV1.WARP_IN, amount)
-    return RequestParams(target_chain, tx, token)
+    tx = user.build_cross_action_tx(asset.chain, dst_chain, asset, rbc_method, amount)
+    return RequestParams(asset.chain, tx, asset)
 
 
-def build_request_batch(user: Manager, config: dict) -> List[RequestParams]:
-    request_num = config["txNum"]
-    i = 0
-
+def build_request_batch(
+        user: Manager, batch_num: int, dst_chain: Chain, asset: Asset, rbc_method: RBCMethodV1) -> List[RequestParams]:
     request_list = list()
-    while True:
-        for token in EXECUTABLE_TOKEN_LIST:
-            action_data = _build_request(user, config["direction"], token)
-            request_list.append(action_data)
-            i += 1
-            if i == request_num:
-                break
-        if i == request_num:
-            break
-
+    for _ in range(batch_num):
+        action_data = _build_request(user, dst_chain, asset, rbc_method)
+        request_list.append(action_data)
     return request_list
 
 
@@ -80,8 +64,8 @@ def check_receipt_batch(user, receipt_params: List[Tuple[Chain, EthHashBytes]]):
             continue
 
 
-def cccp_batch_send(user: Manager, config: dict):
-    request_params = build_request_batch(user, config)
+def cccp_batch_send(user: Manager, batch_num: int, dst_chain: Chain, asset: Asset, rbc_method: RBCMethodV1):
+    request_params = build_request_batch(user, batch_num, dst_chain, asset, rbc_method)
     print(">>> build transaction for each request")
 
     receipt_params = send_request_batch(user, request_params)

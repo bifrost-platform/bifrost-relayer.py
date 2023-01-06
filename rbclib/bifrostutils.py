@@ -1,6 +1,6 @@
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
-from chainpy.eth.ethtype.consts import Chain
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from bridgeconst.consts import Oracle, ChainEventStatus, Symbol
@@ -128,18 +128,18 @@ def fetch_quorum(manager: EventBridge, target_chain_index: Chain, rnd: int = Non
 
 def fetch_socket_rbc_sigs(manager: EventBridge, request_id: tuple, chain_event_status: ChainEventStatus):
     params = [request_id, int(chain_event_status.formatted_hex(), 16)]
-    sigs = manager.world_call(Chain.BIFROST, "socket", "get_signatures", params)
+    sigs = manager.world_call(Chain.BFC_TEST, "socket", "get_signatures", params)
     return sigs[0]
 
 
 def fetch_socket_vsp_sigs(manager: EventBridge, rnd: int):
-    result = manager.world_call(Chain.BIFROST, "socket", "get_round_signatures", [rnd])
+    result = manager.world_call(Chain.BFC_TEST, "socket", "get_round_signatures", [rnd])
     return result[0]
 
 
 def fetch_oracle_latest_round(manager: EventBridge, oracle_id: Oracle):
     oracle_id_bytes = oracle_id.formatted_bytes()
-    return manager.world_call(Chain.BIFROST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
+    return manager.world_call(Chain.BFC_TEST, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
 
 
 def fetch_price_from_oracle(manager: EventBridge, symbol: Symbol) -> EthAmount:

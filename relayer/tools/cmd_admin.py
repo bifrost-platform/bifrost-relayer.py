@@ -1,7 +1,7 @@
 import enum
 from typing import List
 
-from chainpy.eth.ethtype.consts import Chain
+from bridgeconst.consts import Chain
 from relayer.tools.utils import get_chain_from_console, display_receipt_status, get_option_from_console, Manager
 
 
@@ -41,7 +41,7 @@ def admin_cmd(project_root_path: str = "./"):
         elif cmd == SupportedAdminCmd.BATCH_ROUND_UP:
             # batch round up
             chain_index = get_chain_from_console(admin)
-            bifnet_round = admin.world_call(Chain.BIFROST, "relayer_authority", "latest_round", [])[0]
+            bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
             target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
             if bifnet_round < target_round:
                 raise Exception("target chain's round is bigger than bifrost network")
@@ -52,7 +52,7 @@ def admin_cmd(project_root_path: str = "./"):
                 receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
                 display_receipt_status(receipt)
 
-            bifnet_round = admin.world_call(Chain.BIFROST, "relayer_authority", "latest_round", [])[0]
+            bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
             target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
             print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
 

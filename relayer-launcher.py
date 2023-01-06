@@ -1,5 +1,6 @@
 import argparse
 import enum
+import json
 import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
@@ -115,7 +116,7 @@ if __name__ == "__main__":
             "private_key": None,
             "prometheus": True,
             "fast_relayer": False,
-            "slow_relayer": True
+            "slow_relayer": False
         }
     else:
         args = parser.parse_args()
@@ -124,4 +125,5 @@ if __name__ == "__main__":
     if config.get("fast_relayer") and config.get("slow_relayer"):
         raise Exception("launch relayer with not both options: -f and -s")
 
+    # print(json.dumps(config))
     main(config)
