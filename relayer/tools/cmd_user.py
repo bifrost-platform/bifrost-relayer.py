@@ -43,7 +43,7 @@ def user_cmd(project_root_path: str = "./"):
             # cross chain action
             result = get_option_from_console("select direction", ["inbound", "outbound"])
             dir_obj = RBCMethodDirection[result.upper()]
-            chain, asset = get_chain_and_asset_from_console(user, not_included_bifrost=True)
+            chain, asset = get_chain_and_asset_from_console(user, dir_obj, not_included_bifrost=True)
 
             # insert cross-method
             if dir_obj == RBCMethodDirection.INBOUND:
@@ -52,6 +52,9 @@ def user_cmd(project_root_path: str = "./"):
             else:
                 rbc_method = get_option_from_console("method", RBC_SUPPORTED_OUTBOUND_METHODS)
                 src_chain, dst_chain, amount = Chain.BFC_TEST, chain, EthAmount(0.01, asset.decimal)
+
+            print(src_chain.name)
+            print(dst_chain.name)
 
             # insert amount
             result = get_typed_item_from_console(">>> Insert amount (in float) to be sent to socket: ", float)
@@ -70,7 +73,7 @@ def user_cmd(project_root_path: str = "./"):
             chain, asset = get_chain_and_asset_from_console(user, True)
 
             vault_addr = user.get_vault_addr(chain)  # spender
-            _, tx_hash = user.token_approve(chain, asset, vault_addr, EthAmount(2 ** 255))
+            tx_hash = user.token_approve(chain, asset, vault_addr, EthAmount(2 ** 255))
             receipt = user.world_receipt_with_wait(chain, tx_hash, False)
             display_receipt_status(receipt)
 

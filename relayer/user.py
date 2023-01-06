@@ -18,10 +18,11 @@ class UserSubmit:
                  asset0: Asset,
                  apply_addr: EthAddress,
                  amount: EthAmount):
-        inst_tuple = (dst_chain.value, method.formatted_int())
+        inst_tuple = (dst_chain.formatted_bytes(), method.formatted_bytes())
+
         action_param_tuple = (
-            asset0.formatted_hex(),  # first token_index
-            Asset.NONE.formatted_hex(),  # second token_index
+            asset0.formatted_bytes(),  # first token_index
+            Asset.NONE.formatted_bytes(),  # second token_index
             apply_addr.with_checksum(),  # from address
             apply_addr.with_checksum(),  # to address
             amount.int(),
