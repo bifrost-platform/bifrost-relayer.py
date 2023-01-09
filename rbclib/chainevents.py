@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 
@@ -275,6 +276,29 @@ class RbcEvent(ChainEventABC):
             }
         }
 
+    def decoded_json(self):
+        method_params = self.method_params
+        return {
+            "req_id": {
+                "src_chain": self.src_chain.name,
+                "round": self.rnd,
+                "seq_num": self.seq
+            },
+            "event_status": self.status.name,
+            "instruction": {
+                "dst_chain": self.dst_chain.name,
+                "method": self.rbc_method.name
+            },
+            "action_params": {
+                "asset1": method_params[0].name,
+                "asset2": method_params[1].name,
+                "from": method_params[2].with_checksum(),
+                "to": method_params[3].with_checksum(),
+                "amount": method_params[4].int(),
+                "variants": method_params[5].hex_without_0x(),
+            }
+        }
+
     @staticmethod
     def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['RbcEvent']:
         if manager.__class__.__name__ != "Relayer":
@@ -295,6 +319,8 @@ class RbcEvent(ChainEventABC):
         # the collected events are made into objects and stored in the list
         events = list()
         for event in events_raw:
+
+            print(json.dumps(event.to_dict(), indent=4))
             event_obj = RbcEvent.init(event, timestamp_msec(), manager)
             events.append(event_obj)
 
