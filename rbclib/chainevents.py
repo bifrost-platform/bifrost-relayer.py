@@ -319,8 +319,6 @@ class RbcEvent(ChainEventABC):
         # the collected events are made into objects and stored in the list
         events = list()
         for event in events_raw:
-
-            print(json.dumps(event.to_dict(), indent=4))
             event_obj = RbcEvent.init(event, timestamp_msec(), manager)
             events.append(event_obj)
 
