@@ -8,7 +8,7 @@ from rbclib.externalchainevents import ExternalRbcEvents
 from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
-from relayer.metric import PrometheusExporterRelayer
+from rbclib.metric import PrometheusExporterRelayer
 
 from relayer.relayer import Relayer
 

@@ -5,7 +5,7 @@ from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 import eth_abi
 from chainpy.eventbridge.eventbridge import EventBridge
 
-from relayer.metric import PrometheusExporterRelayer
+from rbclib.metric import PrometheusExporterRelayer
 from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
     fetch_sorted_previous_relayer_list, fetch_latest_round
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset
