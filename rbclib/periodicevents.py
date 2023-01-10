@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 import eth_abi
 
 from bridgeconst.consts import Chain, Oracle, Asset
@@ -13,16 +13,13 @@ from chainpy.btc.managers.simplerpccli import SimpleBtcClient
 from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
-from relayer.metric import PrometheusExporterRelayer
+from rbclib.metric import PrometheusExporterRelayer
 from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, fetch_lowest_validator_round, \
     fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .relayersubmit import SocketSignature
 
 from .utils import log_invalid_flow
-
-if TYPE_CHECKING:
-    from relayer.relayer import Relayer
 
 
 price_logger = Logger("PriceUp", logging.INFO)

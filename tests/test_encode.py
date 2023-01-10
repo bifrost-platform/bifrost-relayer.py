@@ -1,6 +1,4 @@
-import copy
 import json
-from enum import Enum
 
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eventbridge.eventbridge import EventBridge
