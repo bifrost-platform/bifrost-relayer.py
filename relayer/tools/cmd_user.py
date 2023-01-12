@@ -7,8 +7,9 @@ from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from relayer.tools.consts import RBC_SUPPORTED_INBOUND_METHODS, RBC_SUPPORTED_OUTBOUND_METHODS
 from relayer.tools.utils_load_test import cccp_batch_send
-from relayer.tools.utils import get_chain_and_asset_from_console, get_typed_item_from_console, \
-    display_receipt_status, display_multichain_asset_balances, fetch_and_display_rounds, Manager
+from relayer.tools.utils import get_chain_and_asset_from_console_for_bridge, get_typed_item_from_console, \
+    display_receipt_status, display_multichain_asset_balances, fetch_and_display_rounds, Manager, \
+    get_chain_and_asset_from_console
 from relayer.tools.utils import get_option_from_console
 
 
@@ -43,7 +44,7 @@ def user_cmd(project_root_path: str = "./"):
             # cross chain action
             result = get_option_from_console("select direction", ["inbound", "outbound"])
             dir_obj = RBCMethodDirection[result.upper()]
-            chain, asset = get_chain_and_asset_from_console(user, dir_obj, not_included_bifrost=True)
+            chain, asset = get_chain_and_asset_from_console_for_bridge(user, dir_obj, not_included_bifrost=True)
 
             # insert cross-method
             if dir_obj == RBCMethodDirection.INBOUND:
@@ -53,14 +54,12 @@ def user_cmd(project_root_path: str = "./"):
                 rbc_method = get_option_from_console("method", RBC_SUPPORTED_OUTBOUND_METHODS)
                 src_chain, dst_chain, amount = Chain.BFC_TEST, chain, EthAmount(0.01, asset.decimal)
 
-            print(src_chain.name)
-            print(dst_chain.name)
-
             # insert amount
             result = get_typed_item_from_console(">>> Insert amount (in float) to be sent to socket: ", float)
             amount = EthAmount(result, asset.decimal) if result is not None else amount
 
             if SupportedUserCmd.RBC_REQUEST:
+                print(">>> Send {} {} from {} to {} with {}".format(amount.change_decimal(4).float_str, asset, src_chain, dst_chain, rbc_method))
                 receipt = user.send_cross_action_and_wait_receipt(src_chain, dst_chain, asset, rbc_method, amount)
                 display_receipt_status(receipt)
             else:
@@ -71,6 +70,10 @@ def user_cmd(project_root_path: str = "./"):
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
             chain, asset = get_chain_and_asset_from_console(user, True)
+
+            if asset == Asset.NONE:
+                print("No token on the chain: {}".format(chain))
+                continue
 
             vault_addr = user.get_vault_addr(chain)  # spender
             tx_hash = user.token_approve(chain, asset, vault_addr, EthAmount(2 ** 255))

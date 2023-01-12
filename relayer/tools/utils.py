@@ -137,7 +137,7 @@ def get_asset_from_console(chain_index: Chain = None, token_only: bool = False) 
         return get_option_from_console(prompt, asset_options)
 
 
-def get_chain_and_asset_from_console(
+def get_chain_and_asset_from_console_for_bridge(
         manager: MultiChainManager,
         direction: RBCMethodDirection,
         token_only: bool = False,
@@ -148,6 +148,14 @@ def get_chain_and_asset_from_console(
         token_index = get_asset_from_console(chain_index, token_only)
     else:
         token_index = get_asset_from_console(Chain.BFC_TEST, token_only)
+    return chain_index, token_index
+
+
+def get_chain_and_asset_from_console(
+        manager: MultiChainManager,
+        token_only: bool = False) -> (Chain, Asset):
+    chain_index = get_chain_from_console(manager)
+    token_index = get_asset_from_console(chain_index, token_only)
     return chain_index, token_index
 
 
