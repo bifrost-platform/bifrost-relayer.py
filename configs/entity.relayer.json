@@ -134,10 +134,10 @@
     },
     "MATIC_MUMBAI": {
         "chain_name": "MATIC_MUMBAI",
-        "block_period_sec": 5,
+        "block_period_sec": 2,
         "url_with_access_key": "",
-        "bootstrap_latest_height": 28557743,
-        "block_aging_period": 5,
+        "bootstrap_latest_height": 30814949,
+        "block_aging_period": 200,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
         "max_log_num": 1000,
@@ -149,9 +149,9 @@
         },
         "abi_dir": "configs/",
         "contracts": [
-			{"name": "relayer_authority", "address": "0xA8229A4EF8873651502f508109f725d03C27007E", "abi_file": "abi.relayer.external.json", "deploy_height": 29429271},
-			{"name": "vault", "address": "0x1b460169e85b6F06f6d36d5A5aD414d998631973", "abi_file": "abi.vault.external.json", "deploy_height": 29429275},
-			{"name": "socket", "address": "0x721499b09A1F0962AEafc2a6f0386b507f1D8Ce4", "abi_file": "abi.socket.external.json", "deploy_height": 29429279}
+			{"name": "relayer_authority", "address": "0x2FD5232fDFa6e1c127e7821CC48108Ca79281a38", "abi_file": "abi.relayer.external.json", "deploy_height": 28954662},
+			{"name": "vault", "address": "0xB2ba0020560cF6c164DC48D1E29559AbA8472208", "abi_file": "abi.vault.external.json", "deploy_height": 30814945},
+			{"name": "socket", "address": "0xA25357F3C313Bd13885678f935178211f0dF6722", "abi_file": "abi.socket.external.json", "deploy_height": 30814949}
 		],
         "events": [
             {
@@ -167,7 +167,8 @@
         "supporting_chains": [
             "BFC_TEST",
             "ETH_GOERLI",
-            "BNB_TEST"
+            "BNB_TEST",
+            "MATIC_MUMBAI"
         ]
     },
     "multichain_config": {
