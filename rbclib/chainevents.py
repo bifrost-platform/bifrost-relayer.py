@@ -83,6 +83,7 @@ class RbcEvent(ChainEventABC):
     """
     Data class for event from socket contract.
     """
+    FAST_RELAYER = False
     CALL_DELAY_SEC = 600
     AGGREGATED_DELAY_SEC = 0
     EVENT_NAME = "Socket"
@@ -103,12 +104,20 @@ class RbcEvent(ChainEventABC):
         """ Depending on the event status, selects a child class of Socket Event, and initiates its instance. """
         # parse event-status from event data (fast, but not expandable)
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
-        status_name = ChainEventStatus(status_data.int()).name.capitalize()
-
-        casting_type = eval("Chain{}Event".format(status_name))
+        status = ChainEventStatus(status_data.int())
+        casting_type = eval("Chain{}Event".format(status.name.capitalize()))
 
         # The normal relayer processes the ACCEPTED or REJECTED event after a certain period of time.
         if casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent:
+            if time_lock != 0:
+                # does not export log in bootstrap process
+                formatted_log(
+                    proto_logger,
+                    relayer_addr=manager.active_account.address,
+                    log_id="SlowRelay:{}".format(status.name),
+                    related_chain=Chain.NONE,
+                    log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
+                )
             time_lock += cls.AGGREGATED_DELAY_SEC * 1000
 
         return casting_type(detected_event, time_lock, manager)
@@ -134,6 +143,9 @@ class RbcEvent(ChainEventABC):
         return "{}:{}".format(request_id_str, self.status.name)
 
     def check_my_event(self) -> bool:
+        if self.__class__.FAST_RELAYER:
+            return True
+
         if self.src_chain not in self.manager.supported_chain_list:
             return False
 
@@ -318,7 +330,7 @@ class RbcEvent(ChainEventABC):
         # the collected events are made into objects and stored in the list
         events = list()
         for event in events_raw:
-            event_obj = RbcEvent.init(event, timestamp_msec(), manager)
+            event_obj = RbcEvent.init(event, 0, manager)
             events.append(event_obj)
 
         # remove finalized event objects
@@ -333,6 +345,7 @@ class RbcEvent(ChainEventABC):
         for not_finalized_event_obj in not_finalized_event_objs:
             if min_rnd > not_finalized_event_obj.rnd:
                 continue
+            not_finalized_event_obj.time_lock = timestamp_msec()
             not_handled_events_obj.append(not_finalized_event_obj)
 
         # logging and return not finalized event objects
@@ -375,28 +388,14 @@ class RbcEvent(ChainEventABC):
         return data[:start] + EthHashBytes(event_status.value) + data[end:]
 
     def is_primary_relayer(self):
+        if self.__class__.FAST_RELAYER:
+            return True
         total_validator_num = fetch_relayer_num(self.relayer, Chain.BFC_TEST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
 
         return primary_index == my_index
-
-    def aggregated_relay(self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus):
-        relayer_index = self.relayer.get_value_by_key(self.rnd)
-        chain, rnd, seq = self.req_id()
-        sigs = fetch_socket_rbc_sigs(self.relayer, (chain.formatted_bytes(), rnd, seq), chain_event_status)
-        submit_data = PollSubmit(self).add_tuple_sigs(sigs)
-
-        msg = "Aggregated" if is_primary_relay else "Total"
-        formatted_log(
-            proto_logger,
-            relayer_addr=self.manager.active_account.address,
-            log_id=self.summary(),
-            related_chain=target_chain,
-            log_data=msg + "-Vote({})".format(relayer_index)
-        )
-        return target_chain, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
     def build_transaction_param_with_sig(self):
         next_status = ChainEventStatus(self.status.value + 2)
@@ -553,15 +552,27 @@ class ChainRevertedEvent(RbcEvent):
             return 1.2
 
 
-class ChainAcceptedEvent(RbcEvent):
+class _AggregatedRelayEvent(RbcEvent):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
-        if self.status != ChainEventStatus.ACCEPTED:
-            raise Exception("Event status not matches")
         self.aggregated = True
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         if not self.check_my_event():
+            return NoneParams
+
+        # Check if the fast relayer has already processed.
+        chain_index, contract_name, method_name, params_tuple = self.build_call_transaction_params()
+        result = self.relayer.world_call(chain_index, contract_name, method_name, params_tuple)
+        status, expected_status = self.check_already_done(result)
+        if status == expected_status:
+            formatted_log(
+                proto_logger,
+                relayer_addr=self.relayer.active_account.address,
+                log_id="SlowRelay:{}".format(self.status.name),
+                related_chain=chain_index,
+                log_data="AlreadyProcessed"
+            )
             return NoneParams
 
         if self.is_primary_relayer() or not self.aggregated:
@@ -582,37 +593,62 @@ class ChainAcceptedEvent(RbcEvent):
         chain, rnd, seq = self.req_id()
         return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
 
+    def check_already_done(self, result: tuple) -> Tuple[ChainEventStatus, ChainEventStatus]:
+        status = ChainEventStatus(result[0][0][0])
+
+        if self.status == ChainEventStatus.ACCEPTED:
+            expected_status = ChainEventStatus.COMMITTED if self.is_inbound() else ChainEventStatus.EXECUTED
+        else:
+            expected_status = ChainEventStatus.ROLLBACKED if self.is_inbound() else ChainEventStatus.REVERTED
+
+        return status, expected_status
+
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():
             return None
-        status = ChainEventStatus(result[0][0][0])
 
-        if self.is_inbound():
-            commit_or_rollback = (status == ChainEventStatus.COMMITTED) or (status == ChainEventStatus.ROLLBACKED)
-            total_send_flag = True if not commit_or_rollback else False
-        else:
-            executed_or_reverted = (status == ChainEventStatus.EXECUTED) or (status == ChainEventStatus.REVERTED)
-            total_send_flag = True if not executed_or_reverted else False
+        status, expected_status = self.check_already_done(result)
 
-        if total_send_flag:
-            expected_status = ChainEventStatus.COMMITTED if self.is_inbound() else ChainEventStatus.EXECUTED
-            formatted_log(
-                proto_logger,
-                relayer_addr=self.manager.active_account.address,
-                log_id=self.summary(),
-                related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
-                log_data="{}-thRelayer:expected({}):actual({})".format(
-                    self.relayer.get_latest_value(),
-                    expected_status.name,
-                    status.name
-                )
-            )
-
-            self.aggregated = False
-            self.switch_to_send(timestamp_msec())
-            return self
-        else:
+        if status == expected_status:
             return None
+        formatted_log(
+            proto_logger,
+            relayer_addr=self.manager.active_account.address,
+            log_id=self.summary(),
+            related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
+            log_data="{}-thRelayer:expected({}):actual({})".format(
+                self.relayer.get_latest_value(),
+                expected_status.name,
+                status.name
+            )
+        )
+
+        self.aggregated = False
+        self.switch_to_send(timestamp_msec())
+        return self
+
+    def aggregated_relay(self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus):
+        relayer_index = self.relayer.get_value_by_key(self.rnd)
+        chain, rnd, seq = self.req_id()
+        sigs = fetch_socket_rbc_sigs(self.relayer, (chain.formatted_bytes(), rnd, seq), chain_event_status)
+        submit_data = PollSubmit(self).add_tuple_sigs(sigs)
+
+        msg = "Primary" if is_primary_relay else "Secondary"
+        formatted_log(
+            proto_logger,
+            relayer_addr=self.manager.active_account.address,
+            log_id=self.summary(),
+            related_chain=target_chain,
+            log_data=msg + "-Vote({})".format(relayer_index if not self.__class__.FAST_RELAYER else "FAST")
+        )
+        return target_chain, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+
+
+class ChainAcceptedEvent(_AggregatedRelayEvent):
+    def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
+        super().__init__(detected_event, time_lock, manager)
+        if self.status != ChainEventStatus.ACCEPTED:
+            raise Exception("Event status not matches")
 
     def handle_tx_result_fail(self) -> Optional['ChainRejectedEvent']:
         if not self.check_my_event():
@@ -626,65 +662,12 @@ class ChainAcceptedEvent(RbcEvent):
         return clone_event
 
 
-class ChainRejectedEvent(RbcEvent):
+class ChainRejectedEvent(_AggregatedRelayEvent):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
         if self.status != ChainEventStatus.REJECTED:
             raise Exception("Event status not matches")
         self.aggregated = True
-
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
-        if not self.check_my_event():
-            return NoneParams
-
-        if self.is_primary_relayer() or not self.aggregated:
-            chain_to_send = self.src_chain if self.is_inbound() else self.dst_chain
-            return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
-
-        else:
-            next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
-            self.switch_to_call(next_time_lock)
-            self.relayer.queue.enqueue(self)
-
-            return NoneParams
-
-    def build_call_transaction_params(self):
-        if not self.check_my_event():
-            return NoneParams
-        target_chain = self.src_chain if self.is_inbound() else self.dst_chain
-        chain, rnd, seq = self.req_id()
-        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
-
-    def handle_call_result(self, result: tuple):
-        if not self.check_my_event():
-            return None
-        status = ChainEventStatus(result[0][0][0])
-        if self.is_inbound():
-            commit_or_rollback = (status == ChainEventStatus.COMMITTED) or (status == ChainEventStatus.ROLLBACKED)
-            total_send_flag = True if not commit_or_rollback else False
-        else:
-            executed_or_reverted = (status == ChainEventStatus.EXECUTED) or (status == ChainEventStatus.REVERTED)
-            total_send_flag = True if not executed_or_reverted else False
-
-        if total_send_flag:
-            expected_status = ChainEventStatus.ROLLBACKED if self.is_inbound() else ChainEventStatus.REVERTED
-            formatted_log(
-                proto_logger,
-                relayer_addr=self.manager.active_account.address,
-                log_id=self.summary(),
-                related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
-                log_data="{}-thRelayer:SwitchPrimary:expected({}):actual({})".format(
-                    self.relayer.get_latest_value(),
-                    expected_status.name,
-                    status.name
-                )
-            )
-
-            self.aggregated = False
-            self.switch_to_send(timestamp_msec())
-            return self
-        else:
-            return None
 
 
 class _FinalStatusEvent(RbcEvent):
@@ -713,6 +696,7 @@ class ChainRollbackedEvent(_FinalStatusEvent):
 
 
 class ValidatorSetUpdatedEvent(ChainEventABC):
+    FAST_RELAYER = False
     CALL_DELAY_SEC = 200
     EVENT_NAME = "RoundUp"
 
@@ -773,7 +757,9 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
                 log_data="from({}):to({})".format(prev_index, new_index)
             )
 
-    def is_previous_relayer(self):
+    def is_previous_relayer(self) -> bool:
+        if self.__class__.FAST_RELAYER:
+            return True
         return self.relayer.has_key(self.round - 1)
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:

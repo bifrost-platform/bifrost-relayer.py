@@ -70,6 +70,9 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
+    RbcEvent.FAST_RELAYER = True
+    ValidatorSetUpdatedEvent.FAST_RELAYER = True
+
 
 def main(_config: dict):
     secret_key = _config.get("private_key")
@@ -114,7 +117,7 @@ if __name__ == "__main__":
             "no_heartbeat": False,
             "private_key": None,
             "prometheus": True,
-            "fast_relayer": False,
+            "fast_relayer": True,
             "slow_relayer": False
         }
     else:

@@ -20,7 +20,11 @@ class Relayer(EventBridge):
         self.current_rnd = None
 
     @classmethod
-    def init_from_config_files(cls, relayer_config_path: str, private_config_path: str = None, private_key: str = None):
+    def init_from_config_files(
+            cls,
+            relayer_config_path: str,
+            private_config_path: str = None,
+            private_key: str = None):
         with open(relayer_config_path, "r") as f:
             relayer_config_dict = json.load(f)
 
@@ -36,7 +40,11 @@ class Relayer(EventBridge):
         )
 
     @classmethod
-    def init_from_dicts(cls, relayer_config_dict: dict, private_config_dict: dict = None, private_key: str = None):
+    def init_from_dicts(
+            cls,
+            relayer_config_dict: dict,
+            private_config_dict: dict = None,
+            private_key: str = None):
         merged_dict = merge_dict(relayer_config_dict, private_config_dict)
         if private_key is not None:
             merged_dict["entity"]["secret_hex"] = hex(EthAccount.from_secret(private_key).priv)

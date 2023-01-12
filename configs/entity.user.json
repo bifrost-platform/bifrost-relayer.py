@@ -3,8 +3,6 @@
         "bitcoin_block_hash": {
             "name": "BITCOIN_BLOCK_HASH",
             "url": "",
-            "auth_id": "",
-            "auth_password": "",
             "collection_period_sec": 300
         },
         "asset_prices": {
