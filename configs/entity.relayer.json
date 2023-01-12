@@ -3,8 +3,6 @@
         "bitcoin_block_hash": {
             "name": "BITCOIN_BLOCK_HASH",
             "url": "",
-            "auth_id": "",
-            "auth_password": "",
             "collection_period_sec": 300
         },
         "asset_prices": {
@@ -80,7 +78,7 @@
         "block_period_sec": 13,
         "url_with_access_key": "",
         "bootstrap_latest_height": 7749286,
-        "block_aging_period": 6,
+        "block_aging_period": 2,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
         "max_log_num": 1000,
