@@ -102,7 +102,7 @@ def main(_config: dict):
     if _config.get("fast_relayer"):
         config_fast_relayer(relayer, prometheus_on)
     elif _config.get("slow_relayer"):
-        config_slow_relayer(relayer, heart_beat_opt, prometheus_on, 30)
+        config_slow_relayer(relayer, heart_beat_opt, prometheus_on, 180)
     else:
         config_general_relayer(relayer, heart_beat_opt, prometheus_on)
 
