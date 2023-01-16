@@ -38,10 +38,13 @@ solidity/package.json
 caches/
 
 # relayer private config files
-configs/buildconfig.py
 configs/entity.relayer.private.json
+configs-mainnet/entity.relayer.private.json
 configs/entity.user.private.json
+configs-mainnet/entity.user.private.json
 configs/keys.json
+configs-mainnet/keys.json
+
 
 # IDE-Specific project files
 .idea
