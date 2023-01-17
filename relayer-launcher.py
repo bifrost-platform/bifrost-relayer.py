@@ -4,7 +4,7 @@ import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 
-from rbclib.externalchainevents import ExternalRbcEvents
+from rbclib.aggchainevents import ExternalRbcEvents
 from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
@@ -31,6 +31,10 @@ class RelayerType(enum.Enum):
     SLOW_RELAYER = 2
     FAST_RELAYER = 3
 
+    @staticmethod
+    def default_slow_relayer_delay_sec():
+        return 180
+
 
 def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
     # multichain monitor will detect "Socket" event from every socket contract.
@@ -54,10 +58,14 @@ def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
+    relayer.set_relayer_role("Relayer")
+    relayer.role = "Relayer"
+
 
 def config_slow_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool, delay: int):
     config_general_relayer(relayer, heart_beat_opt, prometheus_on)
-    RbcEvent.AGGREGATED_DELAY_SEC = delay
+    relayer.set_relayer_role("Slow-relayer", delay)
+    relayer.role = "Slow-relayer"
 
 
 def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
@@ -70,8 +78,8 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
-    RbcEvent.FAST_RELAYER = True
-    ValidatorSetUpdatedEvent.FAST_RELAYER = True
+    relayer.set_relayer_role("Fast-relayer")
+    relayer.role = "Fast-relayer"
 
 
 def main(_config: dict):
@@ -102,7 +110,7 @@ def main(_config: dict):
     if _config.get("fast_relayer"):
         config_fast_relayer(relayer, prometheus_on)
     elif _config.get("slow_relayer"):
-        config_slow_relayer(relayer, heart_beat_opt, prometheus_on, 180)
+        config_slow_relayer(relayer, heart_beat_opt, prometheus_on, RelayerType.default_slow_relayer_delay_sec())
     else:
         config_general_relayer(relayer, heart_beat_opt, prometheus_on)
 
@@ -117,7 +125,7 @@ if __name__ == "__main__":
             "no_heartbeat": False,
             "private_key": None,
             "prometheus": True,
-            "fast_relayer": True,
+            "fast_relayer": False,
             "slow_relayer": False
         }
     else:
@@ -127,5 +135,4 @@ if __name__ == "__main__":
     if config.get("fast_relayer") and config.get("slow_relayer"):
         raise Exception("launch relayer with not both options: -f and -s")
 
-    # print(json.dumps(config))
     main(config)

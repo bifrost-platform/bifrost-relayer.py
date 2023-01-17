@@ -34,7 +34,6 @@ class PriceUpOracle(PeriodicEventABC):
     COLLECTION_PERIOD_SEC = 0  # means none
     ASSETS = []  # means none
     URL_DICT = dict()
-    SOURCE_NAMES = []
 
     def __init__(self,
                  manager: EventBridge,
@@ -54,17 +53,16 @@ class PriceUpOracle(PeriodicEventABC):
             self.__cli = price_cli
         else:
             self.__cli = PriceOracleAgg(
-                self.__class__.SOURCE_NAMES,
+                list(self.__class__.URL_DICT.keys()),
                 self.__class__.URL_DICT
             )
         PrometheusExporterRelayer.exporting_running_time_metric()
 
     @staticmethod
-    def setup(coin_names: list, source_names: list, url_dict: dict, collection_period_sec: int):
+    def setup(coin_names: list, url_dict: dict, collection_period_sec: int):
         PriceUpOracle.ASSETS = coin_names
         PriceUpOracle.COLLECTION_PERIOD_SEC = collection_period_sec
         PriceUpOracle.URL_DICT = url_dict
-        PriceUpOracle.SOURCE_NAMES = source_names
 
     @property
     def relayer(self) -> EventBridge:
