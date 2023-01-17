@@ -99,13 +99,28 @@ class RbcEvent(ChainEventABC):
     def __cmp__(self, other):
         return self.status.value < other.status.value
 
+    @staticmethod
+    def select_child(status: ChainEventStatus):
+        child_class_map = {
+            ChainEventStatus.REQUESTED: ChainRequestedEvent,
+            ChainEventStatus.FAILED: ChainFailedEvent,
+            ChainEventStatus.EXECUTED: ChainExecutedEvent,
+            ChainEventStatus.REVERTED: ChainRevertedEvent,
+            ChainEventStatus.ACCEPTED: ChainAcceptedEvent,
+            ChainEventStatus.REJECTED: ChainRejectedEvent,
+            ChainEventStatus.COMMITTED: ChainCommittedEvent,
+            ChainEventStatus.ROLLBACKED: ChainRollbackedEvent
+        }
+
+        return child_class_map.get(status)
+
     @classmethod
     def init(cls, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         """ Depending on the event status, selects a child class of Socket Event, and initiates its instance. """
         # parse event-status from event data (fast, but not expandable)
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
         status = ChainEventStatus(status_data.int())
-        casting_type = eval("Chain{}Event".format(status.name.capitalize()))
+        casting_type = RbcEvent.select_child(status)
 
         # The normal relayer processes the ACCEPTED or REJECTED event after a certain period of time.
         if casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent:
@@ -337,7 +352,7 @@ class RbcEvent(ChainEventABC):
         not_finalized_event_objs = RbcEvent._remove_finalized_rids(events)
 
         # remove too late event
-        not_handled_events_obj = list()
+        not_handled_events_objs = list()
 
         if manager.current_rnd is None:
             raise Exception("relayer's current rnd is None")
@@ -345,11 +360,17 @@ class RbcEvent(ChainEventABC):
         for not_finalized_event_obj in not_finalized_event_objs:
             if min_rnd > not_finalized_event_obj.rnd:
                 continue
+
+            if RbcEvent.FAST_RELAYER:
+                status = not_finalized_event_obj.status
+                if status != ChainEventStatus.ACCEPTED and status != ChainEventStatus:
+                    continue
+
             not_finalized_event_obj.time_lock = timestamp_msec()
-            not_handled_events_obj.append(not_finalized_event_obj)
+            not_handled_events_objs.append(not_finalized_event_obj)
 
         # logging and return not finalized event objects
-        for event_obj in not_handled_events_obj:
+        for event_obj in not_handled_events_objs:
             formatted_log(
                 bootstrap_logger,
                 relayer_addr=manager.active_account.address,
@@ -357,7 +378,7 @@ class RbcEvent(ChainEventABC):
                 related_chain=Chain.NONE,
                 log_data=event_obj.summary()
             )
-        return not_finalized_event_objs
+        return not_handled_events_objs
 
     @staticmethod
     def _remove_finalized_rids(event_objs: List["RbcEvent"]) -> List["RbcEvent"]:
