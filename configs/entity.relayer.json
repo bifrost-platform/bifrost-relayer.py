@@ -13,11 +13,6 @@
                 "USDC_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
-            "source_names": [
-                "Coingecko",
-                "Upbit",
-                "Chainlink"
-            ],
             "collection_period_sec": 120,
             "urls": {
                 "Coingecko": "",
@@ -137,7 +132,7 @@
         "block_period_sec": 2,
         "url_with_access_key": "",
         "bootstrap_latest_height": 30814949,
-        "block_aging_period": 3,
+        "block_aging_period": 200,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
         "max_log_num": 1000,
@@ -161,9 +156,10 @@
         ]
     },
     "entity": {
-        "role": "Relayer",
-        "account_name": "default",
+        "role": "slow-relayer",
+        "account_name": "relayer-launched-on-console",
         "secret_hex": "",
+        "slow_relayer_delay_sec": 180,
         "supporting_chains": [
             "BFC_TEST",
             "ETH_GOERLI",

@@ -1,12 +1,19 @@
+import copy
 import json
+from typing import Optional
+
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
 from bridgeconst.consts import Chain
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
+from chainpy.eth.managers.configsanitycheck import ConfigChecker
+from chainpy.eth.managers.configsanitycheck import is_meaningful
+
 
 from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \
     fetch_latest_round, find_height_by_timestamp
+from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
 from rbclib.periodicevents import BtcHashUpOracle, AuthDownOracle, PriceUpOracle
 import time
@@ -24,7 +31,10 @@ class Relayer(EventBridge):
             cls,
             relayer_config_path: str,
             private_config_path: str = None,
-            private_key: str = None):
+            private_key: str = None,
+            role: str = None,
+            slow_relayer_delay_sec: int = None
+    ):
         with open(relayer_config_path, "r") as f:
             relayer_config_dict = json.load(f)
 
@@ -36,7 +46,9 @@ class Relayer(EventBridge):
         return cls.init_from_dicts(
             relayer_config_dict,
             private_config_dict=private_config_dict,
-            private_key=private_key
+            private_key=private_key,
+            role=role,
+            slow_relayer_delay_sec=slow_relayer_delay_sec
         )
 
     @classmethod
@@ -44,33 +56,81 @@ class Relayer(EventBridge):
             cls,
             relayer_config_dict: dict,
             private_config_dict: dict = None,
-            private_key: str = None):
+            private_key: str = None,
+            role: str = None,
+            slow_relayer_delay_sec: int = None
+    ):
         merged_dict = merge_dict(relayer_config_dict, private_config_dict)
         if private_key is not None:
             merged_dict["entity"]["secret_hex"] = hex(EthAccount.from_secret(private_key).priv)
 
+        # forced change relayer's role
+        if is_meaningful(role) and role.capitalize() == "Slow-relayer":
+            merged_dict["entity"]["role"] = role.capitalize()
+            merged_dict["entity"]["slow_relayer_delay_sec"] = slow_relayer_delay_sec
+
+        # check a correctness of the relayer config
+        Relayer.config_sanity_check(merged_dict)
+
+        # check whether oracle relayer or not
         oracle_config = merged_dict.get("oracle_config")
-        Relayer.init_classes(oracle_config)
+
+        is_price_oracle_relayer = oracle_config is not None and is_meaningful(oracle_config["asset_prices"])
+        price_oracle_config = oracle_config["asset_prices"] if is_price_oracle_relayer else None
+
+        is_btc_oracle_relayer = oracle_config is not None and is_meaningful(oracle_config["bitcoin_block_hash"])
+        btc_oracle_config = oracle_config["bitcoin_block_hash"] if is_btc_oracle_relayer else None
+
+        slow_relayer_delay_sec = None
+        if merged_dict["entity"]["role"].capitalize() == "Slow-relayer":
+            slow_relayer_delay_sec = merged_dict["entity"]["slow_relayer_delay_sec"]
+
+        Relayer.init_classes(
+            slow_relayer_delay_sec=slow_relayer_delay_sec,
+            price_oracle_config=price_oracle_config,
+            btc_hash_oracle_config=btc_oracle_config
+        )
+
         return cls(merged_dict)
 
     @staticmethod
-    def init_classes(oracle_config_dict: dict):
+    def init_classes(
+            slow_relayer_delay_sec: Optional[int] = 60,
+            auth_down_oracle_period_sec: int = 60,
+            price_oracle_config: Optional[dict] = None,
+            btc_hash_oracle_config: Optional[dict] = None,
+    ):
         # setup hardcoded value (not from config file) because it's a system parameter
-        AuthDownOracle.setup(60)
+        AuthDownOracle.setup(auth_down_oracle_period_sec)
 
-        price_oracle_config = oracle_config_dict["asset_prices"]
+        if slow_relayer_delay_sec is not None:
+            RbcEvent.AGGREGATED_DELAY_SEC = slow_relayer_delay_sec
+
         PriceUpOracle.setup(
             price_oracle_config["names"],
-            price_oracle_config["source_names"],
             price_oracle_config["urls"],
             price_oracle_config["collection_period_sec"]
         )
 
-        btc_hash_oracle_config = oracle_config_dict["bitcoin_block_hash"]
         BtcHashUpOracle.setup(
             btc_hash_oracle_config["url"],
             btc_hash_oracle_config["collection_period_sec"]
         )
+
+    @staticmethod
+    def set_relayer_role(role, slow_relayer_delay_sec: Optional[int] = 60):
+        role = role.capitalize()
+        if role == "Slow-relayer":
+            RbcEvent.AGGREGATED_DELAY_SEC = slow_relayer_delay_sec
+        else:
+            RbcEvent.AGGREGATED_DELAY_SEC = 0
+
+        if role == "Fast-relayer":
+            RbcEvent.FAST_RELAYER = True
+            ValidatorSetUpdatedEvent.FAST_RELAYER = True
+        else:
+            RbcEvent.FAST_RELAYER = False
+            ValidatorSetUpdatedEvent.FAST_RELAYER = False
 
     def _register_relayer_index(self, rnd: int):
         sorted_validator_list = fetch_sorted_previous_relayer_list(self, Chain.BFC_TEST, rnd)
@@ -124,8 +184,27 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
-        bootstrap_logger.info("BIFROST's Relayer: {}".format(__version__))
+        bootstrap_logger.info("BIFROST's {}: version({})".format(self.role, __version__))
+        if self.role == "Slow-relayer":
+            bootstrap_logger.info("Aggregated relay delay: {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
         bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
         self.run_eventbridge()
+
+    @staticmethod
+    def config_sanity_check_from_files(public_config_path: str, private_config_path: str = None):
+        with open(public_config_path, "r") as f:
+            public_config = json.load(f)
+
+        private_config = None
+        if private_config_path is not None:
+            with open(private_config_path, "r") as f:
+                private_config = json.load(f)
+
+        Relayer.config_sanity_check(merge_dict(public_config, private_config))
+
+    @staticmethod
+    def config_sanity_check(config: dict):
+        config_clone = copy.deepcopy(config)
+        ConfigChecker.check_config(config_clone)
