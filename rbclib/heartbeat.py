@@ -1,7 +1,6 @@
 import logging
 
 from typing import TYPE_CHECKING, Optional
-from bridgeconst.consts import Chain
 
 from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
@@ -10,6 +9,8 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import formatted_log, Logger
+
+from .switchable_enum import SwitchableChain
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
@@ -48,7 +49,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         if not is_pulsed_hear_beat(self.relayer):
-            return Chain.BFC_TEST, "relayer_authority", "heartbeat", []
+            return SwitchableChain.BIFROST, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
 
@@ -61,7 +62,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BFC_TEST,
+            related_chain=SwitchableChain.BIFROST,
             log_data="HeartBeat({})".format(True)
         )
         return None
@@ -71,7 +72,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BFC_TEST,
+            related_chain=SwitchableChain.BIFROST,
             log_data="HeartBeat({})".format(False)
         )
         return None
@@ -81,7 +82,7 @@ class RelayerHeartBeat(PeriodicEventABC):
             heart_beat_logger,
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
-            related_chain=Chain.BFC_TEST,
+            related_chain=SwitchableChain.BIFROST,
             log_data="HeartBeat({})".format(None)
         )
         return None

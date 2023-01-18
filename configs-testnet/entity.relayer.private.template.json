@@ -1,0 +1,32 @@
+{
+    "entity": {
+        "secret_hex": "8f2f631c6492850cb13998f30005392fa93fb2b96c5d860ba3f6b568a03f57d4"
+    },
+
+    "oracle_config": {
+      "bitcoin_block_hash": {
+          "name": "BITCOIN_BLOCK_HASH",
+          "url": "https://patient-patient-model.bcoin.discover.quiknode.pro/f7bac2bd75d75e8b8bf43383fb692d830b057fd7/"
+        },
+      "asset_prices": {
+        "urls": {
+          "Coingecko": "https://api.coingecko.com/api/v3/",
+          "Upbit": "https://api.upbit.com/v1/",
+          "Chainlink": "https://mainnet.infura.io/v3/0b96ba79505b4e07b60a8f9796444405"
+        }
+      }
+    },
+
+   "BFC_TEST": {
+        "url_with_access_key": "https://bifrost.withpwn.com/rpc"
+    },
+    "ETH_GOERLI": {
+        "url_with_access_key": "https://eth-goerli.chain.thebifrost.io"
+    },
+    "BNB_TEST": {
+        "url_with_access_key": "https://bsc-test.chain.thebifrost.io"
+    },
+    "MATIC_MUMBAI": {
+        "url_with_access_key": "https://polygon-mumbai.chain.thebifrost.io"
+    }
+}

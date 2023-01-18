@@ -7,7 +7,7 @@ from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, to_eth_v
 
 if TYPE_CHECKING:
-    from .chainevents import RbcEvent, ValidatorSetUpdatedEvent
+    from .chainevents import RbcEvent, RoundUpEvent
 
 
 SigType = Union[list, tuple]
@@ -139,7 +139,7 @@ class PollSubmit(SubmitWithSig):
 
 
 class AggregatedRoundUpSubmit(SubmitWithSig):
-    def __init__(self, event: "ValidatorSetUpdatedEvent"):
+    def __init__(self, event: "RoundUpEvent"):
         super(AggregatedRoundUpSubmit, self).__init__(event)
 
     @property
