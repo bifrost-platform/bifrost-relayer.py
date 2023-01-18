@@ -1,5 +1,17 @@
 [
     {
+        "inputs": [
+            {
+                "internalType": "bytes20",
+                "name": "_commit_hash",
+                "type": "bytes20"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor",
+        "name": "constructor"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -244,6 +256,19 @@
             }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "commit_hash",
+        "outputs": [
+            {
+                "internalType": "bytes20",
+                "name": "",
+                "type": "bytes20"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -872,6 +897,19 @@
             }
         ],
         "name": "set_authority",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes20",
+                "name": "_commit_hash",
+                "type": "bytes20"
+            }
+        ],
+        "name": "set_commit_hash",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"

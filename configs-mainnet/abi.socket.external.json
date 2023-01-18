@@ -1,5 +1,17 @@
 [
     {
+        "inputs": [
+            {
+                "internalType": "bytes20",
+                "name": "_commit_hash",
+                "type": "bytes20"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor",
+        "name": "constructor"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -359,6 +371,43 @@
     },
     {
         "inputs": [],
+        "name": "commit_hash",
+        "outputs": [
+            {
+                "internalType": "bytes20",
+                "name": "",
+                "type": "bytes20"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "fail_fork",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "flag_up",
         "outputs": [
             {
@@ -523,7 +572,7 @@
                     },
                     {
                         "internalType": "uint256",
-                        "name": "registered_block",
+                        "name": "registered_time",
                         "type": "uint256"
                     }
                 ],
@@ -1025,6 +1074,30 @@
                 "internalType": "bytes32",
                 "name": "",
                 "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "request_fork",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
             }
         ],
         "name": "request_ids",
@@ -1036,7 +1109,20 @@
             },
             {
                 "internalType": "uint256",
-                "name": "registered_block",
+                "name": "registered_time",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "request_timeout",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
                 "type": "uint256"
             }
         ],
@@ -1227,6 +1313,19 @@
     {
         "inputs": [
             {
+                "internalType": "bytes20",
+                "name": "_commit_hash",
+                "type": "bytes20"
+            }
+        ],
+        "name": "set_commit_hash",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "contract IOracle_Manager",
                 "name": "_orc_manager",
                 "type": "address"
@@ -1254,7 +1353,7 @@
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "_timeout_block",
+                "name": "_request_timeout",
                 "type": "uint256"
             }
         ],
@@ -1297,19 +1396,6 @@
                 "internalType": "ChainIndex",
                 "name": "",
                 "type": "bytes4"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "timeout_blocks",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
             }
         ],
         "stateMutability": "view",
