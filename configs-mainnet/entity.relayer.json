@@ -7,9 +7,10 @@
         },
         "asset_prices": {
             "names": [
-                "ETH_ON_ETH_MAIN",
                 "BFC_ON_ETH_MAIN",
+                "ETH_ON_ETH_MAIN",
                 "BNB_ON_BNB_MAIN",
+                "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
@@ -26,11 +27,11 @@
             }
         }
     },
-     "BFC_TEST": {
-        "chain_name": "BFC_TEST",
+     "BFC_MAIN": {
+        "chain_name": "BFC_MAIN",
         "block_period_sec": 3,
         "url_with_access_key": "",
-        "bootstrap_latest_height": 2883,
+        "bootstrap_latest_height": 141648,
         "block_aging_period": 2,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
@@ -43,24 +44,24 @@
         },
         "abi_dir": "configs/",
 		"contracts": [
-			{"name": "authority", "address": "0x0000000000000000000000000000000000000400", "abi_file": "abi.authority.bifrost.json", "deploy_height": 1426518},
-			{"name": "relayer_authority", "address": "0x0000000000000000000000000000000000002000", "abi_file": "abi.relayer.bifrost.json", "deploy_height": 1426518},
-			{"name": "vault", "address": "0x90381bB369D4F8069fdA9246b23637a78c5d1c83", "abi_file": "abi.vault.bifrost.json", "deploy_height": 1426522},
-			{"name": "socket", "address": "0x0218371b18340aBD460961bdF3Bd5F01858dAB53", "abi_file": "abi.socket.bifrost.json", "deploy_height": 1426524},
-			{"name": "oracle", "address": "0x252a402B80d081F672e7874E94214054FdB78C77", "abi_file": "abi.oracle.bifrost.json", "deploy_height": 2057990},
-			{"name": "BRIDGED_ETH_GOERLI_BFC_ON_BFC_TEST", "address": "0xfB5D65B8e8784ae3e004e1e476B05d408e6A1f2D", "abi_file": "abi.erc20.json"},
-			{"name": "BRIDGED_ETH_GOERLI_ETH_ON_BFC_TEST", "address": "0xD089773D293F43440529e6cfa84639E0498A0277", "abi_file": "abi.erc20.json"},
-            {"name": "BRIDGED_ETH_GOERLI_BIFI_ON_BFC_TEST", "address": "0xC4F1CcafCBeB0BE0F1CDBA499696603528655F29", "abi_file": "abi.erc20.json"},
-			{"name": "BRIDGED_ETH_GOERLI_USDC_ON_BFC_TEST", "address": "0xa7bb0a2693fb4d1ab9a6C5acCf5C63f12fab1855", "abi_file": "abi.erc20.json"},
-            {"name": "BRIDGED_BNB_TEST_USDC_ON_BFC_TEST", "address": "0xC67f0b7c01f6888D43B563B3a8B851856BcfAB64", "abi_file": "abi.erc20.json"},
-			{"name": "BRIDGED_BNB_TEST_BNB_ON_BFC_TEST", "address": "0x72D22DF54b86d25D9F9E0C10D516Ab22517b7051", "abi_file": "abi.erc20.json"},
-			{"name": "BRIDGED_MATIC_MUMBAI_MATIC_ON_BFC_TEST", "address": "0x82c1aD3aF709210F203869a03CdE8C7d0b9841d8", "abi_file": "abi.erc20.json"},
-			{"name": "UNIFIED_BFC_ON_BFC_TEST", "address": "0xB0fF18CB2d0F3f51a9c54Af862ed98f3caa027A1", "abi_file": "abi.unified.coin.json"},
-			{"name": "UNIFIED_BIFI_ON_BFC_TEST", "address": "0x8010a873d59719e895E20f15f9906B5a1F399C3A", "abi_file": "abi.unified.erc20.json"},
-			{"name": "UNIFIED_BNB_ON_BFC_TEST", "address": "0xCd8bf79fA84D551f2465C0a646cABc295d43Be5C", "abi_file": "abi.unified.erc20.json"},
-			{"name": "UNIFIED_ETH_ON_BFC_TEST", "address": "0xc83EEd1bf5464eD5383bc3342b918E08f6815950", "abi_file": "abi.unified.erc20.json"},
-            {"name": "UNIFIED_USDC_ON_BFC_TEST", "address": "0x28661511CDA7119B2185c647F23106a637CC074f", "abi_file": "abi.unified.erc20.json"},
-			{"name": "UNIFIED_MATIC_ON_BFC_TEST", "address": "0xad115F901a1Af99dc83D055C89641031fd1a50Dc", "abi_file": "abi.unified.erc20.json"}
+			{"name": "authority", "address": "0x0000000000000000000000000000000000000400", "abi_file": "abi.authority.bifrost.json", "deploy_height": 0},
+			{"name": "relayer_authority", "address": "0x0000000000000000000000000000000000002000", "abi_file": "abi.relayer.bifrost.json", "deploy_height": 0},
+            {"name": "vault", "address": "0xD85EB87caB9041ad00764b95796702b1104F42D7", "abi_file": "abi.vault.bifrost.json", "deploy_height": 141648},
+			{"name": "socket", "address": "0xd551F33Ca8eCb0Be83d8799D9C68a368BA36Dd52", "abi_file": "abi.socket.bifrost.json", "deploy_height": 141648},
+			{"name": "oracle", "address": "0x899aeefda82650EB65FC028a6671ab58Bab76199", "abi_file": "abi.oracle.bifrost.json", "deploy_height": 141648},
+			{"name": "BRIDGED_ETH_MAIN_BFC_ON_BFC_MAIN", "address": "0xEEDAb47DFBC7564CD8EB314bdA33405Ac9852326", "abi_file": "abi.erc20.json"},
+			{"name": "BRIDGED_ETH_MAIN_ETH_ON_BFC_MAIN", "address": "0x98e266BDb0eedd38BF45232B9316959ad0Aad90c", "abi_file": "abi.erc20.json"},
+            {"name": "BRIDGED_ETH_MAIN_BIFI_ON_BFC_MAIN", "address": "0x4C7a44F3FB37A53F33D3fe3cCdE97A444F105239", "abi_file": "abi.erc20.json"},
+			{"name": "BRIDGED_ETH_MAIN_USDC_ON_BFC_MAIN", "address": "0xac1552e30857A814a225BAa81145bcB071B46DDd", "abi_file": "abi.erc20.json"},
+            {"name": "BRIDGED_BNB_MAIN_USDC_ON_BFC_MAIN", "address": "0x4F7aB59b5AC112970F5dD66D8a7ac505c8E5e08B", "abi_file": "abi.erc20.json"},
+			{"name": "BRIDGED_BNB_MAIN_BNB_ON_BFC_MAIN", "address": "0x872b347cd764d46c127ffefbcaB605FFF3f3a48C", "abi_file": "abi.erc20.json"},
+			{"name": "BRIDGED_MATIC_MAIN_MATIC_ON_BFC_MAIN", "address": "0xf549E4B5B4Cb7fd4e83b8AA047C742C06D527429", "abi_file": "abi.erc20.json"},
+			{"name": "UNIFIED_BFC_ON_BFC_MAIN", "address": "0xAe172D8c5E428D4b7C70f9E593b207F9daC9BF3e", "abi_file": "abi.unified.coin.json"},
+			{"name": "UNIFIED_BIFI_ON_BFC_MAIN", "address": "0x047938C3aD13c1eB821C8e310B2B6F889b6d0003", "abi_file": "abi.unified.erc20.json"},
+			{"name": "UNIFIED_BNB_ON_BFC_MAIN", "address": "0xB800EaF843F962DFe5e145A8c9D07A3e70b11d7F", "abi_file": "abi.unified.erc20.json"},
+			{"name": "UNIFIED_ETH_ON_BFC_MAIN", "address": "0x6c9944674C1D2cF6c4c4999FC7290Ba105dcd70e", "abi_file": "abi.unified.erc20.json"},
+			{"name": "UNIFIED_USDC_ON_BFC_MAIN", "address": "0x640952E7984f2ECedeAd8Fd97aA618Ab1210A21C", "abi_file": "abi.unified.erc20.json"},
+			{"name": "UNIFIED_MATIC_ON_BFC_MAIN", "address": "0x21ad243b81eff53482F6F6E7C76539f2CfC0B734", "abi_file": "abi.unified.erc20.json"}
 		],
         "events": [
             {
@@ -73,12 +74,12 @@
             }
         ]
     },
-    "ETH_GOERLI": {
-        "chain_name": "ETH_GOERLI",
-        "block_period_sec": 13,
+    "ETH_MAIN": {
+        "chain_name": "ETH_MAIN",
+        "block_period_sec": 12,
         "url_with_access_key": "",
-        "bootstrap_latest_height": 7749286,
-        "block_aging_period": 2,
+        "bootstrap_latest_height": 16431054,
+        "block_aging_period": 6,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
         "max_log_num": 1000,
@@ -90,12 +91,12 @@
         },
         "abi_dir": "configs/",
 		"contracts": [
-			{"name": "relayer_authority", "address": "0xF51f7e267D2D966f8d3Ff2fea42B410bB14800e1", "abi_file": "abi.relayer.external.json", "deploy_height": 8052946},
-			{"name": "vault", "address": "0x7EB02c73349B3De1406e6b433c5bA1a526CBF253", "abi_file": "abi.vault.external.json", "deploy_height": 8052948},
-			{"name": "socket", "address": "0xeF5260Db045200142a6B5DDB297e860099ffd51d", "abi_file": "abi.socket.external.json", "deploy_height": 8052951},
-			{"name": "BFC_ON_ETH_GOERLI", "address": "0x3A815eBa66EaBE966a6Ae7e5Df9652eca24e9c54", "abi_file": "abi.erc20.json"},
-            {"name": "BIFI_ON_ETH_GOERLI", "address": "0x055ED934c426855caB467FdF8441D4FD6a7D2659", "abi_file": "abi.erc20.json"},
-            {"name": "USDC_ON_ETH_GOERLI", "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70", "abi_file": "abi.erc20.json"}
+			{"name": "relayer_authority", "address": "0xAdcaa90cabDc730855064d5b0f5242c16A9B7E10", "abi_file": "abi.relayer.external.json", "deploy_height": 16431054},
+			{"name": "vault", "address": "0x2F95C102Cc26875406BC689Fb01aE382B82AA535", "abi_file": "abi.vault.external.json", "deploy_height": 16431054},
+			{"name": "socket", "address": "0x4A31FfeAc276CC5e508cAC0568d932d398C4DD84", "abi_file": "abi.socket.external.json", "deploy_height": 16431054},
+			{"name": "BFC_ON_ETH_MAIN", "address": "0x0c7D5ae016f806603CB1782bEa29AC69471CAb9c", "abi_file": "abi.erc20.json"},
+            {"name": "BIFI_ON_ETH_MAIN", "address": "0x2791BfD60D232150Bff86b39B7146c0eaAA2BA81", "abi_file": "abi.erc20.json"},
+            {"name": "USDC_ON_ETH_MAIN", "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "abi_file": "abi.erc20.json"}
 		],
         "events": [
             {
@@ -104,11 +105,11 @@
             }
         ]
     },
-    "BNB_TEST": {
-        "chain_name": "BNB_TEST",
+    "BNB_MAIN": {
+        "chain_name": "BNB_MAIN",
         "block_period_sec": 3,
         "url_with_access_key": "",
-        "bootstrap_latest_height": 23601374,
+        "bootstrap_latest_height": 0,
         "block_aging_period": 5,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
@@ -120,10 +121,10 @@
         },
         "abi_dir": "configs/",
 		"contracts": [
-			{"name": "relayer_authority", "address": "0xCf9f6428A309b6652a1dfaA4d8aB8B61C9c7E8CF", "abi_file": "abi.relayer.external.json", "deploy_height": 25067012},
-			{"name": "vault", "address": "0x27C66cb5caa07C9B332939c357c789C606f5054C", "abi_file": "abi.vault.external.json", "deploy_height": 25067016},
-			{"name": "socket", "address": "0x8039c3AD8ED55509fD3f6Daa78867923fDe6E61c", "abi_file": "abi.socket.external.json", "deploy_height": 25067020},
-			{"name": "USDC_ON_BNB_TEST", "address": "0xC9C0aD3179eE2f4801454926ED5D6A2Da30b56FB", "abi_file": "abi.erc20.json"}
+			{"name": "relayer_authority", "address": "0xF0500d77d5446665314722b963ab1F71872063E9", "abi_file": "abi.relayer.external.json", "deploy_height": 24882731},
+			{"name": "vault", "address": "0x78ae4c0FD4f02CA79A2d8738d3369A4Bc5D4E323", "abi_file": "abi.vault.external.json", "deploy_height": 24882731},
+			{"name": "socket", "address": "0xb5Fa48E8B9b89760a9f9176388D1B64A8D4968dF", "abi_file": "abi.socket.external.json", "deploy_height": 24882731},
+			{"name": "USDC_ON_BNB_MAIN", "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", "abi_file": "abi.erc20.json"}
 		],
         "events": [
             {
@@ -132,12 +133,12 @@
             }
         ]
     },
-    "MATIC_MUMBAI": {
-        "chain_name": "MATIC_MUMBAI",
+    "MATIC_MAIN": {
+        "chain_name": "MATIC_MAIN",
         "block_period_sec": 2,
         "url_with_access_key": "",
-        "bootstrap_latest_height": 30814949,
-        "block_aging_period": 3,
+        "bootstrap_latest_height": 0,
+        "block_aging_period": 200,
         "transaction_commit_multiplier": 2,
         "receipt_max_try": 20,
         "max_log_num": 1000,
@@ -149,9 +150,9 @@
         },
         "abi_dir": "configs/",
         "contracts": [
-			{"name": "relayer_authority", "address": "0x2FD5232fDFa6e1c127e7821CC48108Ca79281a38", "abi_file": "abi.relayer.external.json", "deploy_height": 28954662},
-			{"name": "vault", "address": "0xB2ba0020560cF6c164DC48D1E29559AbA8472208", "abi_file": "abi.vault.external.json", "deploy_height": 30814945},
-			{"name": "socket", "address": "0xA25357F3C313Bd13885678f935178211f0dF6722", "abi_file": "abi.socket.external.json", "deploy_height": 30814949}
+			{"name": "relayer_authority", "address": "0x7F48909fBd1E38f1e05B5E326A44175fc2462B13", "abi_file": "abi.relayer.external.json", "deploy_height": 38217005},
+			{"name": "vault", "address": "0x5fA7fe5F94f2D15585a3134C1C5d3019c8c1645d", "abi_file": "abi.vault.external.json", "deploy_height": 38217005},
+			{"name": "socket", "address": "0x050606CC2Bcd9504991Be2c309D6c6c832Bb5bd0", "abi_file": "abi.socket.external.json", "deploy_height": 38217005}
 		],
         "events": [
             {
@@ -161,14 +162,14 @@
         ]
     },
     "entity": {
-        "role": "Relayer",
+        "role": "slow-relayer",
         "account_name": "default",
         "secret_hex": "",
         "supporting_chains": [
-            "BFC_TEST",
-            "ETH_GOERLI",
-            "BNB_TEST",
-            "MATIC_MUMBAI"
+            "BFC_MAIN",
+            "ETH_MAIN",
+            "BNB_MAIN",
+            "MATIC_MAIN"
         ]
     },
     "multichain_config": {
