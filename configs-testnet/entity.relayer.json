@@ -2,7 +2,6 @@
     "oracle_config": {
         "bitcoin_block_hash": {
             "name": "BITCOIN_BLOCK_HASH",
-            "url": "",
             "collection_period_sec": 300
         },
         "asset_prices": {
@@ -10,10 +9,11 @@
                 "ETH_ON_ETH_MAIN",
                 "BFC_ON_ETH_MAIN",
                 "BNB_ON_BNB_MAIN",
+                "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
-            "collection_period_sec": 120
+            "collection_period_sec": 300
         }
     },
     "BFC_TEST": {
@@ -30,7 +30,7 @@
             "max_gas_price": 5000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_dir": "configs/",
+        "abi_dir": "configs-testnet/",
 		"contracts": [
 			{"name": "authority", "address": "0x0000000000000000000000000000000000000400", "abi_file": "abi.authority.bifrost.json", "deploy_height": 1426518},
 			{"name": "relayer_authority", "address": "0x0000000000000000000000000000000000002000", "abi_file": "abi.relayer.bifrost.json", "deploy_height": 1426518},
@@ -76,7 +76,7 @@
             "max_gas_price": 2000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_dir": "configs/",
+        "abi_dir": "configs-testnet/",
 		"contracts": [
 			{"name": "relayer_authority", "address": "0xF51f7e267D2D966f8d3Ff2fea42B410bB14800e1", "abi_file": "abi.relayer.external.json", "deploy_height": 8052946},
 			{"name": "vault", "address": "0x7EB02c73349B3De1406e6b433c5bA1a526CBF253", "abi_file": "abi.vault.external.json", "deploy_height": 8052948},
@@ -105,7 +105,7 @@
             "type": 0,
             "gas_price": 2000000000000
         },
-        "abi_dir": "configs/",
+        "abi_dir": "configs-testnet/",
 		"contracts": [
 			{"name": "relayer_authority", "address": "0xCf9f6428A309b6652a1dfaA4d8aB8B61C9c7E8CF", "abi_file": "abi.relayer.external.json", "deploy_height": 25067012},
 			{"name": "vault", "address": "0x27C66cb5caa07C9B332939c357c789C606f5054C", "abi_file": "abi.vault.external.json", "deploy_height": 25067016},
@@ -133,7 +133,7 @@
             "max_gas_price": 2000000000000,
             "max_priority_price": 1000000000000
         },
-        "abi_dir": "configs/",
+        "abi_dir": "configs-testnet/",
         "contracts": [
 			{"name": "relayer_authority", "address": "0x2FD5232fDFa6e1c127e7821CC48108Ca79281a38", "abi_file": "abi.relayer.external.json", "deploy_height": 28954662},
 			{"name": "vault", "address": "0xB2ba0020560cF6c164DC48D1E29559AbA8472208", "abi_file": "abi.vault.external.json", "deploy_height": 30814945},
