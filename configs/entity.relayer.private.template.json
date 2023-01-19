@@ -16,19 +16,16 @@
       }
     },
 
-   "bifrost": {
+   "BFC_MAIN": {
         "url_with_access_key": "<BIFROST_NETWORK_RPC_ENDPOINT>"
     },
-    "ethereum": {
+    "ETH_MAIN": {
         "url_with_access_key": "<ETHEREUM_GOERLI_RPC_ENDPOINT>"
     },
-    "binance": {
+    "BNB_MAIN": {
         "url_with_access_key": "<BINANCE_TESTNET_RPC_ENDPOINT>"
     },
-    "polygon": {
+    "MATIC_MAIN": {
         "url_with_access_key": "<POLYGON_MUMBAI_RPC_ENDPOINT>"
-    },
-    "avalanche": {
-        "url_with_access_key": "<AVALANCHE_FUJI_RPC_ENDPOINT>"
     }
 }

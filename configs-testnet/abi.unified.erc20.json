@@ -1,17 +1,5 @@
 [
     {
-        "inputs": [
-            {
-                "internalType": "bytes20",
-                "name": "_commit_hash",
-                "type": "bytes20"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor",
-        "name": "constructor"
-    },
-    {
         "anonymous": false,
         "inputs": [
             {
@@ -387,6 +375,32 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_underlying",
+                "type": "address"
+            }
+        ],
+        "name": "circuit_break_off",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_underlying",
+                "type": "address"
+            }
+        ],
+        "name": "circuit_break_on",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "claimAdminship",
         "outputs": [
@@ -410,19 +424,6 @@
             }
         ],
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "commit_hash",
-        "outputs": [
-            {
-                "internalType": "bytes20",
-                "name": "",
-                "type": "bytes20"
-            }
-        ],
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -641,6 +642,19 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address[]",
+                "name": "_underlyings",
+                "type": "address[]"
+            }
+        ],
+        "name": "new_underlyings",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -919,19 +933,6 @@
     {
         "inputs": [
             {
-                "internalType": "bytes20",
-                "name": "_commit_hash",
-                "type": "bytes20"
-            }
-        ],
-        "name": "set_commit_hash",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "internalType": "bool",
                 "name": "_pause_flag",
                 "type": "bool"
@@ -952,6 +953,109 @@
         ],
         "name": "set_proxyAdmin",
         "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_underlying",
+                "type": "address"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "bool",
+                        "name": "support",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "unify_exr",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "split_exr",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct Unified_ERC20_State.Underlying_Config",
+                "name": "_config",
+                "type": "tuple"
+            }
+        ],
+        "name": "set_underlying_config",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "under_addr",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "merge_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "split",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "under_amount",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "under_addr",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "merge_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "split_from",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "under_amount",
+                "type": "uint256"
+            }
+        ],
         "stateMutability": "nonpayable",
         "type": "function"
     },
@@ -1050,6 +1154,92 @@
                 "type": "bool"
             }
         ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "under_addr",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "under_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "unify",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "merge_amount",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "under_addr_from",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "under_addr_to",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "under_amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "unify_split",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_underlying",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_unify_exr",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_split_exr",
+                "type": "uint256"
+            }
+        ],
+        "name": "update_exr",
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },

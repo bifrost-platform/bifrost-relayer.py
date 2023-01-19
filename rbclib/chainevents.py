@@ -7,11 +7,11 @@ from chainpy.eventbridge.eventbridge import EventBridge
 from rbclib.metric import PrometheusExporterRelayer
 from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
     fetch_sorted_previous_relayer_list, fetch_latest_round
-from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset
+from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
 from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
+from .switchable_enum import SwitchableChain
 from .utils import *
-from bridgeconst.consts import Chain
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from chainpy.eventbridge.utils import timestamp_msec
@@ -19,7 +19,6 @@ from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
-
 from chainpy.logger import Logger, formatted_log
 
 if TYPE_CHECKING:
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 proto_logger = Logger("Protocol", logging.DEBUG)
 
 RangesDict = Dict[Chain, Tuple[int, int]]
-NoneParams = (Chain.NONE, "", "", [])
+NoneParams = (SwitchableChain.NONE, "", "", [])
 
 
 RBC_EVENT_STATUS_START_DATA_START_INDEX = 128
@@ -130,7 +129,7 @@ class RbcEvent(ChainEventABC):
                     proto_logger,
                     relayer_addr=manager.active_account.address,
                     log_id="SlowRelay:{}".format(status.name),
-                    related_chain=Chain.NONE,
+                    related_chain=SwitchableChain.NONE,
                     log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
                 )
             time_lock += cls.AGGREGATED_DELAY_SEC * 1000
@@ -219,10 +218,10 @@ class RbcEvent(ChainEventABC):
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
-        return self.src_chain != Chain.BFC_TEST
+        return self.src_chain != SwitchableChain.BIFROST
 
     def is_outbound(self) -> bool:
-        return self.src_chain == Chain.BFC_TEST
+        return self.src_chain == SwitchableChain.BIFROST
 
     def req_id(self) -> Tuple[Union[int, Chain], int, int]:
         unzipped_decoded_data = self.decoded_data[0]
@@ -335,7 +334,7 @@ class RbcEvent(ChainEventABC):
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(RbcEvent.EVENT_NAME),
-            related_chain=Chain.NONE,
+            related_chain=SwitchableChain.NONE,
             log_data="range({})".format(_range)
         )
 
@@ -375,7 +374,7 @@ class RbcEvent(ChainEventABC):
                 bootstrap_logger,
                 relayer_addr=manager.active_account.address,
                 log_id="Unchecked{}Log".format(RbcEvent.EVENT_NAME),
-                related_chain=Chain.NONE,
+                related_chain=SwitchableChain.NONE,
                 log_data=event_obj.summary()
             )
         return not_handled_events_objs
@@ -411,7 +410,7 @@ class RbcEvent(ChainEventABC):
     def is_primary_relayer(self):
         if self.__class__.FAST_RELAYER:
             return True
-        total_validator_num = fetch_relayer_num(self.relayer, Chain.BFC_TEST)
+        total_validator_num = fetch_relayer_num(self.relayer, SwitchableChain.BIFROST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
@@ -423,7 +422,7 @@ class RbcEvent(ChainEventABC):
         data_with_next_status = self.change_status_of_data(self.detected_event, next_status)
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainRequestedEvent(RbcEvent):
@@ -445,13 +444,13 @@ class ChainRequestedEvent(RbcEvent):
 
         if self.is_inbound():
             # TODO inbound forced fail
-            return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()
+            return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()
         else:
             # generate signature if it's needed
             status_changed_data = RbcEvent.change_status_of_data(self.detected_event, ChainEventStatus.ACCEPTED)
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
             submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-            return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+            return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
     def handle_call_result(self, result: tuple):
         if not self.check_my_event():
@@ -461,7 +460,7 @@ class ChainRequestedEvent(RbcEvent):
         voting_num = voting_list[self.status.value]
 
         # get quorum
-        quorum = fetch_quorum(self.relayer, Chain.BFC_TEST, self.rnd)
+        quorum = fetch_quorum(self.relayer, SwitchableChain.BIFROST, self.rnd)
         if quorum == 0:
             return None
 
@@ -470,7 +469,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=Chain.BFC_TEST,
+                related_chain=SwitchableChain.BIFROST,
                 log_data="voting-num({})".format(voting_num)
             )
             ret = None
@@ -479,7 +478,7 @@ class ChainRequestedEvent(RbcEvent):
                 proto_logger,
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
-                related_chain=Chain.BFC_TEST,
+                related_chain=SwitchableChain.BIFROST,
                 log_data="voting-num({}):change-status".format(voting_num)
             )
             ret = self.handle_tx_result_fail()
@@ -534,7 +533,7 @@ class ChainFailedEvent(RbcEvent):
         msg_to_sign = self.detected_event.data
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return Chain.BFC_TEST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
 
 class ChainExecutedEvent(RbcEvent):
@@ -716,23 +715,38 @@ class ChainRollbackedEvent(_FinalStatusEvent):
             raise Exception("Event status not matches")
 
 
-class ValidatorSetUpdatedEvent(ChainEventABC):
+class RoundUpEvent(ChainEventABC):
     FAST_RELAYER = False
     CALL_DELAY_SEC = 200
+    AGGREGATED_DELAY_SEC = 0
     EVENT_NAME = "RoundUp"
 
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
-        super().__init__(detected_event, 0, manager)
+        super().__init__(detected_event, time_lock, manager)
         self.updating_chains = self.relayer.supported_chain_list
-        self.updating_chains.remove(Chain.BFC_TEST)
+        self.updating_chains.remove(SwitchableChain.BIFROST)
         self.selected_chain = None
         self.aggregated = True
 
     @classmethod
     def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
-        return cls(detected_event, 0, relayer)
+
+        if time_lock == 0 or RoundUpEvent.FAST_RELAYER:
+            # in the case of bootstrap
+            return cls(detected_event, 0, relayer)
+        else:
+            # does not export log in bootstrap process
+            formatted_log(
+                proto_logger,
+                relayer_addr=relayer.active_account.address,
+                log_id="SlowRelay:{}".format(cls.EVENT_NAME),
+                related_chain=SwitchableChain.NONE,
+                log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
+            )
+            time_lock = timestamp_msec() + cls.AGGREGATED_DELAY_SEC * 1000
+            return cls(detected_event, time_lock, relayer)
 
     @property
     def relayer(self) -> "EventBridge":
@@ -774,7 +788,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
                 proto_logger,
                 relayer_addr=self.relayer.active_account.address,
                 log_id="UpdateRelayerIndex",
-                related_chain=Chain.NONE,
+                related_chain=SwitchableChain.NONE,
                 log_data="from({}):to({})".format(prev_index, new_index)
             )
 
@@ -782,6 +796,14 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         if self.__class__.FAST_RELAYER:
             return True
         return self.relayer.has_key(self.round - 1)
+
+    def is_primary_relayer(self) -> bool:
+        if self.__class__.FAST_RELAYER:
+            return True
+        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, SwitchableChain.BIFROST, self.round - 1)
+        previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
+        primary_index = self.detected_event.block_number % len(previous_validator_list)
+        return primary_index == self.relayer.get_value_by_key(self.round - 1)
 
     def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         # ignore event except one with status: 10
@@ -805,16 +827,17 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         target_round = fetch_latest_round(self.relayer, self.selected_chain)
 
         if target_round >= self.round:
+            formatted_log(
+                proto_logger,
+                relayer_addr=self.relayer.active_account.address,
+                log_id="SlowRelay:{}:round({})".format(self.__class__.EVENT_NAME, target_round),
+                related_chain=self.selected_chain,
+                log_data="AlreadyProcessed"
+            )
             return NoneParams
 
         # code branch: primary(send) vs secondary(call)
-        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, Chain.BFC_TEST, self.round - 1)
-
-        previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
-        previous_validator_set_size = len(previous_validator_list)
-
-        primary_index = self.detected_event.block_number % previous_validator_set_size
-        if primary_index == self.relayer.get_value_by_key(self.round - 1) or not self.aggregated:
+        if self.is_primary_relayer() or not self.aggregated:
             # primary relayer do
             result = fetch_socket_vsp_sigs(self.relayer, self.round)
             submit_data = AggregatedRoundUpSubmit(self).add_tuple_sigs(result)
@@ -823,30 +846,19 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             # secondary relayer do (prepare to call after a few minutes)
             next_time_lock = timestamp_msec() \
                              + self.relayer.get_chain_manager_of(self.selected_chain).tx_commit_time_sec \
-                             + 1000 * ValidatorSetUpdatedEvent.CALL_DELAY_SEC
-            self.switch_to_call(next_time_lock)
+                             + 1000 * RoundUpEvent.CALL_DELAY_SEC
+
+            self.switch_to_send(next_time_lock)
+            self.aggregated = False
             self.relayer.queue.enqueue(self)
 
             return NoneParams
 
     def build_call_transaction_params(self):
-        return self.selected_chain, RELAYER_AUTHORITY_CONTRACT_NAME, GET_ROUND_FUNCTION_NAME, []
+        pass
 
     def handle_call_result(self, result):
-        selected_chain_round = result[0]  # unzip
-        if selected_chain_round < self.round:
-            formatted_log(
-                proto_logger,
-                relayer_addr=self.relayer.active_account.address,
-                log_id=self.__class__.__name__,
-                related_chain=self.selected_chain,
-                log_data="{}-thRelayer:SwitchPrimary".format(self.relayer.get_value_by_key(self.round))
-            )
-
-            self.switch_to_send(0)
-            self.aggregated = False
-            return self
-        return None
+        pass
 
     def handle_tx_result_success(self):
         return None
@@ -865,13 +877,13 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
     @staticmethod
     def bootstrap(manager: EventBridge, _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
         # Announcing the start of the event collection
-        event_name = ValidatorSetUpdatedEvent.EVENT_NAME
-        target_chain = Chain.BFC_TEST
+        event_name = RoundUpEvent.EVENT_NAME
+        target_chain = SwitchableChain.BIFROST
         formatted_log(
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(event_name),
-            related_chain=Chain.NONE,
+            related_chain=SwitchableChain.NONE,
             log_data="range({})".format(_range[target_chain])
         )
 
@@ -883,7 +895,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
         # remove event object except target status event object
         target_event_objects = list()
         for event in events_raw:
-            event_obj = ValidatorSetUpdatedEvent.init(event, 0, manager)
+            event_obj = RoundUpEvent.init(event, 0, manager)
             if event_obj.status == ChainEventStatus.NEXT_AUTHORITY_COMMITTED:
                 target_event_objects.append((event_obj.round, event_obj))
 
@@ -892,7 +904,7 @@ class ValidatorSetUpdatedEvent(ChainEventABC):
             bootstrap_logger,
             relayer_addr=manager.active_account.address,
             log_id="Unchecked{}Log".format(event_name),
-            related_chain=Chain.BFC_TEST,
+            related_chain=SwitchableChain.BIFROST,
             log_data="{}".format(
                 latest_event_object.summary() if latest_event_object is not None else ""
             )

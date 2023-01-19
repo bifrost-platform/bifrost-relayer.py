@@ -6,9 +6,10 @@ from chainpy.eth.ethtype.hexbytes import EthHexBytes
 
 from rbclib.aggchainevents import ExternalRbcEvents
 from rbclib.heartbeat import RelayerHeartBeat
-from rbclib.chainevents import RbcEvent, ValidatorSetUpdatedEvent
-from rbclib.periodicevents import PriceUpOracle, AuthDownOracle, BtcHashUpOracle
+from rbclib.chainevents import RbcEvent, RoundUpEvent
+from rbclib.periodicevents import PriceUpOracle, VSPFeed, BtcHashUpOracle
 from rbclib.metric import PrometheusExporterRelayer
+from rbclib.switchable_enum import switch_to_test_config
 
 from relayer.relayer import Relayer
 
@@ -21,9 +22,13 @@ parser.add_argument("-b", "--no-heartbeat", action="store_true")
 parser.add_argument("-p", "--prometheus", action="store_true")
 parser.add_argument("-s", "--slow-relayer", action="store_true")
 parser.add_argument("-f", "--fast-relayer", action="store_true")
+parser.add_argument("-t", "--testnet", action="store_true")
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
 DEFAULT_PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
+
+DEFAULT_TEST_RELAYER_CONFIG_PATH = "configs-testnet/entity.relayer.json"
+DEFAULT_TEST_RELAYER_PRIVATE_CONFIG_PATH = "configs-testnet/entity.relayer.private.json"
 
 
 class RelayerType(enum.Enum):
@@ -31,20 +36,16 @@ class RelayerType(enum.Enum):
     SLOW_RELAYER = 2
     FAST_RELAYER = 3
 
-    @staticmethod
-    def default_slow_relayer_delay_sec():
-        return 180
 
-
-def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
+def _config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
     # multichain monitor will detect "Socket" event from every socket contract.
     relayer.register_chain_event_obj("Socket", RbcEvent)
 
     # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
-    relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
+    relayer.register_chain_event_obj("RoundUp", RoundUpEvent)
 
     # event bridge will periodically check validator set of the bifrost network.
-    relayer.register_offchain_event_obj("sync_validator", AuthDownOracle)
+    relayer.register_offchain_event_obj("sync_validator", VSPFeed)
 
     # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
     relayer.register_offchain_event_obj("price", PriceUpOracle)
@@ -58,13 +59,16 @@ def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
+
+def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
+    _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
     relayer.set_relayer_role("Relayer")
     relayer.role = "Relayer"
 
 
-def config_slow_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool, delay: int):
-    config_general_relayer(relayer, heart_beat_opt, prometheus_on)
-    relayer.set_relayer_role("Slow-relayer", delay)
+def config_slow_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
+    _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
+    relayer.set_relayer_role("Slow-relayer")
     relayer.role = "Slow-relayer"
 
 
@@ -73,7 +77,7 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     relayer.register_chain_event_obj("Socket", ExternalRbcEvents)
 
     # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
-    relayer.register_chain_event_obj("RoundUp", ValidatorSetUpdatedEvent)
+    relayer.register_chain_event_obj("RoundUp", RoundUpEvent)
 
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
@@ -86,19 +90,19 @@ def main(_config: dict):
     secret_key = _config.get("private_key")
     secret_key_obj = EthHexBytes(secret_key)
 
+    heart_beat_opt = False if _config.get("no_heartbeat") else False
+    prometheus_on = True if _config.get("prometheus") else False
+    is_test_config = True if _config.get("testnet") else False
+    if is_test_config:
+        switch_to_test_config()
+
     public_config_path, private_config_path = _config.get("config_path"), _config.get("private_config_path")
     if public_config_path is None:
-        public_config_path = DEFAULT_RELAYER_CONFIG_PATH
+        public_config_path = DEFAULT_RELAYER_CONFIG_PATH \
+            if not is_test_config else DEFAULT_TEST_RELAYER_CONFIG_PATH
     if private_config_path is None:
-        private_config_path = DEFAULT_PRIVATE_CONFIG_PATH
-
-    heart_beat_opt = True
-    if _config.get("no_heartbeat"):
-        heart_beat_opt = False
-
-    prometheus_on = False
-    if _config.get("prometheus"):
-        prometheus_on = True
+        private_config_path = DEFAULT_PRIVATE_CONFIG_PATH \
+            if not is_test_config else DEFAULT_TEST_RELAYER_PRIVATE_CONFIG_PATH
 
     # initiate relayer with two config file
     relayer = Relayer.init_from_config_files(
@@ -107,12 +111,15 @@ def main(_config: dict):
         private_key=secret_key_obj.hex() if isinstance(secret_key_obj, EthHexBytes) else None
     )
 
+    if config.get("fast_relayer") and config.get("slow_relayer"):
+        raise Exception("launch relayer with not both options: -f and -s")
+
     if _config.get("fast_relayer"):
         config_fast_relayer(relayer, prometheus_on)
     elif _config.get("slow_relayer"):
-        config_slow_relayer(relayer, heart_beat_opt, prometheus_on, RelayerType.default_slow_relayer_delay_sec())
+        config_slow_relayer(relayer, heart_beat_opt, prometheus_on)
     else:
-        config_general_relayer(relayer, heart_beat_opt, prometheus_on)
+        _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
 
     relayer.run_relayer()
 
@@ -120,19 +127,17 @@ def main(_config: dict):
 if __name__ == "__main__":
     if not sys.argv[1:]:
         config = {
-            "config_path": DEFAULT_RELAYER_CONFIG_PATH,
-            "private_config_path": DEFAULT_PRIVATE_CONFIG_PATH,
-            "no_heartbeat": False,
+            "config_path": None,
+            "private_config_path": None,
             "private_key": None,
-            "prometheus": True,
-            "fast_relayer": False,
-            "slow_relayer": False
+            "no_heartbeat": True,
+            "prometheus": False,
+            "fast_relayer": True,
+            "slow_relayer": False,
+            "testnet": False
         }
     else:
         args = parser.parse_args()
         config = vars(args)
-
-    if config.get("fast_relayer") and config.get("slow_relayer"):
-        raise Exception("launch relayer with not both options: -f and -s")
 
     main(config)

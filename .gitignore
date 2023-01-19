@@ -39,11 +39,12 @@ caches/
 
 # relayer private config files
 configs/entity.relayer.private.json
-configs-mainnet/entity.relayer.private.json
 configs/entity.user.private.json
-configs-mainnet/entity.user.private.json
 configs/keys.json
-configs-mainnet/keys.json
+
+configs-testnet/entity.relayer.private.json
+configs-testnet/entity.user.private.json
+configs-testnet/keys.json
 
 
 # IDE-Specific project files
