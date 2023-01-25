@@ -53,10 +53,7 @@ class PriceUpOracle(PeriodicEventABC):
         if price_cli is not None:
             self.__cli = price_cli
         else:
-            self.__cli = PriceOracleAgg(
-                list(self.__class__.URL_DICT.keys()),
-                self.__class__.URL_DICT
-            )
+            self.__cli = PriceOracleAgg(self.__class__.URL_DICT)
         PrometheusExporterRelayer.exporting_running_time_metric()
 
     @staticmethod

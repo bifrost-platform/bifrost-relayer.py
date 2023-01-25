@@ -124,8 +124,8 @@
         "block_period_sec": 2,
         "bootstrap_latest_height": 30814949,
         "block_aging_period": 200,
-        "transaction_block_delay": 10,
-        "receipt_max_try": 20,
+        "transaction_block_delay": 20,
+        "receipt_max_try": 30,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
         "fee_config": {
