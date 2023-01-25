@@ -90,7 +90,7 @@ def main(_config: dict):
     secret_key = _config.get("private_key")
     secret_key_obj = EthHexBytes(secret_key)
 
-    heart_beat_opt = False if _config.get("no_heartbeat") else False
+    heart_beat_opt = False if _config.get("no_heartbeat") else True
     prometheus_on = True if _config.get("prometheus") else False
     is_test_config = True if _config.get("testnet") else False
     if is_test_config:
@@ -127,17 +127,17 @@ def main(_config: dict):
 if __name__ == "__main__":
     if not sys.argv[1:]:
         config = {
-            "config_path": None,
-            "private_config_path": None,
-            "private_key": None,
-            "no_heartbeat": True,
-            "prometheus": False,
-            "fast_relayer": True,
-            "slow_relayer": False,
-            "testnet": False
+            'private_key': None,
+            'config_path': None,
+            'private_config_path': None,
+            'no_heartbeat': False,
+            'prometheus': False,
+            'slow_relayer': True,
+            'fast_relayer': False,
+            'testnet': True
         }
     else:
         args = parser.parse_args()
         config = vars(args)
-
+    # print(config)
     main(config)
