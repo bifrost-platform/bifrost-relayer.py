@@ -9,7 +9,6 @@ from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.periodicevents import PriceUpOracle, VSPFeed, BtcHashUpOracle
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.switchable_enum import switch_to_test_config
 
 from relayer.relayer import Relayer
 
@@ -93,8 +92,6 @@ def main(_config: dict):
     heart_beat_opt = False if _config.get("no_heartbeat") else True
     prometheus_on = True if _config.get("prometheus") else False
     is_test_config = True if _config.get("testnet") else False
-    if is_test_config:
-        switch_to_test_config()
 
     public_config_path, private_config_path = _config.get("config_path"), _config.get("private_config_path")
     if public_config_path is None:

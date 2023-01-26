@@ -1,8 +1,8 @@
 from bridgeconst.consts import RBCMethodV1
 from chainpy.eth.ethtype.amount import EthAmount
 
-USER_CONFIG_PATH = "configs/entity.relayer.json"
-PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
+USER_CONFIG_PATH = "configs-testnet/entity.relayer.json"
+PRIVATE_CONFIG_PATH = "configs-testnet/entity.relayer.private.json"
 
 ADMIN_RELAYERS = [
     "0x72da8d1D9Ca516F074E1Bcac413bBC4d12AD7Ca0",
