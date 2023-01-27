@@ -1,5 +1,4 @@
 import argparse
-import enum
 import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
@@ -13,8 +12,7 @@ from rbclib.periodicevents import PriceUpOracle, VSPFeed, BtcHashUpOracle
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 
-from relayer.relayer import Relayer
-
+from relayer.relayer import Relayer, relayer_config_global, RelayerRole
 
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
 parser.add_argument("-k", "--private-key", type=str, help="private key to be used by the relayer")
@@ -34,13 +32,7 @@ DEFAULT_TEST_RELAYER_CONFIG_PATH = "configs-testnet/entity.relayer.json"
 DEFAULT_TEST_RELAYER_PRIVATE_CONFIG_PATH = "configs-testnet/entity.relayer.private.json"
 
 
-class RelayerType(enum.Enum):
-    GENERAL_RELAYER = 1
-    SLOW_RELAYER = 2
-    FAST_RELAYER = 3
-
-
-def _config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
+def config_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
     # multichain monitor will detect "Socket" event from every socket contract.
     relayer.register_chain_event_obj("Socket", RbcEvent)
 
@@ -63,18 +55,6 @@ def _config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_o
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
 
-def config_general_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
-    _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
-    relayer.set_relayer_role("Relayer")
-    relayer.role = "Relayer"
-
-
-def config_slow_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
-    _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
-    relayer.set_relayer_role("Slow-relayer")
-    relayer.role = "Slow-relayer"
-
-
 def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     # multichain monitor will detect "Socket" event from every socket contract.
     relayer.register_chain_event_obj("Socket", ExternalRbcEvents)
@@ -85,23 +65,33 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     if prometheus_on:
         PrometheusExporterRelayer.init_prometheus_exporter_on_relayer(relayer.supported_chain_list)
 
-    relayer.set_relayer_role("Fast-relayer")
-    relayer.role = "Fast-relayer"
+    relayer.role = "fast-relayer"
+    relayer_config_global.relayer_role = RelayerRole.FAST_RELAYER
 
 
-def main(_config: dict):
-    secret_key = _config.get("private_key")
-    secret_key_obj = EthHexBytes(secret_key)
+def determine_relayer_role(config: dict) -> RelayerRole:
+    if config.get("fast_relayer") and config.get("slow_relayer"):
+        raise Exception("launch relayer with not both options: -f and -s")
 
-    heart_beat_opt = False if _config.get("no_heartbeat") else True
-    prometheus_on = True if _config.get("prometheus") else False
-    is_test_config = True if _config.get("testnet") else False
+    if config.get("slow_relayer"):
+        return RelayerRole.SLOW_RELAYER
+    elif config.get("fast_relayer"):
+        return RelayerRole.FAST_RELAYER
+    else:
+        return RelayerRole.GENERAL_RELAYER
 
-    log_file_name = _config.get("log_file_name")
+
+def main(config: dict):
+    is_test_config = True if config.get("testnet") else False
+
+    log_file_name = config.get("log_file_name")
     if is_meaningful(log_file_name):
         logger_setting_global.reset(file_name=log_file_name)
 
-    public_config_path, private_config_path = _config.get("config_path"), _config.get("private_config_path")
+    # secret_key_obj is None if config["private_key"] is None
+    secret_key_obj = EthHexBytes(config.get("private_key"))
+
+    public_config_path, private_config_path = config.get("config_path"), config.get("private_config_path")
     if public_config_path is None:
         public_config_path = DEFAULT_RELAYER_CONFIG_PATH \
             if not is_test_config else DEFAULT_TEST_RELAYER_CONFIG_PATH
@@ -113,25 +103,23 @@ def main(_config: dict):
     relayer = Relayer.init_from_config_files(
         public_config_path,
         private_config_path=private_config_path,
-        private_key=secret_key_obj.hex() if isinstance(secret_key_obj, EthHexBytes) else None
+        private_key=secret_key_obj.hex() if isinstance(secret_key_obj, EthHexBytes) else None,
+        role=determine_relayer_role(config)
     )
 
-    if config.get("fast_relayer") and config.get("slow_relayer"):
-        raise Exception("launch relayer with not both options: -f and -s")
-
-    if _config.get("fast_relayer"):
+    heart_beat_opt = False if config.get("no_heartbeat") else True
+    prometheus_on = True if config.get("prometheus") else False
+    if config.get("fast_relayer"):
         config_fast_relayer(relayer, prometheus_on)
-    elif _config.get("slow_relayer"):
-        config_slow_relayer(relayer, heart_beat_opt, prometheus_on)
     else:
-        _config_general_relayer(relayer, heart_beat_opt, prometheus_on)
+        config_relayer(relayer, heart_beat_opt, prometheus_on)
 
     relayer.run_relayer()
 
 
 if __name__ == "__main__":
     if not sys.argv[1:]:
-        config = {
+        _config = {
             'private_key': None,
             'config_path': None,
             'private_config_path': None,
@@ -142,11 +130,13 @@ if __name__ == "__main__":
             'testnet': True,
             "log_file_name": "testnet.log"
         }
-        if config["testnet"]:
+        if _config["testnet"]:
+            # When testnet relay is launched via console, enums are automatically switched.
             SwitchableChain.switch_testnet_config()
             SwitchableAsset.switch_testnet_config()
     else:
         args = parser.parse_args()
-        config = vars(args)
+        _config = vars(args)
+
     # print(config)
-    main(config)
+    main(_config)

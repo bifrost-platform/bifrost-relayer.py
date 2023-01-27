@@ -10,6 +10,7 @@ from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import Logger
 
+from .globalconfig import relayer_config_global
 from .switchable_enum import SwitchableChain
 
 if TYPE_CHECKING:
@@ -17,14 +18,10 @@ if TYPE_CHECKING:
 
 
 class RelayerHeartBeat(PeriodicEventABC):
-    COLLECTION_PERIOD_SEC = 30
-
     def __init__(self,
                  relayer: "Relayer",
-                 period_sec: int = 0,
+                 period_sec: int = relayer_config_global.heart_beat_period_sec,
                  time_lock: int = timestamp_msec()):
-        if period_sec == 0:
-            period_sec = self.__class__.COLLECTION_PERIOD_SEC
         super().__init__(relayer, period_sec, time_lock)
         self.heart_beat_logger = Logger("HeartBeat", logging.INFO)
 

@@ -16,13 +16,23 @@ from chainpy.logger import Logger
 
 from rbclib.metric import PrometheusExporterRelayer
 
-from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, RBC_EVENT_STATUS_START_DATA_START_INDEX, \
+from .consts import (
+    BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS,
+    RBC_EVENT_STATUS_START_DATA_START_INDEX,
     RBC_EVENT_STATUS_START_DATA_END_INDEX
+)
+from .globalconfig import relayer_config_global, RelayerRole
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import SwitchableChain
 from .utils import log_invalid_flow
-from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
-    fetch_sorted_previous_relayer_list, fetch_latest_round
+from .bifrostutils import (
+    fetch_socket_vsp_sigs,
+    fetch_socket_rbc_sigs,
+    fetch_quorum,
+    fetch_relayer_num,
+    fetch_sorted_previous_relayer_list,
+    fetch_latest_round
+)
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
@@ -79,9 +89,6 @@ class RbcEvent(ChainEventABC):
     """
     Data class for event from socket contract.
     """
-    FAST_RELAYER = False
-    CALL_DELAY_SEC = 600
-    AGGREGATED_DELAY_SEC = 0
     EVENT_NAME = "Socket"
 
     def __init__(self,
@@ -118,18 +125,26 @@ class RbcEvent(ChainEventABC):
         casting_type = RbcEvent.select_child(status)
 
         # The normal relayer processes the ACCEPTED or REJECTED event after a certain period of time.
-        if casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent:
-            ret = casting_type(detected_event, time_lock + cls.AGGREGATED_DELAY_SEC * 1000, manager)
-            if time_lock != 0:
-                # does not export log in bootstrap process
-                ret.proto_logger.formatted_log(
-                    relayer_addr=manager.active_account.address,
-                    log_id="SlowRelay:{}".format(ret.summary()),
-                    related_chain=SwitchableChain.NONE,
-                    log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
-                )
+        if time_lock == 0:
+            # bootstrap
+            return casting_type(detected_event, time_lock, manager)
 
-        return casting_type(detected_event, time_lock, manager) 
+        elif relayer_config_global.relayer_role == RelayerRole.SLOW_RELAYER \
+                and (casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent):
+            # slow-relayer case
+            ret = casting_type(
+                detected_event, time_lock + relayer_config_global.slow_relayer_delay_sec * 1000, manager
+            )
+            # does not export log in bootstrap process
+            ret.proto_logger.formatted_log(
+                relayer_addr=manager.active_account.address,
+                log_id="SlowRelay:{}".format(ret.summary()),
+                related_chain=SwitchableChain.NONE,
+                log_data="delay-{}-sec".format(relayer_config_global.slow_relayer_delay_sec)
+            )
+            return ret
+        else:
+            return casting_type(detected_event, time_lock, manager)
 
     @property
     def relayer(self) -> EventBridge:
@@ -152,7 +167,7 @@ class RbcEvent(ChainEventABC):
         return "{}:{}".format(request_id_str, self.status.name)
 
     def check_my_event(self) -> bool:
-        if self.__class__.FAST_RELAYER:
+        if relayer_config_global.is_fast_relayer():
             caller_func_name = sys._getframe(1).f_code.co_name
             print("  - MyEvent({}) I'm fast relayer; caller: {}".format(self.summary(), caller_func_name))
             return True
@@ -365,7 +380,7 @@ class RbcEvent(ChainEventABC):
             if min_rnd > not_finalized_event_obj.rnd:
                 continue
 
-            if RbcEvent.FAST_RELAYER:
+            if relayer_config_global.is_fast_relayer():
                 status = not_finalized_event_obj.status
                 if status != ChainEventStatus.ACCEPTED and status != ChainEventStatus:
                     continue
@@ -412,7 +427,7 @@ class RbcEvent(ChainEventABC):
         return data[:start] + EthHashBytes(event_status.value) + data[end:]
 
     def is_primary_relayer(self):
-        if self.__class__.FAST_RELAYER:
+        if relayer_config_global.is_fast_relayer():
             return True
         total_validator_num = fetch_relayer_num(self.relayer, SwitchableChain.BIFROST)
 
@@ -495,7 +510,7 @@ class ChainRequestedEvent(RbcEvent):
 
         # find out chain to call
         if self.is_inbound():
-            next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
+            next_time_lock = self.time_lock + 1000 * relayer_config_global.rbc_event_call_delay_sec
             self.switch_to_call(next_time_lock)
             return self
         else:
@@ -601,7 +616,7 @@ class _AggregatedRelayEvent(RbcEvent):
             return self.aggregated_relay(chain_to_send, self.aggregated, self.status)
 
         else:
-            next_time_lock = self.time_lock + 1000 * RbcEvent.CALL_DELAY_SEC
+            next_time_lock = self.time_lock + 1000 * relayer_config_global.rbc_event_call_delay_sec
             self.switch_to_call(next_time_lock)
             self.relayer.queue.enqueue(self)
 
@@ -658,7 +673,7 @@ class _AggregatedRelayEvent(RbcEvent):
             relayer_addr=self.manager.active_account.address,
             log_id=self.summary(),
             related_chain=target_chain,
-            log_data=msg + "-Vote({})".format(relayer_index if not self.__class__.FAST_RELAYER else "FAST")
+            log_data=msg + "-Vote({})".format(relayer_index if not relayer_config_global.is_fast_relayer() else "FAST")
         )
         return target_chain, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
 
@@ -715,9 +730,6 @@ class ChainRollbackedEvent(_FinalStatusEvent):
 
 
 class RoundUpEvent(ChainEventABC):
-    FAST_RELAYER = False
-    CALL_DELAY_SEC = 200
-    AGGREGATED_DELAY_SEC = 0
     EVENT_NAME = "RoundUp"
 
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
@@ -734,7 +746,7 @@ class RoundUpEvent(ChainEventABC):
     def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
 
-        if time_lock == 0 or RoundUpEvent.FAST_RELAYER:
+        if time_lock == 0 or relayer_config_global.is_fast_relayer():
             # in the case of bootstrap
             return cls(detected_event, 0, relayer)
         else:
@@ -744,9 +756,9 @@ class RoundUpEvent(ChainEventABC):
                 relayer_addr=relayer.active_account.address,
                 log_id="SlowRelay:{}".format(cls.EVENT_NAME),
                 related_chain=SwitchableChain.NONE,
-                log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
+                log_data="delay-{}-sec".format(relayer_config_global.slow_relayer_delay_sec)
             )
-            time_lock = timestamp_msec() + cls.AGGREGATED_DELAY_SEC * 1000
+            time_lock = timestamp_msec() + relayer_config_global.slow_relayer_delay_sec * 1000
             return cls(detected_event, time_lock, relayer)
 
     @property
@@ -793,14 +805,16 @@ class RoundUpEvent(ChainEventABC):
             )
 
     def is_previous_relayer(self) -> bool:
-        if self.__class__.FAST_RELAYER:
+        if relayer_config_global.is_fast_relayer():
             return True
         return self.relayer.has_key(self.round - 1)
 
     def is_primary_relayer(self) -> bool:
-        if self.__class__.FAST_RELAYER:
+        if relayer_config_global.is_fast_relayer():
             return True
-        previous_validator_list = fetch_sorted_previous_relayer_list(self.relayer, SwitchableChain.BIFROST, self.round - 1)
+        previous_validator_list = fetch_sorted_previous_relayer_list(
+            self.relayer, SwitchableChain.BIFROST, self.round - 1
+        )
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         primary_index = self.detected_event.block_number % len(previous_validator_list)
         return primary_index == self.relayer.get_value_by_key(self.round - 1)
@@ -845,7 +859,7 @@ class RoundUpEvent(ChainEventABC):
             # secondary relayer do (prepare to call after a few minutes)
             next_time_lock = timestamp_msec() \
                              + self.relayer.get_chain_manager_of(self.selected_chain).tx_commit_time_sec \
-                             + 1000 * RoundUpEvent.CALL_DELAY_SEC
+                             + 1000 * relayer_config_global.roundup_event_call_delay_sec
 
             self.switch_to_send(next_time_lock)
             self.aggregated = False

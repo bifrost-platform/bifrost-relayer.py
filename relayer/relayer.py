@@ -1,6 +1,5 @@
 import copy
 import json
-from typing import Optional
 import time
 import logging
 
@@ -13,9 +12,8 @@ from chainpy.logger import Logger
 
 from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \
     fetch_latest_round, find_height_by_timestamp
-from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
-from rbclib.periodicevents import BtcHashUpOracle, VSPFeed, PriceUpOracle
+from rbclib.globalconfig import RelayerRole, relayer_config_global
 from rbclib.switchable_enum import SwitchableChain
 
 from .__init__ import __version__
@@ -32,7 +30,7 @@ class Relayer(EventBridge):
             relayer_config_path: str,
             private_config_path: str = None,
             private_key: str = None,
-            role: str = None,
+            role: RelayerRole = None,
             slow_relayer_delay_sec: int = None
     ):
         with open(relayer_config_path, "r") as f:
@@ -57,88 +55,47 @@ class Relayer(EventBridge):
             relayer_config_dict: dict,
             private_config_dict: dict = None,
             private_key: str = None,
-            role: str = None,
-            slow_relayer_delay_sec: int = None
+            role: RelayerRole = None,
+            slow_relayer_delay_sec: int = None,
+            is_testnet: bool = False
     ):
         merged_dict = merge_dict(relayer_config_dict, private_config_dict)
         if private_key is not None:
             merged_dict["entity"]["secret_hex"] = hex(EthAccount.from_secret(private_key).priv)
 
-        # forced change relayer's role
-        if is_meaningful(role) and role.capitalize() == "Slow-relayer":
-            merged_dict["entity"]["role"] = role.capitalize()
-            merged_dict["entity"]["slow_relayer_delay_sec"] = slow_relayer_delay_sec
-
         # check a correctness of the relayer config
         Relayer.config_sanity_check(merged_dict)
 
+        # forced change relayer's role
+        if role is None:
+            role = RelayerRole[merged_dict["entity"]["role"].replace("-", "_").capitalize()]
+
+        if role == RelayerRole.SLOW_RELAYER and slow_relayer_delay_sec is None:
+            try:
+                slow_relayer_delay_sec = merged_dict["entity"]["slow_relayer_delay_sec"]
+            except ValueError as e:
+                raise Exception("Slow relayer, but no delay in config file")
+
         # check whether oracle relayer or not
         oracle_config = merged_dict.get("oracle_config")
-
         is_price_oracle_relayer = oracle_config is not None and is_meaningful(oracle_config["asset_prices"])
-        price_oracle_config = oracle_config["asset_prices"] if is_price_oracle_relayer else None
-
         is_btc_oracle_relayer = oracle_config is not None and is_meaningful(oracle_config["bitcoin_block_hash"])
-        btc_oracle_config = oracle_config["bitcoin_block_hash"] if is_btc_oracle_relayer else None
 
-        slow_relayer_delay_sec = None
-        if merged_dict["entity"]["role"].capitalize() == "Slow-relayer":
-            slow_relayer_delay_sec = merged_dict["entity"]["slow_relayer_delay_sec"]
-
-        Relayer.init_classes(
+        relayer_config_global.reset(
+            relayer_role=role,
+            is_testnet=is_testnet,
             slow_relayer_delay_sec=slow_relayer_delay_sec,
-            price_oracle_config=price_oracle_config,
-            btc_hash_oracle_config=btc_oracle_config
+            rbc_event_call_delay_sec=600,
+            roundup_event_call_delay_sec=200,
+            price_oracle_assets=oracle_config["asset_prices"]["names"] if is_price_oracle_relayer else None,
+            price_source_url_dict=oracle_config["asset_prices"]["urls"] if is_price_oracle_relayer else None,
+            price_source_collection_period_sec=300,
+            btc_hash_source_url=oracle_config["bitcoin_block_hash"]["url"] if is_btc_oracle_relayer else None,
+            btc_hash_source_collection_period_sec=300,
+            validator_set_check_period_sec=60
         )
 
         return cls(merged_dict)
-
-    @staticmethod
-    def init_classes(
-            slow_relayer_delay_sec: Optional[int] = 60,
-            auth_down_oracle_period_sec: int = 60,
-            price_oracle_config: Optional[dict] = None,
-            btc_hash_oracle_config: Optional[dict] = None,
-    ):
-        # setup hardcoded value (not from config file) because it's a system parameter
-        VSPFeed.setup(auth_down_oracle_period_sec)
-
-        if slow_relayer_delay_sec is not None:
-            RbcEvent.AGGREGATED_DELAY_SEC = slow_relayer_delay_sec
-            RoundUpEvent.AGGREGATED_DELAY_SEC = slow_relayer_delay_sec
-
-        PriceUpOracle.setup(
-            price_oracle_config["names"],
-            price_oracle_config["urls"],
-            price_oracle_config["collection_period_sec"]
-        )
-
-        BtcHashUpOracle.setup(
-            btc_hash_oracle_config["url"],
-            btc_hash_oracle_config["collection_period_sec"]
-        )
-
-    @staticmethod
-    def set_relayer_role(role):
-        role = role.capitalize()
-
-        if role == "User" or role == "Relayer":
-            RbcEvent.FAST_RELAYER = False
-            RoundUpEvent.FAST_RELAYER = False
-            RbcEvent.AGGREGATED_DELAY_SEC = 0
-            RoundUpEvent.AGGREGATED_DELAY_SEC = 0
-
-        elif role == "Fast-relayer":
-            RbcEvent.FAST_RELAYER = True
-            RoundUpEvent.FAST_RELAYER = True
-            RbcEvent.AGGREGATED_DELAY_SEC = 0
-            RoundUpEvent.AGGREGATED_DELAY_SEC = 0
-
-        elif role == "Slow-relayer":
-            RbcEvent.FAST_RELAYER = False
-            RoundUpEvent.FAST_RELAYER = False
-            if RbcEvent.AGGREGATED_DELAY_SEC == 0 or RoundUpEvent.AGGREGATED_DELAY_SEC == 0:
-                raise Exception("Slow relayer has no delay")
 
     def _register_relayer_index(self, rnd: int):
         sorted_validator_list = fetch_sorted_previous_relayer_list(self, SwitchableChain.BIFROST, rnd)
@@ -193,10 +150,11 @@ class Relayer(EventBridge):
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
         logger = Logger("Bootstrap", logging.INFO)
-        logger.info("BIFROST's {}: version({})".format(self.role, __version__))
-        if self.role == "Slow-relayer":
-            logger.info("Aggregated relay delay(sec): {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
-        logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
+        logger.info("BIFROST's {}: version({}), address({})".format(
+            relayer_config_global.relayer_role.name,
+            __version__,
+            self.active_account.address.hex())
+        )
 
         # run relayer
         self.run_eventbridge()

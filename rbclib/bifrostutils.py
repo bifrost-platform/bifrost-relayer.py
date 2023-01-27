@@ -94,7 +94,9 @@ def fetch_sorted_relayer_list(manager: EventBridge, target_chain_index: Chain, i
 def fetch_sorted_previous_relayer_list(
         manager: EventBridge, target_chain_index: Chain,
         rnd: int, is_initial: bool = True) -> list:
-    validator_tuple = manager.world_call(target_chain_index, "relayer_authority", "previous_selected_relayers", [rnd, is_initial])[0]  # unzip
+    validator_tuple = manager.world_call(
+        target_chain_index, "relayer_authority", "previous_selected_relayers", [rnd, is_initial]
+    )[0]  # unzip
     validator_list = list(validator_tuple)
     validator_list_lower = [addr.lower() for addr in validator_list]
     return sorted(validator_list_lower)
@@ -159,7 +161,9 @@ def fetch_btc_hash_from_oracle(manager: EventBridge) -> EthHashBytes:
 def is_pulsed_hear_beat(manager: EventBridge) -> bool:
     """ Check if the relayer has ever sent a heartbeat transaction in this session."""
     relayer_addr = manager.active_account.address
-    return manager.world_call(SwitchableChain.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()])[0]
+    return manager.world_call(
+        SwitchableChain.BIFROST, "relayer_authority", "is_heartbeat_pulsed", [relayer_addr.hex()]
+    )[0]
 
 
 # TODO why only ConsensusType?

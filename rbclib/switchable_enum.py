@@ -36,9 +36,6 @@ class _SwitchableChain:
         self.AVALANCHE = Chain.AVAX_FUJI
 
 
-SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])
-
-
 class _SwitchableAsset:
     def __init__(self, test_flag: bool):
         self.NONE = Asset.NONE
@@ -128,4 +125,5 @@ class _SwitchableAsset:
         self.UNIFIED_USDC_ON_BIFROST = Asset.UNIFIED_USDC_ON_BFC_TEST
 
 
+SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])
 SwitchableAsset = _SwitchableAsset("--testnet" in sys.argv[1:])

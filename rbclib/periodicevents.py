@@ -13,9 +13,11 @@ from chainpy.logger import Logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
+
 from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, fetch_lowest_validator_round, \
     fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
+from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
 from .switchable_enum import SwitchableChain
 
@@ -27,36 +29,23 @@ ROUND_UP_FUNCTION_NAME = "round_control_poll"
 
 
 class PriceUpOracle(PeriodicEventABC):
-    COLLECTION_PERIOD_SEC = 0  # means none
-    ASSETS = []  # means none
-    URL_DICT = dict()
-
     def __init__(self,
                  manager: EventBridge,
-                 period_sec: int = 0,
+                 period_sec: int = 300,
                  time_lock: int = timestamp_msec(),
                  price_cli: PriceOracleAgg = None
                  ):
-        if self.__class__.COLLECTION_PERIOD_SEC == 0 or not self.__class__.ASSETS:
-            raise Exception("call \"PriceUpOracle.setup() first\"")
-
         if period_sec == 0:
-            period_sec = self.__class__.COLLECTION_PERIOD_SEC
-
+            period_sec = relayer_config_global.price_source_collection_period_sec
         super().__init__(manager, period_sec, time_lock)
 
         if price_cli is not None:
             self.__cli = price_cli
         else:
-            self.__cli = PriceOracleAgg(self.__class__.URL_DICT)
+            self.__cli = PriceOracleAgg(relayer_config_global.price_source_url_dict)
+
         PrometheusExporterRelayer.exporting_running_time_metric()
         self.price_logger = Logger("PriceUp", logging.INFO)
-
-    @staticmethod
-    def setup(coin_names: list, url_dict: dict, collection_period_sec: int):
-        PriceUpOracle.ASSETS = coin_names
-        PriceUpOracle.COLLECTION_PERIOD_SEC = collection_period_sec
-        PriceUpOracle.URL_DICT = url_dict
 
     @property
     def relayer(self) -> EventBridge:
@@ -79,7 +68,7 @@ class PriceUpOracle(PeriodicEventABC):
             return NoneParams
 
         # dictionary of prices (key: coin id)
-        symbols = [Asset[asset_name].symbol for asset_name in self.__class__.ASSETS]
+        symbols = [Asset[asset_name].symbol for asset_name in relayer_config_global.price_oracle_assets]
         symbols_str = [symbol.name for symbol in symbols]
         collected_prices = self.__cli.get_current_weighted_price(symbols_str)
 
@@ -117,41 +106,22 @@ class PriceUpOracle(PeriodicEventABC):
 
 
 class BtcHashUpOracle(PeriodicEventABC):
-    URL = ""
-    AUTH_ID = ""
-    AUTH_PASSWD = ""
-    COLLECTION_PERIOD_SEC = 0
-
     def __init__(self,
                  manager: EventBridge,
-                 period_sec: int = 0,
+                 period_sec: int = 300,
                  time_lock: int = timestamp_msec(),
                  btc_cli: SimpleBtcClient = None
                  ):
-
-        if not self.__class__.URL or self.__class__.COLLECTION_PERIOD_SEC == 0:
-            raise Exception("call \"BtcHashUpOracle.setup() first\"")
-
         if period_sec == 0:
-            period_sec = self.__class__.COLLECTION_PERIOD_SEC
-
+            period_sec = relayer_config_global.btc_hash_source_collection_period_sec
         super().__init__(manager, period_sec, time_lock)
 
-        if btc_cli is None:
-            btc_cli = SimpleBtcClient(self.__class__.URL, 1, self.__class__.AUTH_ID, self.__class__.AUTH_PASSWD)
-        self.__cli = btc_cli
-
-        self.delayed = False
-        PrometheusExporterRelayer.exporting_running_time_metric()
-
+        self.__cli = btc_cli if btc_cli is not None else SimpleBtcClient(relayer_config_global.btc_hash_source_url, 1)
         self.btc_logger = Logger("BTChash", logging.INFO)
 
-    @staticmethod
-    def setup(url: str, auth_id: str = None, auth_passwd: str = None, collect_period_sec: int = 60):
-        BtcHashUpOracle.URL = url
-        BtcHashUpOracle.AUTH_ID = auth_id
-        BtcHashUpOracle.AUTH_PASSWD = auth_passwd
-        BtcHashUpOracle.COLLECTION_PERIOD_SEC = collect_period_sec
+        PrometheusExporterRelayer.exporting_running_time_metric()
+
+        self.delayed = False
 
     @property
     def relayer(self) -> EventBridge:
@@ -244,31 +214,21 @@ class BtcHashUpOracle(PeriodicEventABC):
 
 
 class VSPFeed(PeriodicEventABC):
-    COLLECTION_PERIOD_SEC = 0
-
     def __init__(self,
                  manager: EventBridge,
-                 period_sec: int = 0,
+                 period_sec: int = 60,
                  time_lock: int = timestamp_msec(),
                  _round: int = None):
-        if self.__class__.COLLECTION_PERIOD_SEC == 0:
-            raise Exception("call \"VSPFeed.setup() first\"")
         if period_sec == 0:
-            period_sec = self.__class__.COLLECTION_PERIOD_SEC
+            period_sec = relayer_config_global.validator_set_check_period_sec
         super().__init__(manager, period_sec, time_lock)
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
             supported_chain_list.remove(SwitchableChain.BIFROST)
-            self.__current_round = fetch_lowest_validator_round(self.relayer)
-        else:
-            self.__current_round = _round
-        PrometheusExporterRelayer.exporting_running_time_metric()
-
+        self.__current_round = fetch_lowest_validator_round(self.relayer) if _round is None else _round
         self.validator_logger = Logger("AuthDown", logging.INFO)
 
-    @staticmethod
-    def setup(collect_period_sec: int = 60):
-        VSPFeed.COLLECTION_PERIOD_SEC = collect_period_sec
+        PrometheusExporterRelayer.exporting_running_time_metric()
 
     @property
     def relayer(self) -> EventBridge:
