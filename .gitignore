@@ -58,3 +58,6 @@ launch*.sh
 
 # venv files:
 venv/
+
+# relayer log file
+logs/

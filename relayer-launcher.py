@@ -11,7 +11,7 @@ from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.periodicevents import PriceUpOracle, VSPFeed, BtcHashUpOracle
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.switchable_enum import SwitchableChain, _SwitchableChain, SwitchableAsset, _SwitchableAsset
+from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 
 from relayer.relayer import Relayer
 
@@ -25,7 +25,7 @@ parser.add_argument("-p", "--prometheus", action="store_true")
 parser.add_argument("-s", "--slow-relayer", action="store_true")
 parser.add_argument("-f", "--fast-relayer", action="store_true")
 parser.add_argument("-t", "--testnet", action="store_true")
-parser.add_argument("-l", "--log-file-path", type=str)
+parser.add_argument("-l", "--log-file-name", type=str)
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
 DEFAULT_PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
@@ -96,10 +96,10 @@ def main(_config: dict):
     heart_beat_opt = False if _config.get("no_heartbeat") else True
     prometheus_on = True if _config.get("prometheus") else False
     is_test_config = True if _config.get("testnet") else False
-    log_file_name = True if _config.get("log_file") else False
 
+    log_file_name = _config.get("log_file_name")
     if is_meaningful(log_file_name):
-        logger_setting_global.reset(file_path=log_file_name)
+        logger_setting_global.reset(file_name=log_file_name)
 
     public_config_path, private_config_path = _config.get("config_path"), _config.get("private_config_path")
     if public_config_path is None:
@@ -140,7 +140,7 @@ if __name__ == "__main__":
             'slow_relayer': True,
             'fast_relayer': False,
             'testnet': True,
-            "log_file": False
+            "log_file_name": "testnet.log"
         }
         if config["testnet"]:
             SwitchableChain.switch_testnet_config()

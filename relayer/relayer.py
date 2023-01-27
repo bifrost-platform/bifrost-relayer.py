@@ -192,11 +192,11 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
-        btc_logger = Logger("Bootstrap", logging.INFO)
-        btc_logger.info("BIFROST's {}: version({})".format(self.role, __version__))
+        logger = Logger("Bootstrap", logging.INFO)
+        logger.info("BIFROST's {}: version({})".format(self.role, __version__))
         if self.role == "Slow-relayer":
-            btc_logger.info("Aggregated relay delay(sec): {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
-        btc_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
+            logger.info("Aggregated relay delay(sec): {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
+        logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
         self.run_eventbridge()

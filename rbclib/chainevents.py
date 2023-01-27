@@ -1,17 +1,10 @@
 import logging
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
-
 import eth_abi
-from chainpy.eventbridge.eventbridge import EventBridge
 
-from rbclib.metric import PrometheusExporterRelayer
-from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
-    fetch_sorted_previous_relayer_list, fetch_latest_round
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
-from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
-from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
-from .switchable_enum import SwitchableChain
-from .utils import *
+
+from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.eth.managers.eventobj import DetectedEvent
@@ -20,15 +13,21 @@ from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
 from chainpy.logger import Logger
 
+from rbclib.metric import PrometheusExporterRelayer
+
+from .consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, RBC_EVENT_STATUS_START_DATA_START_INDEX, \
+    RBC_EVENT_STATUS_START_DATA_END_INDEX
+from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
+from .switchable_enum import SwitchableChain
+from .utils import log_invalid_flow
+from .bifrostutils import fetch_socket_vsp_sigs, fetch_socket_rbc_sigs, fetch_quorum, fetch_relayer_num, \
+    fetch_sorted_previous_relayer_list, fetch_latest_round
+
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = (SwitchableChain.NONE, "", "", [])
-
-
-RBC_EVENT_STATUS_START_DATA_START_INDEX = 128
-RBC_EVENT_STATUS_START_DATA_END_INDEX = 160
 
 SOCKET_CONTRACT_NAME = "socket"
 SUBMIT_FUNCTION_NAME = "poll"
@@ -87,10 +86,8 @@ class RbcEvent(ChainEventABC):
     def __init__(self,
                  detected_event: DetectedEvent,
                  time_lock: int,
-                 manager: EventBridge,
-                 is_fast_relayer: bool = False):
+                 manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
-        self.__is_fast_relayer = is_fast_relayer
         self.proto_logger = Logger("Protocol", logging.DEBUG)
 
     def __cmp__(self, other):
@@ -126,7 +123,7 @@ class RbcEvent(ChainEventABC):
                 # does not export log in bootstrap process
                 ret.proto_logger.formatted_log(
                     relayer_addr=manager.active_account.address,
-                    log_id="SlowRelay:{}".format(status.name),
+                    log_id="SlowRelay:{}".format(ret.summary()),
                     related_chain=SwitchableChain.NONE,
                     log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
                 )
@@ -880,9 +877,8 @@ class RoundUpEvent(ChainEventABC):
         event_name = RoundUpEvent.EVENT_NAME
         target_chain = SwitchableChain.BIFROST
 
-        bootstrap_logger = Logger("Bootstrap", logging.INFO)
-
-        bootstrap_logger.formatted_log(
+        logger = Logger("Bootstrap", logging.INFO)
+        logger.formatted_log(
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(event_name),
             related_chain=SwitchableChain.NONE,
@@ -902,7 +898,7 @@ class RoundUpEvent(ChainEventABC):
                 target_event_objects.append((event_obj.round, event_obj))
 
         latest_event_object = sorted(target_event_objects)[-1][1] if target_event_objects else None
-        bootstrap_logger.formatted_log(
+        logger.formatted_log(
             relayer_addr=manager.active_account.address,
             log_id="Unchecked{}Log".format(event_name),
             related_chain=SwitchableChain.BIFROST,
