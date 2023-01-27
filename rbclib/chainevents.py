@@ -1,4 +1,5 @@
 import logging
+import sys
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 import eth_abi
 
@@ -152,16 +153,17 @@ class RbcEvent(ChainEventABC):
 
     def check_my_event(self) -> bool:
         if self.__class__.FAST_RELAYER:
-            print("MyEvent({}) I'm fast relayer".format(self.summary()))
+            caller_func_name = sys._getframe(1).f_code.co_name
+            print("  - MyEvent({}) I'm fast relayer; caller: {}".format(self.summary(), caller_func_name))
             return True
 
         if self.src_chain not in self.manager.supported_chain_list:
-            print("NotMyEvent({}) not supported src chain: {}".format(self.summary(), self.src_chain.name))
+            print("  - NotMyEvent({}) not supported src chain: {}".format(self.summary(), self.src_chain.name))
             return False
 
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         if relayer_index is not None:
-            print("MyEvent({})".format(self.summary()))
+            print("  - MyEvent({})".format(self.summary()))
             return True
         else:
             print("NotMyEvent({}) relayer index({})".format(self.summary(), relayer_index))
