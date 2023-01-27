@@ -5,6 +5,7 @@ from chainpy.eth.ethtype.amount import EthAmount
 from bridgeconst.consts import Chain, RBCMethodDirection, Asset
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
+from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 from relayer.tools.consts import RBC_SUPPORTED_INBOUND_METHODS, RBC_SUPPORTED_OUTBOUND_METHODS
 from relayer.tools.utils_load_test import cccp_batch_send
 from relayer.tools.utils import get_chain_and_asset_from_console_for_bridge, get_typed_item_from_console, \
@@ -32,6 +33,8 @@ class SupportedUserCmd(enum.Enum):
 
 def user_cmd(project_root_path: str = "./"):
     user = Manager.init_manager("User", project_root_path)
+    SwitchableChain.switch_testnet_config()
+    SwitchableAsset.switch_testnet_config()
     print(">>>  User Address: {}".format(user.active_account.address.with_checksum()))
 
     while True:

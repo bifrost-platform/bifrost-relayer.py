@@ -1,23 +1,23 @@
 import copy
 import json
 from typing import Optional
+import time
+import logging
 
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from chainpy.eth.managers.configsanitycheck import ConfigChecker
 from chainpy.eth.managers.configsanitycheck import is_meaningful
-
+from chainpy.logger import Logger
 
 from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \
     fetch_latest_round, find_height_by_timestamp
 from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
 from rbclib.periodicevents import BtcHashUpOracle, VSPFeed, PriceUpOracle
-import time
-
 from rbclib.switchable_enum import SwitchableChain
+
 from .__init__ import __version__
 
 
@@ -192,10 +192,11 @@ class Relayer(EventBridge):
             else:
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
-        bootstrap_logger.info("BIFROST's {}: version({})".format(self.role, __version__))
+        btc_logger = Logger("Bootstrap", logging.INFO)
+        btc_logger.info("BIFROST's {}: version({})".format(self.role, __version__))
         if self.role == "Slow-relayer":
-            bootstrap_logger.info("Aggregated relay delay(sec): {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
-        bootstrap_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
+            btc_logger.info("Aggregated relay delay(sec): {}".format(RbcEvent.AGGREGATED_DELAY_SEC))
+        btc_logger.info("Relayer-has-been-launched ({})".format(self.active_account.address.hex()))
 
         # run relayer
         self.run_eventbridge()

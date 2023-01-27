@@ -1,4 +1,4 @@
-from bridgeconst.consts import Chain
+from bridgeconst.consts import Chain, Symbol, RBCMethodDirection, AssetType
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
@@ -22,9 +22,24 @@ class UserSubmit:
                  amount: EthAmount):
         inst_tuple = (dst_chain.formatted_bytes(), method.formatted_bytes())
 
+        is_testnet = True if dst_chain.name.split("_")[1] != "MAIN" else False
+        direction: RBCMethodDirection = method.analyze()[1]
+
+        if asset0.symbol == Symbol.BFC:
+            asset1 = Asset.BFC_ON_BFC_MAIN if not is_testnet else Asset.BFC_ON_BFC_TEST
+        else:
+            if direction == RBCMethodDirection.INBOUND:
+                asset1 = Asset.from_name("UNIFIED_{}_{}_ON_{}".format(
+                    asset0.chain.name,
+                    asset0.symbol.name,
+                    dst_chain.name
+                ))
+            else:
+                asset1 = Asset.from_name("UNIFIED_{}_{}_ON_{}".format(dst_chain.name, asset0.symbol.name, asset0.chain))
+
         action_param_tuple = (
             asset0.formatted_bytes(),  # first token_index
-            Asset.NONE.formatted_bytes(),  # second token_index
+            asset1.formatted_bytes(),
             apply_addr.with_checksum(),  # from address
             apply_addr.with_checksum(),  # to address
             amount.int(),

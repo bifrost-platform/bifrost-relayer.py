@@ -5,7 +5,6 @@ import eth_abi
 from bridgeconst.consts import Oracle, Asset
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.logger import formatted_log
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
@@ -22,10 +21,6 @@ from .switchable_enum import SwitchableChain
 
 from .utils import log_invalid_flow
 
-
-price_logger = Logger("PriceUp", logging.INFO)
-validator_logger = Logger("AuthDown", logging.INFO)
-btc_logger = Logger("BTChash", logging.INFO)
 
 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"
 ROUND_UP_FUNCTION_NAME = "round_control_poll"
@@ -55,6 +50,7 @@ class PriceUpOracle(PeriodicEventABC):
         else:
             self.__cli = PriceOracleAgg(self.__class__.URL_DICT)
         PrometheusExporterRelayer.exporting_running_time_metric()
+        self.price_logger = Logger("PriceUp", logging.INFO)
 
     @staticmethod
     def setup(coin_names: list, url_dict: dict, collection_period_sec: int):
@@ -73,7 +69,7 @@ class PriceUpOracle(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.price_logger, self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -92,8 +88,7 @@ class PriceUpOracle(PeriodicEventABC):
         prices = [value for value in collected_prices.values()]
         PrometheusExporterRelayer.exporting_asset_prices(symbols_str, prices)
 
-        formatted_log(
-            price_logger,
+        self.price_logger.formatted_log(
             relayer_addr=self.relayer.active_account.address,
             log_id=self.__class__.__name__,
             related_chain=SwitchableChain.BIFROST,
@@ -106,18 +101,18 @@ class PriceUpOracle(PeriodicEventABC):
         ]
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.price_logger, self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.price_logger, self)
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.price_logger, self)
         return None
 
 
@@ -149,6 +144,8 @@ class BtcHashUpOracle(PeriodicEventABC):
         self.delayed = False
         PrometheusExporterRelayer.exporting_running_time_metric()
 
+        self.btc_logger = Logger("BTChash", logging.INFO)
+
     @staticmethod
     def setup(url: str, auth_id: str = None, auth_passwd: str = None, collect_period_sec: int = 60):
         BtcHashUpOracle.URL = url
@@ -169,7 +166,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(btc_logger, self)
+        log_invalid_flow(self.btc_logger, self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -187,8 +184,7 @@ class BtcHashUpOracle(PeriodicEventABC):
 
         if delta < 0:
             # critical error
-            formatted_log(
-                btc_logger,
+            self.btc_logger.formatted_log(
                 relayer_addr=self.relayer.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=SwitchableChain.BIFROST,
@@ -206,8 +202,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             result = self.__cli.get_block_hash_by_height(feed_target_height)
             block_hash = EthHashBytes(result)
             PrometheusExporterRelayer.exporting_btc_hash(feed_target_height)
-            formatted_log(
-                btc_logger,
+            self.btc_logger.formatted_log(
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=SwitchableChain.BIFROST,
@@ -221,8 +216,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             ]
 
         else:
-            formatted_log(
-                btc_logger,
+            self.btc_logger.formatted_log(
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.__class__.__name__,
                 related_chain=SwitchableChain.BIFROST,
@@ -231,18 +225,18 @@ class BtcHashUpOracle(PeriodicEventABC):
             return NoneParams
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.btc_logger, self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.btc_logger, self)
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.btc_logger, self)
         return None
 
     def gas_limit_multiplier(self) -> float:
@@ -269,6 +263,8 @@ class VSPFeed(PeriodicEventABC):
         else:
             self.__current_round = _round
         PrometheusExporterRelayer.exporting_running_time_metric()
+
+        self.validator_logger = Logger("AuthDown", logging.INFO)
 
     @staticmethod
     def setup(collect_period_sec: int = 60):
@@ -298,7 +294,7 @@ class VSPFeed(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.validator_logger, self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -308,8 +304,7 @@ class VSPFeed(PeriodicEventABC):
             rnd = fetch_latest_round(self.relayer, chain_index)
             PrometheusExporterRelayer.exporting_external_chain_rnd(chain_index, rnd)
 
-        formatted_log(
-            validator_logger,
+        self.validator_logger.formatted_log(
             relayer_addr=self.relayer.active_account.address,
             log_id="CheckRound",
             related_chain=SwitchableChain.BIFROST,
@@ -338,7 +333,7 @@ class VSPFeed(PeriodicEventABC):
         return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME, submit_data
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.validator_logger, self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
@@ -348,5 +343,5 @@ class VSPFeed(PeriodicEventABC):
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(price_logger, self)
+        log_invalid_flow(self.validator_logger, self)
         return None

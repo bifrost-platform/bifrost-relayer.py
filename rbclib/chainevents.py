@@ -13,18 +13,15 @@ from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import SwitchableChain
 from .utils import *
 from chainpy.eventbridge.chaineventabc import ChainEventABC
-from chainpy.eventbridge.multichainmonitor import bootstrap_logger
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
-from chainpy.logger import Logger, formatted_log
+from chainpy.logger import Logger
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
-
-proto_logger = Logger("Protocol", logging.DEBUG)
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = (SwitchableChain.NONE, "", "", [])
@@ -94,6 +91,7 @@ class RbcEvent(ChainEventABC):
                  is_fast_relayer: bool = False):
         super().__init__(detected_event, time_lock, manager)
         self.__is_fast_relayer = is_fast_relayer
+        self.proto_logger = Logger("Protocol", logging.DEBUG)
 
     def __cmp__(self, other):
         return self.status.value < other.status.value
@@ -123,18 +121,17 @@ class RbcEvent(ChainEventABC):
 
         # The normal relayer processes the ACCEPTED or REJECTED event after a certain period of time.
         if casting_type == ChainAcceptedEvent or casting_type == ChainRejectedEvent:
+            ret = casting_type(detected_event, time_lock + cls.AGGREGATED_DELAY_SEC * 1000, manager)
             if time_lock != 0:
                 # does not export log in bootstrap process
-                formatted_log(
-                    proto_logger,
+                ret.proto_logger.formatted_log(
                     relayer_addr=manager.active_account.address,
                     log_id="SlowRelay:{}".format(status.name),
                     related_chain=SwitchableChain.NONE,
                     log_data="delay-{}-sec".format(cls.AGGREGATED_DELAY_SEC)
                 )
-            time_lock += cls.AGGREGATED_DELAY_SEC * 1000
 
-        return casting_type(detected_event, time_lock, manager)
+        return casting_type(detected_event, time_lock, manager) 
 
     @property
     def relayer(self) -> EventBridge:
@@ -158,19 +155,27 @@ class RbcEvent(ChainEventABC):
 
     def check_my_event(self) -> bool:
         if self.__class__.FAST_RELAYER:
+            print("MyEvent({}) I'm fast relayer".format(self.summary()))
             return True
 
         if self.src_chain not in self.manager.supported_chain_list:
+            print("NotMyEvent({}) not supported src chain: {}".format(self.summary(), self.src_chain.name))
             return False
 
         relayer_index = self.relayer.get_value_by_key(self.rnd)
-        return relayer_index is not None or self.__is_fast_relayer
+        if relayer_index is not None:
+            print("MyEvent({})".format(self.summary()))
+            return True
+        else:
+            print("NotMyEvent({}) relayer index({})".format(self.summary(), relayer_index))
+            return False
+        # return relayer_index is not None
 
     def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ builds and returns call transaction parameters related to this event. """
         if not self.check_my_event():
             return NoneParams
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return NoneParams
 
     def build_transaction_params(self):
@@ -183,7 +188,7 @@ class RbcEvent(ChainEventABC):
         """
         if not self.check_my_event():
             return None
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return None
 
     def handle_tx_result_fail(self):
@@ -194,7 +199,7 @@ class RbcEvent(ChainEventABC):
         """
         if not self.check_my_event():
             return None
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return None
 
     def handle_tx_result_success(self):
@@ -214,7 +219,7 @@ class RbcEvent(ChainEventABC):
         """ logic to be executed when the transaction receipt does not arrive within the specified time. """
         if not self.check_my_event():
             return None
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
@@ -330,8 +335,9 @@ class RbcEvent(ChainEventABC):
             raise Exception("Relayer only as a manger")
 
         # Announcing the start of the event collection
-        formatted_log(
-            bootstrap_logger,
+        bootstrap_logger = Logger("Bootstrap", logging.INFO)
+
+        bootstrap_logger.formatted_log(
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(RbcEvent.EVENT_NAME),
             related_chain=SwitchableChain.NONE,
@@ -370,8 +376,7 @@ class RbcEvent(ChainEventABC):
 
         # logging and return not finalized event objects
         for event_obj in not_handled_events_objs:
-            formatted_log(
-                bootstrap_logger,
+            bootstrap_logger.formatted_log(
                 relayer_addr=manager.active_account.address,
                 log_id="Unchecked{}Log".format(RbcEvent.EVENT_NAME),
                 related_chain=SwitchableChain.NONE,
@@ -465,8 +470,7 @@ class ChainRequestedEvent(RbcEvent):
             return None
 
         if voting_num >= quorum:
-            formatted_log(
-                proto_logger,
+            self.proto_logger.formatted_log(
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
                 related_chain=SwitchableChain.BIFROST,
@@ -474,8 +478,7 @@ class ChainRequestedEvent(RbcEvent):
             )
             ret = None
         else:
-            formatted_log(
-                proto_logger,
+            self.proto_logger.formatted_log(
                 relayer_addr=self.manager.active_account.address,
                 log_id=self.summary(),
                 related_chain=SwitchableChain.BIFROST,
@@ -586,8 +589,7 @@ class _AggregatedRelayEvent(RbcEvent):
         result = self.relayer.world_call(chain_index, contract_name, method_name, params_tuple)
         status, expected_status = self.check_already_done(result)
         if status == expected_status:
-            formatted_log(
-                proto_logger,
+            self.proto_logger.formatted_log(
                 relayer_addr=self.relayer.active_account.address,
                 log_id="SlowRelay:{}".format(self.status.name),
                 related_chain=chain_index,
@@ -631,8 +633,7 @@ class _AggregatedRelayEvent(RbcEvent):
 
         if status == expected_status:
             return None
-        formatted_log(
-            proto_logger,
+        self.proto_logger.formatted_log(
             relayer_addr=self.manager.active_account.address,
             log_id=self.summary(),
             related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
@@ -654,8 +655,7 @@ class _AggregatedRelayEvent(RbcEvent):
         submit_data = PollSubmit(self).add_tuple_sigs(sigs)
 
         msg = "Primary" if is_primary_relay else "Secondary"
-        formatted_log(
-            proto_logger,
+        self.proto_logger.formatted_log(
             relayer_addr=self.manager.active_account.address,
             log_id=self.summary(),
             related_chain=target_chain,
@@ -674,7 +674,7 @@ class ChainAcceptedEvent(_AggregatedRelayEvent):
         if not self.check_my_event():
             return None
         if self.is_inbound():
-            log_invalid_flow(proto_logger, self)
+            log_invalid_flow(self.proto_logger, self)
             return None
         # outbound case
         clone_event = self.clone_with_other_status(ChainEventStatus.REJECTED, self.time_lock)
@@ -729,6 +729,8 @@ class RoundUpEvent(ChainEventABC):
         self.selected_chain = None
         self.aggregated = True
 
+        self.proto_logger = Logger("Protocol", logging.DEBUG)
+
     @classmethod
     def init(cls, detected_event: DetectedEvent, time_lock: int, relayer: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
@@ -738,8 +740,8 @@ class RoundUpEvent(ChainEventABC):
             return cls(detected_event, 0, relayer)
         else:
             # does not export log in bootstrap process
-            formatted_log(
-                proto_logger,
+            proto_logger = Logger("Protocol", logging.DEBUG)
+            proto_logger.formatted_log(
                 relayer_addr=relayer.active_account.address,
                 log_id="SlowRelay:{}".format(cls.EVENT_NAME),
                 related_chain=SwitchableChain.NONE,
@@ -784,8 +786,7 @@ class RoundUpEvent(ChainEventABC):
             new_index = sorted_validator_list.index(this_addr)
             self.relayer.set_value_by_key(new_rnd, new_index)
             prev_index = self.relayer.get_value_by_key(new_rnd - 1)
-            formatted_log(
-                proto_logger,
+            self.proto_logger.formatted_log(
                 relayer_addr=self.relayer.active_account.address,
                 log_id="UpdateRelayerIndex",
                 related_chain=SwitchableChain.NONE,
@@ -827,8 +828,7 @@ class RoundUpEvent(ChainEventABC):
         target_round = fetch_latest_round(self.relayer, self.selected_chain)
 
         if target_round >= self.round:
-            formatted_log(
-                proto_logger,
+            self.proto_logger.formatted_log(
                 relayer_addr=self.relayer.active_account.address,
                 log_id="SlowRelay:{}:round({})".format(self.__class__.EVENT_NAME, target_round),
                 related_chain=self.selected_chain,
@@ -864,11 +864,11 @@ class RoundUpEvent(ChainEventABC):
         return None
 
     def handle_tx_result_fail(self) -> None:
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return None
 
     def handle_tx_result_no_receipt(self) -> None:
-        log_invalid_flow(proto_logger, self)
+        log_invalid_flow(self.proto_logger, self)
         return None
 
     def summary(self) -> str:
@@ -879,8 +879,10 @@ class RoundUpEvent(ChainEventABC):
         # Announcing the start of the event collection
         event_name = RoundUpEvent.EVENT_NAME
         target_chain = SwitchableChain.BIFROST
-        formatted_log(
-            bootstrap_logger,
+
+        bootstrap_logger = Logger("Bootstrap", logging.INFO)
+
+        bootstrap_logger.formatted_log(
             relayer_addr=manager.active_account.address,
             log_id="Collect{}Logs".format(event_name),
             related_chain=SwitchableChain.NONE,
@@ -900,8 +902,7 @@ class RoundUpEvent(ChainEventABC):
                 target_event_objects.append((event_obj.round, event_obj))
 
         latest_event_object = sorted(target_event_objects)[-1][1] if target_event_objects else None
-        formatted_log(
-            bootstrap_logger,
+        bootstrap_logger.formatted_log(
             relayer_addr=manager.active_account.address,
             log_id="Unchecked{}Log".format(event_name),
             related_chain=SwitchableChain.BIFROST,

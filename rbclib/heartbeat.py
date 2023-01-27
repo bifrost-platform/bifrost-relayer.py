@@ -8,15 +8,12 @@ from rbclib.metric import PrometheusExporterRelayer
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
-from chainpy.logger import formatted_log, Logger
+from chainpy.logger import Logger
 
 from .switchable_enum import SwitchableChain
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
-
-
-heart_beat_logger = Logger("HeartBeat", logging.INFO)
 
 
 class RelayerHeartBeat(PeriodicEventABC):
@@ -29,6 +26,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         if period_sec == 0:
             period_sec = self.__class__.COLLECTION_PERIOD_SEC
         super().__init__(relayer, period_sec, time_lock)
+        self.heart_beat_logger = Logger("HeartBeat", logging.INFO)
 
     @property
     def relayer(self) -> "Relayer":
@@ -58,8 +56,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         PrometheusExporterRelayer.exporting_heartbeat_metric()
-        formatted_log(
-            heart_beat_logger,
+        self.heart_beat_logger.formatted_log(
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
             related_chain=SwitchableChain.BIFROST,
@@ -68,8 +65,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        formatted_log(
-            heart_beat_logger,
+        self.heart_beat_logger.formatted_log(
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
             related_chain=SwitchableChain.BIFROST,
@@ -78,8 +74,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        formatted_log(
-            heart_beat_logger,
+        self.heart_beat_logger.formatted_log(
             relayer_addr=self.relayer.active_account.address,
             log_id="HeartBeat",
             related_chain=SwitchableChain.BIFROST,
