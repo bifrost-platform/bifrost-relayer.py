@@ -105,6 +105,7 @@ class Relayer(EventBridge):
         try:
             my_addr = self.active_account.address.hex().lower()
             relayer_index = sorted_relayer_list.index(my_addr)
+            print("RegisterMyIndex: round({}), index({})".format(rnd, relayer_index))
             self.set_value_by_key(rnd, relayer_index)
         except ValueError:
             pass
@@ -129,7 +130,7 @@ class Relayer(EventBridge):
         # Wait until the bifrost node completes the sync.
         self.wait_until_node_sync()
 
-        # check whether this relayer belongs to current validator list
+        # store whether this relayer is a selected validator in each round.
         self.current_rnd = fetch_latest_round(self, SwitchableChain.BIFROST)
         round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.current_rnd)
         for i in range(round_history_limit):
@@ -138,8 +139,6 @@ class Relayer(EventBridge):
         # determine timestamp which bootstrap starts from
         current_height, _, round_length = fetch_round_info(self)
         bootstrap_start_height = max(current_height - round_length * BOOTSTRAP_OFFSET_ROUNDS, 1)
-        bootstrap_start_time = self.get_chain_manager_of(SwitchableChain.BIFROST).\
-            eth_get_block_by_height(bootstrap_start_height).timestamp
 
         # determine heights of each chain which bootstrap starts from
         for chain_index in self.supported_chain_list:
@@ -147,6 +146,8 @@ class Relayer(EventBridge):
             if chain_index == SwitchableChain.BIFROST:
                 chain_manager.latest_height = bootstrap_start_height
             else:
+                bootstrap_start_time = self.get_chain_manager_of(SwitchableChain.BIFROST). \
+                    eth_get_block_by_height(bootstrap_start_height).timestamp
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
         logger = Logger("Bootstrap", logging.INFO)
