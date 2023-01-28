@@ -180,6 +180,12 @@ def fetch_submitted_oracle_feed(
     return EthHashBytes(result)
 
 
+def fetch_oracle_history(manager: EventBridge, oracle_id: Oracle, _round: int) -> EthHashBytes:
+    params = [oracle_id.formatted_bytes(), _round]
+    result = manager.world_call(SwitchableChain.BIFROST, "oracle", "oracle_history", params)[0]
+    return EthHashBytes(result)
+
+
 # TODO why only ConsensusType?
 def is_submitted_oracle_feed(
         manager: EventBridge,

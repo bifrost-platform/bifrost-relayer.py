@@ -181,9 +181,19 @@ class RbcEvent(ChainEventABC):
             print("  - MyEvent({})".format(self.summary()))
             return True
         else:
-            print("NotMyEvent({}) relayer index({})".format(self.summary(), relayer_index))
-            return False
-        # return relayer_index is not None
+            sorted_validator_list = fetch_sorted_previous_relayer_list(self.manager, SwitchableChain.BIFROST, self.rnd)
+            relayer_lower_list = [relayer_addr.lower() for relayer_addr in sorted_validator_list]
+            sorted_relayer_list = sorted(relayer_lower_list)
+
+            try:
+                my_addr = self.manager.active_account.address.hex().lower()
+                relayer_index = sorted_relayer_list.index(my_addr)
+                print("RegisterMyIndex: round({}), index({})".format(self.rnd, relayer_index))
+                self.manager.set_value_by_key(self.rnd, relayer_index)
+                return True
+            except ValueError:
+                print("NotMyEvent({}) relayer index({})".format(self.summary(), relayer_index))
+                return False
 
     def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ builds and returns call transaction parameters related to this event. """
