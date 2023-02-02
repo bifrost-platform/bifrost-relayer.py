@@ -283,20 +283,20 @@ class VSPFeed(PeriodicEventABC):
         # update relayer index cache
         sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
         try:
-            relayer_index = sorted_validator_list.index(self.relayer.active_account.address.lower())
+            relayer_index = sorted_validator_list.index(self.relayer.active_account.address.hex().lower())
             self.relayer.set_value_by_key(round_from_bn, relayer_index)
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                msg="round({}), index({})".format(round_from_bn, relayer_index)
+                msg="round({}):index({})".format(round_from_bn, relayer_index)
             )
         except ValueError:
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                msg="NotValidator: round({})".format(round_from_bn)
+                msg="NotValidator:round({})".format(round_from_bn)
             )
 
         # vote for new validator list by only previous validator

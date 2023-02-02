@@ -89,7 +89,7 @@ def fetch_relayer_index(
 ) -> Optional[int]:
     """ if rnd is None"""
     sorted_relayer_list = fetch_sorted_relayer_list_lower(manager, chain, rnd, is_initial=True)
-    relayer_address = manager.active_account.address.lower() \
+    relayer_address = manager.active_account.address.hex().lower() \
         if relayer_address is None else relayer_address.hex().lower()
 
     try:
