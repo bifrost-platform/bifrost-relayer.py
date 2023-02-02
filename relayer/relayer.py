@@ -130,7 +130,7 @@ class Relayer(EventBridge):
                 "UpdateAuth",
                 address=self.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                msg="round({}), index({})".format(self.round_cache - i, relayer_index)
+                msg="round({}):index({})".format(self.round_cache - i, relayer_index)
             )
             self.set_value_by_key(self.round_cache - i, relayer_index)
 

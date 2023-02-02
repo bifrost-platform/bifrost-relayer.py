@@ -177,7 +177,7 @@ class RbcEvent(ChainEventABC):
 
         cached_index = self.relayer.get_value_by_key(self.rnd)
         global_logger.formatted_log(
-            "CheckMyEvent",
+            "CheckAuth",
             address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
             msg="RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
@@ -196,12 +196,12 @@ class RbcEvent(ChainEventABC):
                     "UpdateAuth",
                     address=self.relayer.active_account.address,
                     related_chain=SwitchableChain.BIFROST,
-                    msg="round({}), index({})".format(self.rnd, relayer_index)
+                    msg="round({}):index({})".format(self.rnd, relayer_index)
                 )
                 return True
             except ValueError:
                 global_logger.formatted_log(
-                    "CheckMyEvent", address=self.relayer.active_account.address, related_chain=SwitchableChain.BIFROST,
+                    "CheckAuth", address=self.relayer.active_account.address, related_chain=SwitchableChain.BIFROST,
                     msg="{}, MyAddr: {}, fetchedList: {}".format(self.summary(), my_addr, sorted_relayer_list)
                 )
                 return False
