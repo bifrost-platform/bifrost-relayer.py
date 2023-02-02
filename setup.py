@@ -6,6 +6,6 @@ setup(
     version=__version__,
     packages=["rbclib"],
     install_requires=[
-        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git@staged"
+        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git@BN-977-improve-relayers-log-and-exceptions"
     ]
 )
