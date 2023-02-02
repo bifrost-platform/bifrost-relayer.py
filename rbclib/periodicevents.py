@@ -81,7 +81,6 @@ class PriceUpOracle(PeriodicEventABC):
             relayer_addr=self.relayer.active_account.address,
             log_id=self.__class__.__name__,
             related_chain=SwitchableChain.BIFROST,
-            # log_data=str("/".join([price.float_str for price in prices]))
             log_data="price-feeding"
         )
         return SwitchableChain.BIFROST, "socket", "oracle_aggregate_feeding", [
@@ -260,6 +259,7 @@ class VSPFeed(PeriodicEventABC):
     def build_transaction_params(self) -> SendParamTuple:
         round_from_bn = fetch_latest_round(self.relayer, SwitchableChain.BIFROST)
 
+        # for prometheus exporter
         for chain_index in self.relayer.supported_chain_list:
             rnd = fetch_latest_round(self.relayer, chain_index)
             PrometheusExporterRelayer.exporting_external_chain_rnd(chain_index, rnd)
@@ -274,6 +274,27 @@ class VSPFeed(PeriodicEventABC):
         if self.__current_round >= round_from_bn:
             return NoneParams
 
+        # update relayer index cache
+        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, SwitchableChain.BIFROST)
+        relayer_index = None
+        try:
+            relayer_index = sorted_validator_list.index(self.relayer.active_account.address.lower())
+            self.relayer.set_value_by_key(round_from_bn, relayer_index)
+            self.validator_logger.formatted_log(
+                relayer_addr=self.relayer.active_account.address,
+                log_id="UpdateRelayerIndex",
+                related_chain=SwitchableChain.NONE,
+                log_data="relayerIndex({})".format(relayer_index)
+            )
+        except ValueError as e:
+            self.validator_logger.formatted_log(
+                relayer_addr=self.relayer.active_account.address,
+                log_id="UpdateRelayerIndex",
+                related_chain=SwitchableChain.NONE,
+                log_data="NotValidator: round({})".format(round_from_bn)
+            )
+
+        # vote for new validator list by only previous validaotr
         if not is_selected_previous_relayer(
                 self.relayer, SwitchableChain.BIFROST, round_from_bn - 1, self.relayer.active_account.address
         ):

@@ -181,13 +181,19 @@ class RbcEvent(ChainEventABC):
             print("  - MyEvent({})".format(self.summary()))
             return True
         else:
-            sorted_validator_list = fetch_sorted_previous_relayer_list(self.manager, SwitchableChain.BIFROST, self.rnd)
-            relayer_lower_list = [relayer_addr.lower() for relayer_addr in sorted_validator_list]
-            sorted_relayer_list = sorted(relayer_lower_list)
+            print("caller: {}".format(sys._getframe(1).f_code.co_name))
+            print("enter \"check_my_event\" with \"None\" relayer index")
+
+            sorted_relayer_list = fetch_sorted_previous_relayer_list(self.manager, SwitchableChain.BIFROST, self.rnd)
+            print("in \"check_my_event\", sorted_validator_list: {}".format(sorted_relayer_list))
 
             try:
                 my_addr = self.manager.active_account.address.hex().lower()
+                print("in \"check_my_event\", my_addr: {}".format(my_addr))
+
                 relayer_index = sorted_relayer_list.index(my_addr)
+                print("in \"check_my_event\", relayer_index: {}".format(relayer_index))
+
                 print("RegisterMyIndex: round({}), index({})".format(self.rnd, relayer_index))
                 self.manager.set_value_by_key(self.rnd, relayer_index)
                 return True

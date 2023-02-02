@@ -16,7 +16,7 @@ from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFS
 from rbclib.globalconfig import RelayerRole, relayer_config_global
 from rbclib.switchable_enum import SwitchableChain
 
-from .__init__ import __version__
+from rbclib.__init__ import __version__
 
 
 class Relayer(EventBridge):
