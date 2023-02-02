@@ -2,22 +2,22 @@
     "entity": {
         "secret_hex": "<RELAYER_ACCOUNT_PRIVATE_KEY>"
     },
-
     "oracle_config": {
-      "bitcoin_block_hash": {
-          "url": "<BITCOIN_MAINNET_RPC_ENDPOINT>"
+        "bitcoin_block_hash": {
+            "url": "<BITCOIN_MAINNET_RPC_ENDPOINT>"
         },
-      "asset_prices": {
-        "urls": {
-          "Coingecko": "https://api.coingecko.com/api/v3/",
-          "Upbit": "https://api.upbit.com/v1/",
-          "Chainlink": "<ETHEREUM_MAINNET_RPC_ENDPOINT>"
+        "asset_prices": {
+            "urls": {
+                "Coingecko": "https://api.coingecko.com/api/v3/",
+                "Upbit": "https://api.upbit.com/v1/",
+                "Chainlink": "<ETHEREUM_MAINNET_RPC_ENDPOINT>",
+                "Binance": "https://api.binance.com/api/v3/",
+                "GateIo": "https://api.gateio.ws/api/v4/"
+            }
         }
-      }
     },
-
-   "BFC_TEST": {
-        "url_with_access_key": "<BIFROST_NETWORK_RPC_ENDPOINT>"
+    "BFC_TEST": {
+        "url_with_access_key": "http://127.0.0.1:9933"
     },
     "ETH_TEST": {
         "url_with_access_key": "<ETHEREUM_GOERLI_RPC_ENDPOINT>"
