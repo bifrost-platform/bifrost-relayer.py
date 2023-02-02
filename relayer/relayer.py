@@ -1,14 +1,14 @@
 import copy
 import json
-import time
 import logging
+import time
 
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eth.managers.configsanitycheck import ConfigChecker
 from chainpy.eth.managers.configsanitycheck import is_meaningful
-from chainpy.logger import Logger
+from chainpy.logger import global_logger
 
 from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \
     fetch_latest_round, find_height_by_timestamp
@@ -73,7 +73,7 @@ class Relayer(EventBridge):
         if role == RelayerRole.SLOW_RELAYER and slow_relayer_delay_sec is None:
             try:
                 slow_relayer_delay_sec = merged_dict["entity"]["slow_relayer_delay_sec"]
-            except ValueError as e:
+            except ValueError:
                 raise Exception("Slow relayer, but no delay in config file")
 
         # check whether oracle relayer or not
@@ -105,7 +105,11 @@ class Relayer(EventBridge):
         try:
             my_addr = self.active_account.address.hex().lower()
             relayer_index = sorted_relayer_list.index(my_addr)
-            print("RegisterMyIndex: round({}), index({})".format(rnd, relayer_index))
+            global_logger.formatted_log(
+                "Relayer",
+                address=self.active_account.address,
+                msg="UpdateAuth:round({}), index({})".format(rnd, relayer_index)
+            )
             self.set_value_by_key(rnd, relayer_index)
         except ValueError:
             pass
@@ -117,6 +121,11 @@ class Relayer(EventBridge):
             try:
                 result = chain_manager.send_request("system_health", [])["isSyncing"]
             except Exception as e:
+                global_logger.formatted_log(
+                    "DEV",
+                    address=self.active_account.address,
+                    msg="Not handled Exception: {}".format(str(e))
+                )
                 time.sleep(10)
                 continue
 
@@ -150,12 +159,11 @@ class Relayer(EventBridge):
                     eth_get_block_by_height(bootstrap_start_height).timestamp
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
-        logger = Logger("Bootstrap", logging.INFO)
-        logger.info("BIFROST's {}: version({}), address({})".format(
+        global_logger.log(logging.INFO, "BIFROST's {}: version({}), address({})".format(
             relayer_config_global.relayer_role.name,
             __version__,
-            self.active_account.address.hex())
-        )
+            self.active_account.address.hex()
+            ))
 
         # run relayer
         self.run_eventbridge()

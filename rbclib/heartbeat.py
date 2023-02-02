@@ -1,5 +1,3 @@
-import logging
-
 from typing import TYPE_CHECKING, Optional
 
 from .bifrostutils import is_pulsed_hear_beat
@@ -8,7 +6,7 @@ from rbclib.metric import PrometheusExporterRelayer
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
-from chainpy.logger import Logger
+from chainpy.logger import global_logger
 
 from .globalconfig import relayer_config_global
 from .switchable_enum import SwitchableChain
@@ -23,7 +21,6 @@ class RelayerHeartBeat(PeriodicEventABC):
                  period_sec: int = relayer_config_global.heart_beat_period_sec,
                  time_lock: int = timestamp_msec()):
         super().__init__(relayer, period_sec, time_lock)
-        self.heart_beat_logger = Logger("HeartBeat", logging.INFO)
 
     @property
     def relayer(self) -> "Relayer":
@@ -53,28 +50,28 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         PrometheusExporterRelayer.exporting_heartbeat_metric()
-        self.heart_beat_logger.formatted_log(
-            relayer_addr=self.relayer.active_account.address,
-            log_id="HeartBeat",
+        global_logger.formatted_log(
+            "HeartBeat",
+            address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            log_data="HeartBeat({})".format(True)
+            msg="HeartBeat({})".format(True)
         )
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        self.heart_beat_logger.formatted_log(
-            relayer_addr=self.relayer.active_account.address,
-            log_id="HeartBeat",
+        global_logger.formatted_log(
+            "HeartBeat",
+            address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            log_data="HeartBeat({})".format(False)
+            msg="HeartBeat({})".format(False)
         )
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        self.heart_beat_logger.formatted_log(
-            relayer_addr=self.relayer.active_account.address,
-            log_id="HeartBeat",
+        global_logger.formatted_log(
+            "HeartBeat",
+            address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            log_data="HeartBeat({})".format(None)
+            msg="HeartBeat({})".format(None)
         )
         return None

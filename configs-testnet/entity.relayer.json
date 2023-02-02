@@ -125,7 +125,7 @@
         "bootstrap_latest_height": 30814949,
         "block_aging_period": 200,
         "transaction_block_delay": 20,
-        "receipt_max_try": 30,
+        "receipt_max_try": 100,
         "max_log_num": 1000,
         "rpc_server_downtime_allow_sec": 180,
         "fee_config": {
@@ -149,7 +149,7 @@
     "entity": {
         "role": "slow-relayer",
         "account_name": "relayer-launched-on-console",
-        "slow_relayer_delay_sec": 1000,
+        "slow_relayer_delay_sec": 2000,
         "supporting_chains": [
             "BFC_TEST",
             "ETH_GOERLI",
