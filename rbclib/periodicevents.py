@@ -16,10 +16,10 @@ from rbclib.metric import PrometheusExporterRelayer
 from .bifrostutils import (
     is_submitted_oracle_feed,
     fetch_oracle_latest_round,
-    fetch_lowest_validator_round,
-    fetch_sorted_relayer_list,
+    fetch_bottom_round,
+    fetch_sorted_relayer_list_lower,
     fetch_latest_round,
-    is_selected_previous_relayer,
+    is_selected_relayer,
     is_selected_relayer
 )
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
@@ -28,7 +28,6 @@ from .relayersubmit import SocketSignature
 from .switchable_enum import SwitchableChain
 
 from .utils import log_invalid_flow
-
 
 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"
 ROUND_UP_FUNCTION_NAME = "round_control_poll"
@@ -68,7 +67,9 @@ class PriceUpOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = is_selected_relayer(self.relayer, SwitchableChain.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(
+            self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address
+        )
         if not auth:
             return NoneParams
 
@@ -144,7 +145,9 @@ class BtcHashUpOracle(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
-        auth = is_selected_relayer(self.relayer, SwitchableChain.BIFROST, self.relayer.active_account.address)
+        auth = is_selected_relayer(
+            self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address
+        )
         if not auth:
             return NoneParams
 
@@ -228,7 +231,7 @@ class VSPFeed(PeriodicEventABC):
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
             supported_chain_list.remove(SwitchableChain.BIFROST)
-        self.__current_round = fetch_lowest_validator_round(self.relayer) if _round is None else _round
+        self.__current_round = fetch_bottom_round(self.relayer) if _round is None else _round
 
         PrometheusExporterRelayer.exporting_running_time_metric()
 
@@ -278,30 +281,33 @@ class VSPFeed(PeriodicEventABC):
             return NoneParams
 
         # update relayer index cache
-        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, SwitchableChain.BIFROST)
+        sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
         try:
             relayer_index = sorted_validator_list.index(self.relayer.active_account.address.lower())
             self.relayer.set_value_by_key(round_from_bn, relayer_index)
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
-                msg="relayerIndex({})".format(relayer_index)
+                related_chain=SwitchableChain.BIFROST,
+                msg="round({}), index({})".format(round_from_bn, relayer_index)
             )
         except ValueError:
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
+                related_chain=SwitchableChain.BIFROST,
                 msg="NotValidator: round({})".format(round_from_bn)
             )
 
         # vote for new validator list by only previous validator
-        if not is_selected_previous_relayer(
-                self.relayer, SwitchableChain.BIFROST, round_from_bn - 1, self.relayer.active_account.address
+        if not is_selected_relayer(
+                self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address,
+                rnd=(round_from_bn - 1)
         ):
             self.current_round = round_from_bn
             return NoneParams
 
-        sorted_validator_list = fetch_sorted_relayer_list(self.relayer, SwitchableChain.BIFROST)
+        sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
 
         types_str_list = ["uint256", "address[]"]
         data_to_sig = eth_abi.encode_abi(types_str_list, [round_from_bn, sorted_validator_list])

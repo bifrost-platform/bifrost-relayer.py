@@ -86,9 +86,9 @@ def main(config: dict):
 
     log_file_name = config.get("log_file_name")
     if is_meaningful(log_file_name):
+        # enable logger with file handler
         logger_config_global.reset(log_file_name=log_file_name)
-        # TODO
-        global_logger.init(log_file_name=log_file_name)
+    global_logger.init(log_file_name=log_file_name)
 
     # secret_key_obj is None if config["private_key"] is None
     secret_key_obj = EthHexBytes(config.get("private_key"))
@@ -129,8 +129,8 @@ if __name__ == "__main__":
             'prometheus': False,
             'slow_relayer': False,
             'fast_relayer': True,
-            'testnet': True,
-            "log_file_name": "testnet.log"
+            'testnet': True
+            # "log_file_name": "testnet.log"
         }
         if _config["testnet"]:
             # When testnet relay is launched via console, enums are automatically switched.

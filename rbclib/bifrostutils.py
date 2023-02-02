@@ -1,3 +1,5 @@
+from typing import Optional
+
 from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
@@ -53,28 +55,17 @@ def binary_search(
         )
 
 
-def is_selected_relayer(
-        manager: EventBridge,
-        target_chain: Chain,
-        addr: EthAddress,
-        is_initial: bool = True) -> bool:
-    return manager.world_call(target_chain, "relayer_authority", "is_selected_relayer", [addr.hex(), is_initial])[0]
-
-
-# TODO how about integrate is_selected_relayer and is_selected_previous_relayer?
-def is_selected_previous_relayer(
-        manager: EventBridge,
-        target_chain: Chain,
-        round_num: int,
-        addr: EthAddress,
-        is_initial: bool = True) -> bool:
-    return manager.world_call(
-        target_chain, "relayer_authority",
-        "is_previous_selected_relayer", [round_num, addr.hex(), is_initial])[0]
-
-
 def fetch_latest_round(manager: EventBridge, target_chain_index: Chain) -> int:
     return manager.world_call(target_chain_index, "relayer_authority", "latest_round", [])[0]  # unzip
+
+
+def fetch_bottom_round(manager: EventBridge) -> int:
+    bottom_round = 2 ** 256 - 1
+    for chain_index in manager.supported_chain_list:
+        round_num = fetch_latest_round(manager, chain_index)
+        if bottom_round > round_num:
+            bottom_round = round_num
+    return bottom_round
 
 
 def fetch_round_info(manager: EventBridge) -> (int, int, int):
@@ -84,50 +75,49 @@ def fetch_round_info(manager: EventBridge) -> (int, int, int):
     return current_height, current_rnd_idx, round_length
 
 
-def fetch_sorted_relayer_list(manager: EventBridge, target_chain_index: Chain, is_initial: bool = True) -> list:
-    validator_tuple = manager.world_call(target_chain_index, "relayer_authority", "selected_relayers", [is_initial])[0]
+def is_selected_relayer(
+        manager: EventBridge, chain: Chain, rnd: int = None,
+        relayer_address: EthAddress = None, is_initial: bool = True) -> bool:
+    method = "is_selected_relayer" if rnd is None else "is_previous_selected_relayer"
+    params = [relayer_address.hex(), is_initial] if rnd is None else [rnd, relayer_address.hex(), is_initial]
+
+    return manager.world_call(chain, "relayer_authority", method, params)[0]
+
+
+def fetch_relayer_index(
+        manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None
+) -> Optional[int]:
+    """ if rnd is None"""
+    sorted_relayer_list = fetch_sorted_relayer_list_lower(manager, chain, rnd, is_initial=True)
+    relayer_address = manager.active_account.address.lower() \
+        if relayer_address is None else relayer_address.hex().lower()
+
+    try:
+        return sorted_relayer_list.index(relayer_address)
+    except ValueError:
+        return None
+
+
+def fetch_sorted_relayer_list_lower(
+        manager: EventBridge, chain: Chain, rnd: int = None, is_initial: bool = True) -> list:
+    method = "selected_relayers" if rnd is None else "previous_selected_relayers"
+    params = [is_initial] if rnd is None else [rnd, is_initial]
+
+    validator_tuple = manager.world_call(chain, "relayer_authority", method, params)[0]
     validator_list = list(validator_tuple)
     validator_list_lower = [addr.lower() for addr in validator_list]
     return sorted(validator_list_lower)
-
-
-def fetch_sorted_previous_relayer_list(
-        manager: EventBridge, target_chain_index: Chain,
-        rnd: int, is_initial: bool = True) -> list:
-    validator_tuple = manager.world_call(
-        target_chain_index, "relayer_authority", "previous_selected_relayers", [rnd, is_initial]
-    )[0]  # unzip
-    validator_list = list(validator_tuple)
-    validator_list_lower = [addr.lower() for addr in validator_list]
-    return sorted(validator_list_lower)
-
-
-def fetch_lowest_validator_round(manager: EventBridge) -> int:
-    bottom_round = 2 ** 256 - 1
-    for chain_index in manager.supported_chain_list:
-        round_num = fetch_latest_round(manager, chain_index)
-        if bottom_round > round_num:
-            bottom_round = round_num
-    return bottom_round
 
 
 def fetch_relayer_num(manager: EventBridge, target_chain_index: Chain, is_initial: bool = True) -> int:
-    validator_tuple = fetch_sorted_relayer_list(manager, target_chain_index, is_initial)
+    validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain_index, is_initial)
     return len(validator_tuple)
 
 
 def fetch_quorum(manager: EventBridge, target_chain_index: Chain, rnd: int = None, is_initial: bool = True) -> int:
-    if rnd is None:
-        majority = manager.world_call(target_chain_index, "relayer_authority", "majority", [is_initial])[0]
-    else:
-        current_rnd = fetch_latest_round(manager, target_chain_index)
-        if current_rnd - rnd > 6:
-            majority = 0
-        else:
-            majority = manager.world_call(
-                target_chain_index, "relayer_authority",
-                "previous_majority", [rnd, is_initial])[0]
-    return majority
+    method = "majority" if rnd is None else "previous_majority"
+    params = [is_initial] if rnd is None else [rnd, is_initial]
+    return manager.world_call(target_chain_index, "relayer_authority", method, params)[0]
 
 
 def fetch_socket_rbc_sigs(manager: EventBridge, request_id: tuple, chain_event_status: ChainEventStatus):
@@ -166,32 +156,26 @@ def is_pulsed_hear_beat(manager: EventBridge) -> bool:
     )[0]
 
 
-# TODO why only ConsensusType?
 def fetch_submitted_oracle_feed(
-        manager: EventBridge,
-        oracle_id: Oracle,
-        _round: int,
-        validator_addr: EthAddress = None) -> EthHashBytes:
-    if validator_addr is None:
-        validator_addr = manager.active_account.address
-    oracle_id_bytes = oracle_id.formatted_bytes()
-    params = [oracle_id_bytes, validator_addr.hex(), _round]
-    result = manager.world_call(SwitchableChain.BIFROST, "oracle", "get_consensus_feed", params)[0]
+        manager: EventBridge, oracle: Oracle, rnd: int,
+        relayer_address: EthAddress = None) -> EthHashBytes:
+    relayer_address = manager.active_account.address if relayer_address is None else relayer_address
+
+    oracle_id_bytes = oracle.formatted_bytes()
+    method = "get_consensus_feed" if oracle.oracle_type.EXACT else "get_aggregated_feed"
+    params = [oracle_id_bytes, relayer_address.hex(), rnd]
+    result = manager.world_call(SwitchableChain.BIFROST, "oracle", method, params)[0]
     return EthHashBytes(result)
+
+
+def is_submitted_oracle_feed(
+        manager: EventBridge, oracle: Oracle, rnd: int, relayer_addr: EthAddress = None) -> bool:
+    """ Check whether the external data of the round has been transmitted. """
+    result = fetch_submitted_oracle_feed(manager, oracle, rnd, relayer_addr)
+    return result != 0
 
 
 def fetch_oracle_history(manager: EventBridge, oracle_id: Oracle, _round: int) -> EthHashBytes:
     params = [oracle_id.formatted_bytes(), _round]
     result = manager.world_call(SwitchableChain.BIFROST, "oracle", "oracle_history", params)[0]
     return EthHashBytes(result)
-
-
-# TODO why only ConsensusType?
-def is_submitted_oracle_feed(
-        manager: EventBridge,
-        oracle_id: Oracle,
-        _round: int,
-        validator_addr: EthAddress = None) -> bool:
-    """ Check whether the external data of the round has been transmitted. """
-    result = fetch_submitted_oracle_feed(manager, oracle_id, _round, validator_addr)
-    return result != 0
