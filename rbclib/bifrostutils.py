@@ -20,7 +20,7 @@ def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, f
     if front_time >= target_time:
         return front_height
 
-    if chain_manager.chain_index != SwitchableChain.BIFROST:
+    if chain_manager.chain != SwitchableChain.BIFROST:
         target_time -= 30000
     return binary_search(chain_manager, front_height, front_time, current_height, current_time, target_time)
 

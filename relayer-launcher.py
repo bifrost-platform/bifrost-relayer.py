@@ -3,7 +3,7 @@ import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.eth.managers.configsanitycheck import is_meaningful
-from chainpy.logger import logger_setting_global
+from chainpy.logger import logger_config_global, global_logger
 
 from rbclib.aggchainevents import ExternalRbcEvents
 from rbclib.heartbeat import RelayerHeartBeat
@@ -86,7 +86,9 @@ def main(config: dict):
 
     log_file_name = config.get("log_file_name")
     if is_meaningful(log_file_name):
-        logger_setting_global.reset(file_name=log_file_name)
+        logger_config_global.reset(log_file_name=log_file_name)
+        # TODO
+        global_logger.init(log_file_name=log_file_name)
 
     # secret_key_obj is None if config["private_key"] is None
     secret_key_obj = EthHexBytes(config.get("private_key"))
@@ -125,8 +127,8 @@ if __name__ == "__main__":
             'private_config_path': None,
             'no_heartbeat': False,
             'prometheus': False,
-            'slow_relayer': True,
-            'fast_relayer': False,
+            'slow_relayer': False,
+            'fast_relayer': True,
             'testnet': True,
             "log_file_name": "testnet.log"
         }
@@ -138,5 +140,5 @@ if __name__ == "__main__":
         args = parser.parse_args()
         _config = vars(args)
 
-    # print(config)
+    # print(_config)
     main(_config)

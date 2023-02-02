@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 import eth_abi
 
@@ -9,13 +8,20 @@ from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.btc.managers.simplerpccli import SimpleBtcClient
-from chainpy.logger import Logger
+from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
 
-from .bifrostutils import is_submitted_oracle_feed, fetch_oracle_latest_round, fetch_lowest_validator_round, \
-    fetch_sorted_relayer_list, fetch_latest_round, is_selected_previous_relayer, is_selected_relayer
+from .bifrostutils import (
+    is_submitted_oracle_feed,
+    fetch_oracle_latest_round,
+    fetch_lowest_validator_round,
+    fetch_sorted_relayer_list,
+    fetch_latest_round,
+    is_selected_previous_relayer,
+    is_selected_relayer
+)
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
@@ -45,7 +51,6 @@ class PriceUpOracle(PeriodicEventABC):
             self.__cli = PriceOracleAgg(relayer_config_global.price_source_url_dict)
 
         PrometheusExporterRelayer.exporting_running_time_metric()
-        self.price_logger = Logger("PriceUp", logging.INFO)
 
     @property
     def relayer(self) -> EventBridge:
@@ -58,7 +63,7 @@ class PriceUpOracle(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(self.price_logger, self)
+        log_invalid_flow("PriceUp", self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -77,11 +82,11 @@ class PriceUpOracle(PeriodicEventABC):
         prices = [value for value in collected_prices.values()]
         PrometheusExporterRelayer.exporting_asset_prices(symbols_str, prices)
 
-        self.price_logger.formatted_log(
-            relayer_addr=self.relayer.active_account.address,
-            log_id=self.__class__.__name__,
+        global_logger.formatted_log(
+            "PriceUp",
+            address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            log_data="price-feeding"
+            msg="{}:price-feeding".format(self.__class__.__name__)
         )
         return SwitchableChain.BIFROST, "socket", "oracle_aggregate_feeding", [
             oid_list,
@@ -89,18 +94,18 @@ class PriceUpOracle(PeriodicEventABC):
         ]
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.price_logger, self)
+        log_invalid_flow("PriceUp", self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.price_logger, self)
+        log_invalid_flow("PriceUp", self)
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.price_logger, self)
+        log_invalid_flow("PriceUp", self)
         return None
 
 
@@ -116,7 +121,6 @@ class BtcHashUpOracle(PeriodicEventABC):
         super().__init__(manager, period_sec, time_lock)
 
         self.__cli = btc_cli if btc_cli is not None else SimpleBtcClient(relayer_config_global.btc_hash_source_url, 1)
-        self.btc_logger = Logger("BTChash", logging.INFO)
 
         PrometheusExporterRelayer.exporting_running_time_metric()
 
@@ -135,7 +139,7 @@ class BtcHashUpOracle(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(self.btc_logger, self)
+        log_invalid_flow("BtcHash", self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -153,11 +157,11 @@ class BtcHashUpOracle(PeriodicEventABC):
 
         if delta < 0:
             # critical error
-            self.btc_logger.formatted_log(
-                relayer_addr=self.relayer.active_account.address,
-                log_id=self.__class__.__name__,
+            global_logger.formatted_log(
+                "BtcHash",
+                address=self.relayer.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                log_data="oracle-error:OracleHeight({})>BtcHeight({})".format(
+                msg="oracle-error:OracleHeight({})>BtcHeight({})".format(
                     latest_height_from_socket, latest_height_from_chain
                 )
             )
@@ -171,11 +175,11 @@ class BtcHashUpOracle(PeriodicEventABC):
             result = self.__cli.get_block_hash_by_height(feed_target_height)
             block_hash = EthHashBytes(result)
             PrometheusExporterRelayer.exporting_btc_hash(feed_target_height)
-            self.btc_logger.formatted_log(
-                relayer_addr=self.manager.active_account.address,
-                log_id=self.__class__.__name__,
+            global_logger.formatted_log(
+                "BtcHash",
+                address=self.manager.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                log_data="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
+                msg="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
 
             return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, [
@@ -185,27 +189,27 @@ class BtcHashUpOracle(PeriodicEventABC):
             ]
 
         else:
-            self.btc_logger.formatted_log(
-                relayer_addr=self.manager.active_account.address,
-                log_id=self.__class__.__name__,
+            global_logger.formatted_log(
+                "BtcHash",
+                address=self.manager.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                log_data="submitted:height({})".format(feed_target_height)
+                msg="submitted:height({})".format(feed_target_height)
             )
             return NoneParams
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.btc_logger, self)
+        log_invalid_flow("BtcHash", self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
         return None
 
     def handle_tx_result_fail(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.btc_logger, self)
+        log_invalid_flow("BtcHash", self)
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.btc_logger, self)
+        log_invalid_flow("BtcHash", self)
         return None
 
     def gas_limit_multiplier(self) -> float:
@@ -225,7 +229,6 @@ class VSPFeed(PeriodicEventABC):
             supported_chain_list = self.relayer.supported_chain_list
             supported_chain_list.remove(SwitchableChain.BIFROST)
         self.__current_round = fetch_lowest_validator_round(self.relayer) if _round is None else _round
-        self.validator_logger = Logger("AuthDown", logging.INFO)
 
         PrometheusExporterRelayer.exporting_running_time_metric()
 
@@ -253,7 +256,7 @@ class VSPFeed(PeriodicEventABC):
         return "{}".format(self.__class__.__name__)
 
     def build_call_transaction_params(self) -> CallParamTuple:
-        log_invalid_flow(self.validator_logger, self)
+        log_invalid_flow("VSPFeed", self)
         return SwitchableChain.NONE, "", "", []
 
     def build_transaction_params(self) -> SendParamTuple:
@@ -264,11 +267,11 @@ class VSPFeed(PeriodicEventABC):
             rnd = fetch_latest_round(self.relayer, chain_index)
             PrometheusExporterRelayer.exporting_external_chain_rnd(chain_index, rnd)
 
-        self.validator_logger.formatted_log(
-            relayer_addr=self.relayer.active_account.address,
-            log_id="CheckRound",
+        global_logger.formatted_log(
+            "CheckRound",
+            address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            log_data="cached({}):fetched({})".format(self.__current_round, round_from_bn)
+            msg="cached({}):fetched({})".format(self.__current_round, round_from_bn)
         )
 
         if self.__current_round >= round_from_bn:
@@ -276,25 +279,22 @@ class VSPFeed(PeriodicEventABC):
 
         # update relayer index cache
         sorted_validator_list = fetch_sorted_relayer_list(self.relayer, SwitchableChain.BIFROST)
-        relayer_index = None
         try:
             relayer_index = sorted_validator_list.index(self.relayer.active_account.address.lower())
             self.relayer.set_value_by_key(round_from_bn, relayer_index)
-            self.validator_logger.formatted_log(
-                relayer_addr=self.relayer.active_account.address,
-                log_id="UpdateRelayerIndex",
-                related_chain=SwitchableChain.NONE,
-                log_data="relayerIndex({})".format(relayer_index)
+            global_logger.formatted_log(
+                "UpdateAuth",
+                address=self.relayer.active_account.address,
+                msg="relayerIndex({})".format(relayer_index)
             )
-        except ValueError as e:
-            self.validator_logger.formatted_log(
-                relayer_addr=self.relayer.active_account.address,
-                log_id="UpdateRelayerIndex",
-                related_chain=SwitchableChain.NONE,
-                log_data="NotValidator: round({})".format(round_from_bn)
+        except ValueError:
+            global_logger.formatted_log(
+                "UpdateAuth",
+                address=self.relayer.active_account.address,
+                msg="NotValidator: round({})".format(round_from_bn)
             )
 
-        # vote for new validator list by only previous validaotr
+        # vote for new validator list by only previous validator
         if not is_selected_previous_relayer(
                 self.relayer, SwitchableChain.BIFROST, round_from_bn - 1, self.relayer.active_account.address
         ):
@@ -314,7 +314,7 @@ class VSPFeed(PeriodicEventABC):
         return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME, submit_data
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.validator_logger, self)
+        log_invalid_flow("VSPFeed", self)
         return None
 
     def handle_tx_result_success(self) -> Optional[PeriodicEventABC]:
@@ -324,5 +324,5 @@ class VSPFeed(PeriodicEventABC):
         return None
 
     def handle_tx_result_no_receipt(self) -> Optional[PeriodicEventABC]:
-        log_invalid_flow(self.validator_logger, self)
+        log_invalid_flow("VSPFeed", self)
         return None
