@@ -10,8 +10,7 @@ from chainpy.eth.managers.configsanitycheck import ConfigChecker
 from chainpy.eth.managers.configsanitycheck import is_meaningful
 from chainpy.logger import global_logger
 
-from rbclib.bifrostutils import fetch_sorted_previous_relayer_list, fetch_round_info, \
-    fetch_latest_round, find_height_by_timestamp
+from rbclib.bifrostutils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
 from rbclib.globalconfig import RelayerRole, relayer_config_global
 from rbclib.switchable_enum import SwitchableChain
@@ -22,7 +21,7 @@ from rbclib.__init__ import __version__
 class Relayer(EventBridge):
     def __init__(self, multichain_config: dict, relayer_index_cache_max_length: int = 100):
         super().__init__(multichain_config, int, relayer_index_cache_max_length)
-        self.current_rnd = None
+        self.round_cache = None
 
     @classmethod
     def init_from_config_files(
@@ -97,59 +96,48 @@ class Relayer(EventBridge):
 
         return cls(merged_dict)
 
-    def _register_relayer_index(self, rnd: int):
-        sorted_validator_list = fetch_sorted_previous_relayer_list(self, SwitchableChain.BIFROST, rnd)
-        relayer_lower_list = [relayer_addr.lower() for relayer_addr in sorted_validator_list]
-        sorted_relayer_list = sorted(relayer_lower_list)
-
-        try:
-            my_addr = self.active_account.address.hex().lower()
-            relayer_index = sorted_relayer_list.index(my_addr)
-            global_logger.formatted_log(
-                "Relayer",
-                address=self.active_account.address,
-                msg="UpdateAuth:round({}), index({})".format(rnd, relayer_index)
-            )
-            self.set_value_by_key(rnd, relayer_index)
-        except ValueError:
-            pass
-
-    def wait_until_node_sync(self):
+    def _wait_until_node_sync(self):
+        """ Wait node's block synchronization"""
+        chain_manager = self.get_chain_manager_of(SwitchableChain.BIFROST)
         while True:
-            # wait node's block synchronization
-            chain_manager = self.get_chain_manager_of(SwitchableChain.BIFROST)
             try:
                 result = chain_manager.send_request("system_health", [])["isSyncing"]
             except Exception as e:
+                # defensive code
                 global_logger.formatted_log(
-                    "DEV",
+                    "WaitNodeSync",
                     address=self.active_account.address,
-                    msg="Not handled Exception: {}".format(str(e))
+                    msg="error occurs \"system_health\" rpc-method: {}".format(str(e))
                 )
                 time.sleep(10)
                 continue
 
             if not result:
                 break
-            else:
-                print(">>> BIFROST Node is syncing..")
-                time.sleep(60)
 
-    def run_relayer(self):
-        # Wait until the bifrost node completes the sync.
-        self.wait_until_node_sync()
+            global_logger.formatted_log(
+                "WaitNodeSync",
+                address=self.active_account.address,
+                msg="BIFROST Node is syncing..."
+            )
+            time.sleep(60)
 
-        # store whether this relayer is a selected validator in each round.
-        self.current_rnd = fetch_latest_round(self, SwitchableChain.BIFROST)
-        round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.current_rnd)
+    def _register_relayer_auth(self):
+        round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.round_cache)
         for i in range(round_history_limit):
-            self._register_relayer_index(self.current_rnd - i)
+            relayer_index = fetch_relayer_index(self, SwitchableChain.BIFROST, rnd=self.round_cache - i)
+            global_logger.formatted_log(
+                "UpdateAuth",
+                address=self.active_account.address,
+                related_chain=SwitchableChain.BIFROST,
+                msg="round({}), index({})".format(self.round_cache - i, relayer_index)
+            )
+            self.set_value_by_key(self.round_cache - i, relayer_index)
 
-        # determine timestamp which bootstrap starts from
+    def _determine_latest_heights_for_each_chain(self):
         current_height, _, round_length = fetch_round_info(self)
         bootstrap_start_height = max(current_height - round_length * BOOTSTRAP_OFFSET_ROUNDS, 1)
 
-        # determine heights of each chain which bootstrap starts from
         for chain_index in self.supported_chain_list:
             chain_manager = self.get_chain_manager_of(chain_index)
             if chain_index == SwitchableChain.BIFROST:
@@ -159,11 +147,24 @@ class Relayer(EventBridge):
                     eth_get_block_by_height(bootstrap_start_height).timestamp
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
+    def run_relayer(self):
+        # Wait until the bifrost node completes the sync.
+        self._wait_until_node_sync()
+
         global_logger.log(logging.INFO, "BIFROST's {}: version({}), address({})".format(
             relayer_config_global.relayer_role.name,
             __version__,
             self.active_account.address.hex()
-            ))
+        ))
+
+        # store the latest round of the BIFROST network
+        self.round_cache = fetch_latest_round(self, SwitchableChain.BIFROST)
+
+        # store whether this relayer is a selected relayer in each round.
+        self._register_relayer_auth()
+
+        # determine timestamp from which bootstrap starts
+        self._determine_latest_heights_for_each_chain()
 
         # run relayer
         self.run_eventbridge()

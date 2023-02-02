@@ -1,4 +1,3 @@
-import sys
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
 import eth_abi
 
@@ -29,8 +28,7 @@ from .bifrostutils import (
     fetch_socket_rbc_sigs,
     fetch_quorum,
     fetch_relayer_num,
-    fetch_sorted_previous_relayer_list,
-    fetch_latest_round
+    fetch_latest_round, fetch_sorted_relayer_list_lower
 )
 
 if TYPE_CHECKING:
@@ -166,39 +164,46 @@ class RbcEvent(ChainEventABC):
 
     def check_my_event(self) -> bool:
         if relayer_config_global.is_fast_relayer():
-            caller_func_name = sys._getframe(1).f_code.co_name
-            print("  - MyEvent({}) I'm fast relayer; caller: {}".format(self.summary(), caller_func_name))
             return True
 
         if self.src_chain not in self.manager.supported_chain_list:
-            print("  - NotMyEvent({}) not supported src chain: {}".format(self.summary(), self.src_chain.name))
+            global_logger.formatted_log(
+                "WrongRequest",
+                address=self.relayer.active_account.address,
+                related_chain=self.src_chain,
+                msg="RequestOnNotSupportedChain: {}".format(self.summary())
+            )
             return False
 
-        relayer_index = self.relayer.get_value_by_key(self.rnd)
-        if relayer_index is not None:
-            print("  - MyEvent({})".format(self.summary()))
+        cached_index = self.relayer.get_value_by_key(self.rnd)
+        global_logger.formatted_log(
+            "CheckMyEvent",
+            address=self.relayer.active_account.address,
+            related_chain=SwitchableChain.BIFROST,
+            msg="RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
+        )
+
+        if cached_index is not None:
             return True
         else:
-            print("caller: {}".format(sys._getframe(1).f_code.co_name))
-            print("enter \"check_my_event\" with \"None\" relayer index")
-
-            sorted_relayer_list = fetch_sorted_previous_relayer_list(self.manager, SwitchableChain.BIFROST, self.rnd)
-            print("in \"check_my_event\", sorted_validator_list: {}".format(sorted_relayer_list))
+            sorted_relayer_list = fetch_sorted_relayer_list_lower(self.manager, SwitchableChain.BIFROST, rnd=self.rnd)
+            my_addr = self.manager.active_account.address.hex().lower()
 
             try:
-                my_addr = self.manager.active_account.address.hex().lower()
-                print("in \"check_my_event\", my_addr: {}".format(my_addr))
-
                 relayer_index = sorted_relayer_list.index(my_addr)
                 self.manager.set_value_by_key(self.rnd, relayer_index)
                 global_logger.formatted_log(
                     "UpdateAuth",
                     address=self.relayer.active_account.address,
+                    related_chain=SwitchableChain.BIFROST,
                     msg="round({}), index({})".format(self.rnd, relayer_index)
                 )
                 return True
             except ValueError:
-                print("NotMyEvent({}) relayer index({})".format(self.summary(), relayer_index))
+                global_logger.formatted_log(
+                    "CheckMyEvent", address=self.relayer.active_account.address, related_chain=SwitchableChain.BIFROST,
+                    msg="{}, MyAddr: {}, fetchedList: {}".format(self.summary(), my_addr, sorted_relayer_list)
+                )
                 return False
 
     def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
@@ -387,9 +392,9 @@ class RbcEvent(ChainEventABC):
         # remove too late event
         not_handled_events_objs = list()
 
-        if manager.current_rnd is None:
+        if manager.round_cache is None:
             raise Exception("relayer's current rnd is None")
-        min_rnd = manager.current_rnd - BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
+        min_rnd = manager.round_cache - BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS
         for not_finalized_event_obj in not_finalized_event_objs:
             if min_rnd > not_finalized_event_obj.rnd:
                 continue
@@ -800,25 +805,6 @@ class RoundUpEvent(ChainEventABC):
         clone_obj.selected_chain = selected_chain
         return clone_obj
 
-    def update_auth(self, new_rnd: int, validator_list: List[EthAddress]):
-        # address of this relayer
-        this_addr = self.relayer.active_account.address.hex().lower()
-        this_addr = EthAddress(this_addr)
-
-        # addresses of validators
-        sorted_validator_list = sorted(validator_list)
-
-        # set self as a privileged relayer in the round
-        if this_addr in sorted_validator_list and self.relayer.get_value_by_key(new_rnd) is None:
-            new_index = sorted_validator_list.index(this_addr)
-            self.relayer.set_value_by_key(new_rnd, new_index)
-            prev_index = self.relayer.get_value_by_key(new_rnd - 1)
-            global_logger.formatted_log(
-                "Protocol",
-                address=self.relayer.active_account.address,
-                msg="UpdateRelayerIndex:from({}):to({})".format(prev_index, new_index)
-            )
-
     def is_previous_relayer(self) -> bool:
         if relayer_config_global.is_fast_relayer():
             return True
@@ -827,8 +813,8 @@ class RoundUpEvent(ChainEventABC):
     def is_primary_relayer(self) -> bool:
         if relayer_config_global.is_fast_relayer():
             return True
-        previous_validator_list = fetch_sorted_previous_relayer_list(
-            self.relayer, SwitchableChain.BIFROST, self.round - 1
+        previous_validator_list = fetch_sorted_relayer_list_lower(
+            self.relayer, SwitchableChain.BIFROST, rnd=(self.round - 1)
         )
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         primary_index = self.detected_event.block_number % len(previous_validator_list)
@@ -838,9 +824,6 @@ class RoundUpEvent(ChainEventABC):
         # ignore event except one with status: 10
         if self.status != ChainEventStatus.NEXT_AUTHORITY_COMMITTED:
             return NoneParams
-
-        # update auth cache
-        self.update_auth(self.round, self.sorted_validator_list)
 
         # check whether this relayer is included in the very previous validator set
         if not self.is_previous_relayer():
