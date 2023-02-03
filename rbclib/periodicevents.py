@@ -20,7 +20,7 @@ from .bifrostutils import (
     fetch_sorted_relayer_list_lower,
     fetch_latest_round,
     is_selected_relayer,
-    is_selected_relayer
+    is_selected_relayer, fetch_relayer_index
 )
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .globalconfig import relayer_config_global
@@ -274,24 +274,33 @@ class VSPFeed(PeriodicEventABC):
             "CheckRound",
             address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            msg="cached({}):fetched({})".format(self.__current_round, round_from_bn)
+            msg="VSPFeed:cached({}):fetched({})".format(self.__current_round, round_from_bn)
         )
 
         if self.__current_round >= round_from_bn:
             return NoneParams
 
+        # update round cache
+        self.current_round = round_from_bn
+
         # update relayer index cache
-        sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
-        try:
-            relayer_index = sorted_validator_list.index(self.relayer.active_account.address.hex().lower())
+        relayer_index = fetch_relayer_index(self.relayer, SwitchableChain.BIFROST, rnd=round_from_bn)
+        global_logger.formatted_log(
+            "UpdateAuth",
+            address=self.relayer.active_account.address,
+            related_chain=SwitchableChain.BIFROST,
+            msg="VSPFeed:FetchRelayerIdx:round({}):index({})".format(round_from_bn, relayer_index)
+        )
+
+        if relayer_index is not None:
             self.relayer.set_value_by_key(round_from_bn, relayer_index)
             global_logger.formatted_log(
-                "UpdateAuth",
+                "CheckAuth",
                 address=self.relayer.active_account.address,
                 related_chain=SwitchableChain.BIFROST,
-                msg="round({}):index({})".format(round_from_bn, relayer_index)
+                msg="VSPFeed:UpdatedRelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
             )
-        except ValueError:
+        else:
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
@@ -301,22 +310,19 @@ class VSPFeed(PeriodicEventABC):
 
         # vote for new validator list by only previous validator
         if not is_selected_relayer(
-                self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address,
+                self.relayer, SwitchableChain.BIFROST,
+                relayer_address=self.relayer.active_account.address,
                 rnd=(round_from_bn - 1)
         ):
-            self.current_round = round_from_bn
             return NoneParams
 
+        # build VSP feed data with signature
         sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
-
-        types_str_list = ["uint256", "address[]"]
-        data_to_sig = eth_abi.encode_abi(types_str_list, [round_from_bn, sorted_validator_list])
+        data_to_sig = eth_abi.encode_abi(["uint256", "address[]"], [round_from_bn, sorted_validator_list])
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_to_sig)
         socket_sig = SocketSignature.from_single_sig(sig.r, sig.s, sig.v + 27)
 
-        self.current_round = round_from_bn
         submit_data = [(round_from_bn, sorted_validator_list, socket_sig.tuple())]
-
         return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME, submit_data
 
     def handle_call_result(self, result: tuple) -> Optional[PeriodicEventABC]:

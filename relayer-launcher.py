@@ -129,8 +129,8 @@ if __name__ == "__main__":
             'prometheus': False,
             'slow_relayer': False,
             'fast_relayer': True,
-            'testnet': True
-            # "log_file_name": "testnet.log"
+            'testnet': True,
+            "log_file_name": "console.log"
         }
         if _config["testnet"]:
             # When testnet relay is launched via console, enums are automatically switched.
