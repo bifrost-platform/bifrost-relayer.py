@@ -6,12 +6,12 @@ from bridgeconst.consts import Chain, RBCMethodDirection, Asset
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
-from relayer.tools.consts import RBC_SUPPORTED_INBOUND_METHODS, RBC_SUPPORTED_OUTBOUND_METHODS
-from relayer.tools.utils_load_test import cccp_batch_send
-from relayer.tools.utils import get_chain_and_asset_from_console_for_bridge, get_typed_item_from_console, \
+from tools.consts import RBC_SUPPORTED_INBOUND_METHODS, RBC_SUPPORTED_OUTBOUND_METHODS
+from tools.utils_load_test import cccp_batch_send
+from tools.utils import get_chain_and_asset_from_console_for_bridge, get_typed_item_from_console, \
     display_receipt_status, display_multichain_asset_balances, fetch_and_display_rounds, Manager, \
     get_chain_and_asset_from_console
-from relayer.tools.utils import get_option_from_console
+from tools.utils import get_option_from_console
 
 
 class SupportedUserCmd(enum.Enum):

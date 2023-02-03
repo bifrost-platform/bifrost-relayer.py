@@ -4,7 +4,7 @@ from chainpy.eth.ethtype.chaindata import EthBlock
 from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
-from relayer.tools.consts import BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT
+from tools.consts import BIFNET_LIMIT_AMOUNT, EXTERNAL_LIMIT_AMOUNT
 from relayer.user import User
 
 

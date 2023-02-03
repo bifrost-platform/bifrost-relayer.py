@@ -10,7 +10,7 @@ from bridgeconst.testbridgespec import SUPPORTING_ASSETS
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 from relayer.relayer import Relayer
-from relayer.tools.consts import ADMIN_RELAYERS, USER_CONFIG_PATH, PRIVATE_CONFIG_PATH
+from tools.consts import USER_CONFIG_PATH, PRIVATE_CONFIG_PATH
 from relayer.user import User
 
 KEY_JSON_PATH = "./configs/keys.json"
