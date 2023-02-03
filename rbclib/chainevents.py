@@ -28,7 +28,7 @@ from .bifrostutils import (
     fetch_socket_rbc_sigs,
     fetch_quorum,
     fetch_relayer_num,
-    fetch_latest_round, fetch_sorted_relayer_list_lower
+    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index
 )
 
 if TYPE_CHECKING:
@@ -171,7 +171,7 @@ class RbcEvent(ChainEventABC):
                 "WrongRequest",
                 address=self.relayer.active_account.address,
                 related_chain=self.src_chain,
-                msg="RequestOnNotSupportedChain: {}".format(self.summary())
+                msg="CheckMyEvent:RequestOnNotSupportedChain: {}".format(self.summary())
             )
             return False
 
@@ -180,31 +180,30 @@ class RbcEvent(ChainEventABC):
             "CheckAuth",
             address=self.relayer.active_account.address,
             related_chain=SwitchableChain.BIFROST,
-            msg="RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
+            msg="CheckMyEvent:RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
         )
-
         if cached_index is not None:
             return True
-        else:
-            sorted_relayer_list = fetch_sorted_relayer_list_lower(self.manager, SwitchableChain.BIFROST, rnd=self.rnd)
-            my_addr = self.manager.active_account.address.hex().lower()
 
-            try:
-                relayer_index = sorted_relayer_list.index(my_addr)
-                self.manager.set_value_by_key(self.rnd, relayer_index)
-                global_logger.formatted_log(
-                    "UpdateAuth",
-                    address=self.relayer.active_account.address,
-                    related_chain=SwitchableChain.BIFROST,
-                    msg="round({}):index({})".format(self.rnd, relayer_index)
-                )
-                return True
-            except ValueError:
-                global_logger.formatted_log(
-                    "CheckAuth", address=self.relayer.active_account.address, related_chain=SwitchableChain.BIFROST,
-                    msg="{}, MyAddr: {}, fetchedList: {}".format(self.summary(), my_addr, sorted_relayer_list)
-                )
-                return False
+        relayer_index = fetch_relayer_index(self.manager, SwitchableChain.BIFROST, rnd=self.rnd)
+        global_logger.formatted_log(
+            "UpdateAuth",
+            address=self.relayer.active_account.address,
+            related_chain=SwitchableChain.BIFROST,
+            msg="CheckMyEvent:FetchRelayerIdx:round({}):index({})".format(self.rnd, relayer_index)
+        )
+
+        if relayer_index is not None:
+            self.manager.set_value_by_key(self.rnd, relayer_index)
+            return True
+
+        global_logger.formatted_log(
+            "UpdateAuth",
+            address=self.relayer.active_account.address,
+            related_chain=SwitchableChain.BIFROST,
+            msg="CheckMyEvent:IgnoreRequest:{}".format(self.summary())
+        )
+        return False
 
     def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
         """ builds and returns call transaction parameters related to this event. """
