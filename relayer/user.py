@@ -14,6 +14,7 @@ class UserSubmit:
     """
     Data class for payload of user request (sent to the "First chain")
     """
+
     def __init__(self,
                  method: RBCMethodV1,
                  dst_chain: Chain,
@@ -21,21 +22,14 @@ class UserSubmit:
                  apply_addr: EthAddress,
                  amount: EthAmount):
         inst_tuple = (dst_chain.formatted_bytes(), method.formatted_bytes())
-
-        is_testnet = True if dst_chain.name.split("_")[1] != "MAIN" else False
         direction: RBCMethodDirection = method.analyze()[1]
 
-        if asset0.symbol == Symbol.BFC:
-            asset1 = Asset.BFC_ON_BFC_MAIN if not is_testnet else Asset.BFC_ON_BFC_TEST
+        if direction == RBCMethodDirection.INBOUND and asset0.symbol == Symbol.BFC:
+            asset1 = Asset.from_name("_".join([asset0.symbol.name, "ON", dst_chain.name]))
+        elif direction == RBCMethodDirection.INBOUND:
+            asset1 = Asset.from_name("_".join(["UNIFIED", asset0.symbol.name, "ON", dst_chain.name]))
         else:
-            if direction == RBCMethodDirection.INBOUND:
-                asset1 = Asset.from_name("UNIFIED_{}_{}_ON_{}".format(
-                    asset0.chain.name,
-                    asset0.symbol.name,
-                    dst_chain.name
-                ))
-            else:
-                asset1 = Asset.from_name("UNIFIED_{}_{}_ON_{}".format(dst_chain.name, asset0.symbol.name, asset0.chain))
+            asset1 = Asset.from_name("_".join([asset0.symbol.name, "ON", dst_chain.name]))
 
         action_param_tuple = (
             asset0.formatted_bytes(),  # first token_index
@@ -155,7 +149,7 @@ class User(MultiChainManager):
             [params]
         )
         tx, tx_hash = self.world_send_transaction(target_chain, tx)
-
+        print("tx_hash: {}".format(tx_hash.hex()))
         return tx_hash
 
     def round_up(self, chain: Chain, is_initial: bool = True):

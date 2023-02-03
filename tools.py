@@ -1,27 +1,29 @@
 from tools.cmd_admin import admin_cmd
-from tools.cmd_nominator import nominator_cmd
-from tools import operator_cmd
-from tools import user_cmd
+from tools.cmd_operator import operator_cmd
+from tools.cmd_user import user_cmd
 from tools.utils import get_option_from_console
 
-if __name__ == "__main__":
+PROJECT_ROOT_PATH = "./"
 
-    tool_names = ["User", "Operator", "Nominator", "Admin"]
+if __name__ == "__main__":
+    user_roles = ["User", "Operator", "Admin"]
+
     while True:
-        selected_tools = get_option_from_console("Select the tool you will use. ", tool_names)
-        project_root_path = "./"
+        # select network type
+        network_type = get_option_from_console("Select Network Type ", ["testnet", "mainnet"])
+        is_testnet = True if network_type == "testnet" else False
+
+        # get user's role
+        selected_tools = get_option_from_console("What is your role? ", user_roles)
 
         if selected_tools == "User":
-            user_cmd(project_root_path)
-
-        elif selected_tools == "Nominator":
-            nominator_cmd(project_root_path)
+            user_cmd(is_testnet, project_root_path=PROJECT_ROOT_PATH)
 
         elif selected_tools == "Operator":
-            operator_cmd(project_root_path)
+            operator_cmd(is_testnet, project_root_path=PROJECT_ROOT_PATH)
 
         if selected_tools == "Admin":
-            admin_cmd(project_root_path)
+            admin_cmd(PROJECT_ROOT_PATH)
 
         else:
             print("quited")
