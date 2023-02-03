@@ -5,9 +5,9 @@ from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress
-from relayer.tools.consts import NOMINATION_AMOUNT
-from relayer.tools.utils_recharger import fetch_healthy_relayers
-from relayer.tools.utils import display_receipt_status, get_option_from_console, get_typed_item_from_console, \
+from tools.consts import NOMINATION_AMOUNT
+from tools.utils_recharger import fetch_healthy_relayers
+from tools.utils import display_receipt_status, get_option_from_console, get_typed_item_from_console, \
     Manager
 
 

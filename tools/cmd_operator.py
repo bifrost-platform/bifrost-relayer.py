@@ -7,10 +7,10 @@ from chainpy.eth.ethtype.hexbytes import EthAddress
 from rbclib.bifrostutils import fetch_submitted_oracle_feed, fetch_btc_hash_from_oracle, fetch_price_from_oracle, \
     fetch_oracle_latest_round, fetch_sorted_relayer_list_lower
 from bridgeconst.consts import Oracle
-from relayer.tools.consts import ADMIN_RELAYERS
-from relayer.tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
+from tools.consts import ADMIN_RELAYERS
+from tools.utils import display_multichain_coins_balances, display_multichain_balances_on, \
     fetch_and_display_rounds, Manager, get_asset_from_console
-from relayer.tools.utils import get_option_from_console
+from tools.utils import get_option_from_console
 
 
 class SupportedOperatorCmd(enum.Enum):

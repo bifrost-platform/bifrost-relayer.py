@@ -5,7 +5,7 @@ from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthTransaction
 from bridgeconst.consts import Chain, RBCMethodV1, Asset, RBCMethodDirection
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
-from relayer.tools.utils import Manager
+from tools.utils import Manager
 from relayer.user import User
 
 

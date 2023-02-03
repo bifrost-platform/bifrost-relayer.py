@@ -1,8 +1,8 @@
-from relayer.tools.cmd_admin import admin_cmd
-from relayer.tools.cmd_nominator import nominator_cmd
-from relayer.tools.cmd_operator import operator_cmd
-from relayer.tools.cmd_user import user_cmd
-from relayer.tools.utils import get_option_from_console
+from tools.cmd_admin import admin_cmd
+from tools.cmd_nominator import nominator_cmd
+from tools import operator_cmd
+from tools import user_cmd
+from tools.utils import get_option_from_console
 
 if __name__ == "__main__":
 

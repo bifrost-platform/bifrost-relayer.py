@@ -2,7 +2,7 @@ import enum
 from typing import List
 
 from bridgeconst.consts import Chain
-from relayer.tools.utils import get_chain_from_console, display_receipt_status, get_option_from_console, Manager
+from tools.utils import get_chain_from_console, display_receipt_status, get_option_from_console, Manager
 
 
 class SupportedAdminCmd(enum.Enum):
