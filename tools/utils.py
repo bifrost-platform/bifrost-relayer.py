@@ -1,19 +1,28 @@
 import copy
 import json
-
 from typing import Union, List, Any
+
+from bridgeconst.consts import Chain, Asset, RBCMethodDirection, Symbol
+from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
+from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
+
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
-from bridgeconst.consts import Chain, Asset, RBCMethodDirection
-from bridgeconst.testbridgespec import SUPPORTING_ASSETS
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from relayer.relayer import Relayer
-from tools.consts import USER_CONFIG_PATH, PRIVATE_CONFIG_PATH
-from relayer.user import User
 
-KEY_JSON_PATH = "./configs/keys.json"
+from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
+from relayer.relayer import Relayer
+from tools.consts import (
+    USER_MAINNET_CONFIG_PATH,
+    USER_TESTNET_CONFIG_PATH,
+    PRIVATE_MAINNET_CONFIG_PATH,
+    PRIVATE_TESTNET_CONFIG_PATH,
+    KEY_JSON_PATH
+)
+
+from relayer.user import User
 
 
 class Manager(User, Relayer):
@@ -21,8 +30,13 @@ class Manager(User, Relayer):
         super().__init__(multichain_config)
 
     @classmethod
-    def init_manager(cls, role: str, project_root_path: str = "./", account: EthAccount = None):
-        manager = Manager.from_config_files(USER_CONFIG_PATH, PRIVATE_CONFIG_PATH)
+    def init_manager(cls, role: str, is_testnet: bool, project_root_path: str = "./", account: EthAccount = None):
+        if is_testnet:
+            SwitchableChain.switch_testnet_config()
+            SwitchableAsset.switch_testnet_config()
+            manager = Manager.from_config_files(USER_TESTNET_CONFIG_PATH, PRIVATE_TESTNET_CONFIG_PATH)
+        else:
+            manager = Manager.from_config_files(USER_MAINNET_CONFIG_PATH, PRIVATE_MAINNET_CONFIG_PATH)
 
         with open(project_root_path + KEY_JSON_PATH) as f:
             key = json.load(f)[role.lower()]
@@ -85,9 +99,9 @@ def display_multichain_balances_on(
 
 def display_receipt_status(receipt: EthReceipt):
     if receipt is None:
-        msg = "None-receipt"
+        msg = ">>> None-receipt"
     else:
-        msg = "tx({}) ".format(receipt.transaction_hash.hex())
+        msg = ">>> tx({}) ".format(receipt.transaction_hash.hex())
         msg += "successes" if receipt.status == 1 else "fails"
     print(msg)
 
@@ -120,21 +134,29 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
     # remove BIFROST from the supported chain list
     supported_chain_list_clone = copy.deepcopy(manager.supported_chain_list)
     if not_included_bifrost:
-        supported_chain_list_clone.remove(Chain.BFC_TEST)
+        supported_chain_list_clone.remove(SwitchableChain.BIFROST)
 
     prompt = "select a chain"
     chain_index = get_option_from_console(prompt, supported_chain_list_clone)
     return chain_index
 
 
-def get_asset_from_console(chain_index: Chain = None, token_only: bool = False) -> Asset:
+def get_asset_from_console(chain: Chain = None, direction: RBCMethodDirection = None, token_only: bool = False) -> Asset:
     prompt = "select a asset"
-    asset_options = asset_list_of(chain_index, token_only)
+    asset_options = asset_list_of(chain, token_only)
+    symbol_options = list(set([asset.symbol for asset in asset_options]))
 
     if not asset_options:
         return Asset.NONE
     else:
-        return get_option_from_console(prompt, asset_options)
+        selected_symbol = get_option_from_console(prompt, symbol_options)
+        if direction == RBCMethodDirection.INBOUND and selected_symbol == Symbol.BFC:
+            asset_name = "_".join([selected_symbol.name, "ON", chain.name])
+        elif direction == RBCMethodDirection.INBOUND:
+            asset_name = "_".join(["UNIFIED", selected_symbol.name, "ON", SwitchableChain.BIFROST.name])
+        else:
+            asset_name = "_".join([selected_symbol.name, "ON", chain.name])
+        return Asset.from_name(asset_name)
 
 
 def get_chain_and_asset_from_console_for_bridge(
@@ -142,29 +164,25 @@ def get_chain_and_asset_from_console_for_bridge(
         direction: RBCMethodDirection,
         token_only: bool = False,
         not_included_bifrost: bool = False) -> (Chain, Asset):
-    chain_index = get_chain_from_console(manager, not_included_bifrost)
-
-    if direction == RBCMethodDirection.INBOUND:
-        token_index = get_asset_from_console(chain_index, token_only)
-    else:
-        token_index = get_asset_from_console(Chain.BFC_TEST, token_only)
-    return chain_index, token_index
+    chain = get_chain_from_console(manager, not_included_bifrost)
+    asset = get_asset_from_console(chain, direction, token_only)
+    return chain, asset
 
 
-def get_chain_and_asset_from_console(
-        manager: MultiChainManager,
-        token_only: bool = False) -> (Chain, Asset):
-    chain_index = get_chain_from_console(manager)
-    token_index = get_asset_from_console(chain_index, token_only)
-    return chain_index, token_index
+def get_chain_and_asset_from_console(manager: MultiChainManager, token_only: bool = False) -> (Chain, Asset):
+    chain = get_chain_from_console(manager)
+    asset = get_asset_from_console(chain, token_only)  # TODO fix
+    return chain, asset
 
 
 def asset_list_of(chain: Chain = None, token_only: bool = False) -> List[Asset]:
+    is_testnet_config = chain.name.split("_")[1] != "MAIN"
+    supporting_asset = TESTNET_ASSETS if is_testnet_config else MAINNET_ASSETS
     if chain is None:
-        return SUPPORTING_ASSETS
+        return supporting_asset
 
     coins, tokens = [], []
-    for asset in SUPPORTING_ASSETS:
+    for asset in supporting_asset:
         if asset.chain == chain:
             if asset.is_coin():
                 coins.append(asset)
@@ -173,9 +191,26 @@ def asset_list_of(chain: Chain = None, token_only: bool = False) -> List[Asset]:
     return tokens if token_only else coins + tokens
 
 
+def symbol_list(is_testnet: bool) -> List[Symbol]:
+    supporting_asset = TESTNET_ASSETS if is_testnet else MAINNET_ASSETS
+
+    symbols = list()
+    for asset in supporting_asset:
+        symbol = asset.symbol
+        if symbol not in symbols:
+            symbols.append(symbol)
+    return symbols
+
+
 def fetch_and_display_rounds(manager: Union[User, Relayer]):
     print("-----------------------------------------------")
     for chain_index in manager.supported_chain_list:
         _round = manager.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
         print("{:>8}: {}".format(chain_index.name, _round))
     print("-----------------------------------------------")
+
+
+def display_addrs(title: str, addrs: List[str]):
+    print("<{}>".format(title))
+    for addr in addrs:
+        print("  - {}".format(addr))
