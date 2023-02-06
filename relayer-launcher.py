@@ -87,7 +87,7 @@ def main(config: dict):
     log_file_name = config.get("log_file_name")
     if is_meaningful(log_file_name):
         # enable logger with file handler
-        logger_config_global.reset(log_file_name=log_file_name)
+        logger_config_global.reset(log_file_name=log_file_name, backup_count=8760)
     global_logger.init(log_file_name=log_file_name)
 
     # secret_key_obj is None if config["private_key"] is None
