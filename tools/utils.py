@@ -1,8 +1,8 @@
 import copy
 import json
-from typing import Union, List, Any
+from typing import Union, List, Any, Tuple
 
-from bridgeconst.consts import Chain, Asset, RBCMethodDirection, Symbol
+from bridgeconst.consts import Chain, Asset, Symbol
 from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
 from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
 
@@ -14,6 +14,7 @@ from chainpy.eth.managers.multichainmanager import MultiChainManager
 
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 from relayer.relayer import Relayer
+from relayer.user_utils import symbol_to_asset
 from tools.consts import (
     USER_MAINNET_CONFIG_PATH,
     USER_TESTNET_CONFIG_PATH,
@@ -78,7 +79,7 @@ def display_multichain_balances_on(
 
     print(chain_index.name + "-" * (BALANCE_FORMAT_STRING_LEN * INLINE_BALANCES_NUM + 1 - len(chain_index.name)))
     bal_str, bal_num = "", 0
-    target_asset_list = asset_list_of(chain_index)
+    target_asset_list = asset_list_on(chain_index)
     for token in target_asset_list:
         if token.is_coin():
             bal = manager.world_native_balance(chain_index, target_addr)
@@ -141,43 +142,15 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
     return chain_index
 
 
-def get_asset_from_console(chain: Chain = None, direction: RBCMethodDirection = None, token_only: bool = False) -> Asset:
-    prompt = "select a asset"
-    asset_options = asset_list_of(chain, token_only)
-    symbol_options = list(set([asset.symbol for asset in asset_options]))
+def asset_list_on(chain: Chain = None, token_only: bool = False, is_testnet: bool = False) -> List[Asset]:
+    if chain is None and is_testnet is None:
+        raise Exception("You must enter chain or is_testnet to specify the network.")
 
-    if not asset_options:
-        return Asset.NONE
-    else:
-        selected_symbol = get_option_from_console(prompt, symbol_options)
-        if direction == RBCMethodDirection.INBOUND and selected_symbol == Symbol.BFC:
-            asset_name = "_".join([selected_symbol.name, "ON", chain.name])
-        elif direction == RBCMethodDirection.INBOUND:
-            asset_name = "_".join(["UNIFIED", selected_symbol.name, "ON", SwitchableChain.BIFROST.name])
-        else:
-            asset_name = "_".join([selected_symbol.name, "ON", chain.name])
-        return Asset.from_name(asset_name)
+    if chain is not None:
+        is_testnet = chain.name.split("_")[1] != "MAIN"
 
+    supporting_asset = TESTNET_ASSETS if is_testnet else MAINNET_ASSETS
 
-def get_chain_and_asset_from_console_for_bridge(
-        manager: MultiChainManager,
-        direction: RBCMethodDirection,
-        token_only: bool = False,
-        not_included_bifrost: bool = False) -> (Chain, Asset):
-    chain = get_chain_from_console(manager, not_included_bifrost)
-    asset = get_asset_from_console(chain, direction, token_only)
-    return chain, asset
-
-
-def get_chain_and_asset_from_console(manager: MultiChainManager, token_only: bool = False) -> (Chain, Asset):
-    chain = get_chain_from_console(manager)
-    asset = get_asset_from_console(chain, token_only)  # TODO fix
-    return chain, asset
-
-
-def asset_list_of(chain: Chain = None, token_only: bool = False) -> List[Asset]:
-    is_testnet_config = chain.name.split("_")[1] != "MAIN"
-    supporting_asset = TESTNET_ASSETS if is_testnet_config else MAINNET_ASSETS
     if chain is None:
         return supporting_asset
 
@@ -191,15 +164,29 @@ def asset_list_of(chain: Chain = None, token_only: bool = False) -> List[Asset]:
     return tokens if token_only else coins + tokens
 
 
-def symbol_list(is_testnet: bool) -> List[Symbol]:
-    supporting_asset = TESTNET_ASSETS if is_testnet else MAINNET_ASSETS
+def symbol_list_on(chain: Chain = None, token_only: bool = False, is_testnet: bool = False) -> List[Symbol]:
+    asset_list = asset_list_on(chain, token_only=token_only, is_testnet=is_testnet)
+    return list(set([asset.symbol for asset in asset_list]))
 
-    symbols = list()
-    for asset in supporting_asset:
-        symbol = asset.symbol
-        if symbol not in symbols:
-            symbols.append(symbol)
-    return symbols
+
+def get_symbol_from_console(chain: Chain = None, token_only: bool = False) -> Symbol:
+    prompt = "select a symbol of asset"
+    symbol_options = symbol_list_on(chain, token_only)
+    return get_option_from_console(prompt, symbol_options)
+
+
+def get_asset_from_console(chain: Chain = None, token_only: bool = False) -> Asset:
+    symbol = get_symbol_from_console(chain, token_only=token_only)
+    return symbol_to_asset(chain, symbol)
+
+
+def get_chain_and_symbol_from_console(
+        manager: MultiChainManager,
+        token_only: bool = False,
+        not_included_bifrost: bool = False) -> Tuple[Chain, Symbol]:
+    chain = get_chain_from_console(manager, not_included_bifrost)
+    symbol = get_symbol_from_console(chain, token_only)
+    return chain, symbol
 
 
 def fetch_and_display_rounds(manager: Union[User, Relayer]):
