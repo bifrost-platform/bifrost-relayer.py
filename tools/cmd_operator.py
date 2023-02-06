@@ -22,7 +22,7 @@ from .utils import (
     fetch_and_display_rounds,
     Manager,
     display_addrs,
-    symbol_list,
+    symbol_list_on,
     get_option_from_console
 )
 
@@ -77,7 +77,7 @@ def operator_cmd(is_testnet: bool, project_root_path: str = "./"):
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_PRICE_OF:
             # get price from oracle
-            symbols = symbol_list(is_testnet)
+            symbols = symbol_list_on(is_testnet)
             symbol = get_option_from_console("Select Asset Symbol", symbols)
             price = fetch_price_from_oracle(operator, symbol)
             print(">>> Price: {}".format(price.change_decimal(6).float_str))

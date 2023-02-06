@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from bridgeconst.consts import Chain, Symbol, RBCMethodDirection, AssetType
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.chaindata import EthReceipt
@@ -8,6 +10,7 @@ from chainpy.eth.managers.multichainmanager import MultiChainManager
 from bridgeconst.consts import RBCMethodV1, Asset
 
 from rbclib.switchable_enum import SwitchableChain
+from relayer.user_utils import symbol_to_asset
 
 
 class UserSubmit:
@@ -17,20 +20,12 @@ class UserSubmit:
 
     def __init__(self,
                  method: RBCMethodV1,
+                 src_chain: Chain,
                  dst_chain: Chain,
-                 asset0: Asset,
+                 symbol: Symbol,
                  apply_addr: EthAddress,
                  amount: EthAmount):
-        inst_tuple = (dst_chain.formatted_bytes(), method.formatted_bytes())
-        direction: RBCMethodDirection = method.analyze()[1]
-
-        if direction == RBCMethodDirection.INBOUND and asset0.symbol == Symbol.BFC:
-            asset1 = Asset.from_name("_".join([asset0.symbol.name, "ON", dst_chain.name]))
-        elif direction == RBCMethodDirection.INBOUND:
-            asset1 = Asset.from_name("_".join(["UNIFIED", asset0.symbol.name, "ON", dst_chain.name]))
-        else:
-            asset1 = Asset.from_name("_".join([asset0.symbol.name, "ON", dst_chain.name]))
-
+        asset0, asset1 = symbol_to_asset(src_chain, symbol), symbol_to_asset(dst_chain, symbol)
         action_param_tuple = (
             asset0.formatted_bytes(),  # first token_index
             asset1.formatted_bytes(),
@@ -39,6 +34,9 @@ class UserSubmit:
             amount.int(),
             EthHexBytes(b'\00')
         )
+
+        inst_tuple = (dst_chain.formatted_bytes(), method.formatted_bytes())
+
         self.__data = (inst_tuple, action_param_tuple)
 
     def tuple(self) -> tuple:
@@ -104,40 +102,45 @@ class User(MultiChainManager):
     def build_cross_action_tx(self,
                               src_chain: Chain,
                               dst_chain: Chain,
-                              asset: Asset,
+                              symbol: Symbol,
                               cross_action_index: RBCMethodV1,
                               amount: EthAmount) -> EthTransaction:
         user_request = UserSubmit(
             cross_action_index,
-            dst_chain,
-            asset,
+            src_chain, dst_chain,
+            symbol,
             self.active_account.address,
             amount
         )
-        value = None
-        if asset.is_coin():
-            value = amount
+
+        value = amount if symbol_to_asset(src_chain, symbol).is_coin() else None
 
         return self.world_build_transaction(src_chain, "vault", "request", [user_request.tuple()], value)
 
     def send_cross_action(self,
                           src_chain: Chain,
                           dst_chain: Chain,
-                          asset: Asset,
+                          symbol: Symbol,
                           cross_action_index: RBCMethodV1,
                           amount: EthAmount) -> EthHashBytes:
-        tx = self.build_cross_action_tx(src_chain, dst_chain, asset, cross_action_index, amount)
+        tx = self.build_cross_action_tx(src_chain, dst_chain, symbol, cross_action_index, amount)
         tx_hash = self.world_send_transaction(src_chain, tx)
         return tx_hash
 
     def send_cross_action_and_wait_receipt(self,
                                            src_chain: Chain,
                                            dst_chain: Chain,
-                                           asset: Asset,
+                                           symbol: Symbol,
                                            cross_action_index: RBCMethodV1,
-                                           amount: EthAmount) -> EthReceipt:
-        tx_hash = self.send_cross_action(src_chain, dst_chain, asset, cross_action_index, amount)
-        return self.world_receipt_with_wait(src_chain, tx_hash, False)
+                                           amount: EthAmount) -> Tuple[EthReceipt, Tuple[Chain, int, int]]:
+        tx_hash = self.send_cross_action(src_chain, dst_chain, symbol, cross_action_index, amount)
+
+        receipt = self.world_receipt_with_wait(src_chain, tx_hash, False)
+
+        result = self.get_contract_obj_on(src_chain, "socket"). \
+            get_method_abi("Socket"). \
+            decode_event_data(receipt.logs[3].data)[0]
+        return receipt, (Chain.from_bytes(result[0][0]), result[0][1], result[0][2])
 
     def send_timeout_rollback(self, target_chain: Chain, rnd: int, sequence_num: int) -> EthHashBytes:
         params = (target_chain.value, rnd, sequence_num)
