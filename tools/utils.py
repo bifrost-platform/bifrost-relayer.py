@@ -1,8 +1,9 @@
 import copy
 import json
+from time import sleep
 from typing import Union, List, Any, Tuple
 
-from bridgeconst.consts import Chain, Asset, Symbol
+from bridgeconst.consts import Chain, Asset, Symbol, RBCMethodV1
 from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
 from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
 
@@ -201,3 +202,42 @@ def display_addrs(title: str, addrs: List[str]):
     print("<{}>".format(title))
     for addr in addrs:
         print("  - {}".format(addr))
+
+
+def cccp_batch_send(
+        user: Manager,
+        batch_num: int,
+        src_chain: Chain,
+        dst_chain: Chain,
+        symbol: Symbol,
+        rbc_method: RBCMethodV1,
+        amount: EthAmount
+) -> Tuple[List[EthReceipt], List[Tuple[Chain, int, int]]]:
+    request_txs = list()
+    print(">>> build transaction for each request")
+    for _ in range(batch_num):
+        tx = user.build_cross_action_tx(src_chain, dst_chain, symbol, rbc_method, amount)
+        request_txs.append(tx)
+    print(">>>> complete")
+
+    tx_hashes = list()
+    print("\n>>> send transaction for each request")
+    for i in range(batch_num):
+        tx_hash = user.world_send_transaction(src_chain, request_txs[i])
+        tx_hashes.append(tx_hash)
+    print(">>>> completes")
+
+    receipts = list()
+    rids = list()
+
+    print("\n>>> start check receipt for each request")
+    for i in range(batch_num):
+        receipt = user.world_receipt_with_wait(src_chain, tx_hashes[i])
+        result = user.get_contract_obj_on(src_chain, "socket"). \
+            get_method_abi("Socket"). \
+            decode_event_data(receipt.logs[3].data)[0]
+        receipts.append(receipt)
+        rids.append((Chain.from_bytes(result[0][0]), result[0][1], result[0][2]))
+    print(">>>> completes")
+
+    return receipts, rids

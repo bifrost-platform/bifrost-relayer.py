@@ -2,11 +2,10 @@ import enum
 from typing import List
 
 from chainpy.eth.ethtype.amount import EthAmount
-from bridgeconst.consts import Chain, RBCMethodDirection, Asset, Symbol, RBCMethodV1
+from bridgeconst.consts import RBCMethodDirection, Asset, Symbol, RBCMethodV1
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.switchable_enum import SwitchableChain
-from .utils_load_test import cccp_batch_send
 from .utils import (
     get_typed_item_from_console,
     display_receipt_status,
@@ -14,7 +13,7 @@ from .utils import (
     fetch_and_display_rounds,
     Manager,
     get_option_from_console,
-    get_chain_and_symbol_from_console
+    get_chain_and_symbol_from_console, cccp_batch_send
 )
 
 
@@ -65,7 +64,7 @@ def user_cmd(is_testnet: bool, project_root_path: str = "./"):
             result = get_typed_item_from_console("Insert amount (int or float) to be sent to socket: ", float)
             amount = EthAmount(result, symbol.decimal)
 
-            if SupportedUserCmd.RBC_REQUEST:
+            if cmd == SupportedUserCmd.RBC_REQUEST:
                 print(">>> Send {} {} from {} to {} with {}".format(
                     amount.change_decimal(4).float_str,
                     symbol, src_chain,
@@ -75,10 +74,14 @@ def user_cmd(is_testnet: bool, project_root_path: str = "./"):
                 receipt, rid = user.send_cross_action_and_wait_receipt(src_chain, dst_chain, symbol, rbc_method, amount)
                 display_receipt_status(receipt)
                 print(">>> rid: ({}, {}, {})".format(rid[0].name, rid[1], rid[2]))
-
             else:
                 req_num = get_typed_item_from_console("how many request? ", int)
-                cccp_batch_send(user, req_num, dst_chain, src_chain, rbc_method)
+                receipts, rids = cccp_batch_send(user, req_num, src_chain, dst_chain, symbol, rbc_method, amount)
+
+                for i in range(req_num):
+                    display_receipt_status(receipts[i])
+                    rid = rids[i]
+                    print(">>> rid: ({}, {}, {})".format(rid[0].name, rid[1], rid[2]))
             continue
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
