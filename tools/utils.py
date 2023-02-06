@@ -32,7 +32,7 @@ class Manager(User, Relayer):
         super().__init__(multichain_config)
 
     @classmethod
-    def init_manager(cls, role: str, is_testnet: bool, project_root_path: str = "./", account: EthAccount = None):
+    def init_manager(cls, role: str, is_testnet: bool, account: EthAccount = None):
         if is_testnet:
             SwitchableChain.switch_testnet_config()
             SwitchableAsset.switch_testnet_config()
@@ -40,7 +40,7 @@ class Manager(User, Relayer):
         else:
             manager = Manager.from_config_files(USER_MAINNET_CONFIG_PATH, PRIVATE_MAINNET_CONFIG_PATH)
 
-        with open(project_root_path + KEY_JSON_PATH) as f:
+        with open(KEY_JSON_PATH) as f:
             key = json.load(f)[role.lower()]
         manager.set_account(key)
 

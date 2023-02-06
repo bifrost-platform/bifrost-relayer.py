@@ -17,13 +17,13 @@ if __name__ == "__main__":
         selected_tools = get_option_from_console("What is your role? ", user_roles)
 
         if selected_tools == "User":
-            user_cmd(is_testnet, project_root_path=PROJECT_ROOT_PATH)
+            user_cmd(is_testnet)
 
         elif selected_tools == "Operator":
-            operator_cmd(is_testnet, project_root_path=PROJECT_ROOT_PATH)
+            operator_cmd(is_testnet)
 
         if selected_tools == "Admin":
-            admin_cmd(PROJECT_ROOT_PATH)
+            admin_cmd()
 
         else:
             print("quited")

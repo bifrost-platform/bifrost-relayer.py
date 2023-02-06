@@ -3,7 +3,7 @@ from typing import List
 
 from chainpy.eth.ethtype.amount import EthAmount
 from bridgeconst.consts import RBCMethodDirection, Asset, Symbol, RBCMethodV1
-from chainpy.eth.ethtype.hexbytes import EthAddress
+from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
 from rbclib.switchable_enum import SwitchableChain
 from relayer.user_utils import symbol_to_asset
@@ -14,7 +14,7 @@ from .utils import (
     fetch_and_display_rounds,
     Manager,
     get_option_from_console,
-    get_chain_and_symbol_from_console, cccp_batch_send
+    get_chain_and_symbol_from_console, cccp_batch_send, get_chain_from_console
 )
 
 
@@ -22,7 +22,7 @@ class SupportedUserCmd(enum.Enum):
     FETCH_ROUNDS = "fetch every round from each chain"
     RBC_REQUEST = "rbc request"
     RBC_LOAD_TEST = "rbc batch request"
-    # RBC_ROLLBACK = "rbc reqeust rollback"
+    RBC_ROLLBACK = "rbc reqeust rollback"
 
     TOKEN_APPROVE = "token approve"
     ASSET_TRANSFER = "transfer asset to target address"
@@ -35,8 +35,8 @@ class SupportedUserCmd(enum.Enum):
         return [cmd for cmd in SupportedUserCmd]
 
 
-def user_cmd(is_testnet: bool, project_root_path: str = "./"):
-    user = Manager.init_manager("User", is_testnet, project_root_path=project_root_path)
+def user_cmd(is_testnet: bool):
+    user = Manager.init_manager("User", is_testnet)
     print(">>>  User Address: {}".format(user.active_account.address.with_checksum()))
 
     while True:
@@ -84,6 +84,39 @@ def user_cmd(is_testnet: bool, project_root_path: str = "./"):
                     rid = rids[i]
                     print(">>> rid: ({}, {}, {})".format(rid[0].name, rid[1], rid[2]))
             continue
+
+        elif cmd == SupportedUserCmd.RBC_ROLLBACK:
+            chain = get_chain_from_console(user)
+            tx_hash = get_typed_item_from_console("Enter tx_hash to rollback", EthHashBytes)
+
+            rollback_address, params = user.build_rollback_params(chain, tx_hash)
+            print("rollback_address: {}".format(rollback_address.with_checksum()))
+
+            rollback_asset = Asset.from_bytes(params[1][1][0])
+            before_balance = user.world_balance(chain, rollback_asset, rollback_address)
+            print("before balance: {} {}".format(
+                before_balance.change_decimal(4).float_str, rollback_asset.symbol.name
+            ))
+            expected_balance = EthAmount(params[1][1][4], rollback_asset.decimal)
+            print("expected balance: {} {}".format(
+                expected_balance.change_decimal(4).float_str,
+                rollback_asset.symbol.name
+            ))
+
+            tx = user.world_build_transaction(chain, "socket", "timeout_rollback", params)
+            tx_hash = user.world_send_transaction(chain, tx)
+            print(">>> Rollback {} {} to {}".format(
+                (expected_balance - before_balance).change_decimal(4).float_str,
+                rollback_asset.symbol, rollback_address.with_checksum()
+            ))
+
+            receipt = user.world_receipt_with_wait(chain, tx_hash)
+            display_receipt_status(receipt)
+
+            actual_balance = user.world_balance(chain, rollback_asset, rollback_address)
+            print("actual balance: {} {}".format(
+                actual_balance.change_decimal(4).float_str, rollback_asset.symbol.name
+            ))
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve

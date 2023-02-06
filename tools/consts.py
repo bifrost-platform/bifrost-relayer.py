@@ -1,7 +1,7 @@
 from bridgeconst.consts import RBCMethodV1
 from chainpy.eth.ethtype.amount import EthAmount
 
-KEY_JSON_PATH = "./configs/keys.json"
+KEY_JSON_PATH = "./tools/keys.json"
 USER_MAINNET_CONFIG_PATH = "configs/entity.relayer.json"
 PRIVATE_MAINNET_CONFIG_PATH = "configs/entity.relayer.private.json"
 USER_TESTNET_CONFIG_PATH = "configs-testnet/entity.relayer.json"
