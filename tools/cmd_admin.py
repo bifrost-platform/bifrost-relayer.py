@@ -18,8 +18,8 @@ class SupportedAdminCmd(enum.Enum):
         return [cmd for cmd in SupportedAdminCmd]
 
 
-def admin_cmd(project_root_path: str = "./"):
-    admin = Manager.init_manager("admin", project_root_path)
+def admin_cmd():
+    admin = Manager.init_manager("admin")
     print(">>>  Admin Address: {}".format(admin.active_account.address.with_checksum()))
 
     while True:

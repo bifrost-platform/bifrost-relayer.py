@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 from bridgeconst.consts import Chain, Symbol, RBCMethodDirection, AssetType
 from chainpy.eth.ethtype.amount import EthAmount
@@ -142,18 +142,23 @@ class User(MultiChainManager):
             decode_event_data(receipt.logs[3].data)[0]
         return receipt, (Chain.from_bytes(result[0][0]), result[0][1], result[0][2])
 
-    def send_timeout_rollback(self, target_chain: Chain, rnd: int, sequence_num: int) -> EthHashBytes:
-        params = (target_chain.value, rnd, sequence_num)
+    def build_rollback_params(self, chain: Chain, tx_hash: EthHashBytes) -> \
+            Tuple[
+                EthAddress,
+                Tuple[
+                    Tuple[bytes, int, int],
+                    Tuple[Tuple[bytes, bytes], Tuple[bytes, bytes, str, str, int, bytes]]
+                ]
+            ]:
+        chain_manager = self.get_chain_manager_of(chain)
 
-        tx = self.world_build_transaction(
-            target_chain,
-            "socket",
-            "timeout_rollback",
-            [params]
-        )
-        tx, tx_hash = self.world_send_transaction(target_chain, tx)
-        print("tx_hash: {}".format(tx_hash.hex()))
-        return tx_hash
+        # find out request id
+        receipt = chain_manager.eth_receipt_with_wait(tx_hash)
+        result = self.get_contract_obj_on(chain, "socket"). \
+            get_method_abi("Socket"). \
+            decode_event_data(receipt.logs[2].data)[0]
+
+        return EthAddress(result[3][2]), (result[0], (result[2], result[3]))
 
     def round_up(self, chain: Chain, is_initial: bool = True):
         current_bif_round = self.world_call(SwitchableChain.BIFROST, "relayer_authority", "latest_round", [])[0]

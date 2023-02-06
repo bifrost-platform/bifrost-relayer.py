@@ -46,8 +46,8 @@ class SupportedOperatorCmd(enum.Enum):
         return [cmd for cmd in SupportedOperatorCmd]
 
 
-def operator_cmd(is_testnet: bool, project_root_path: str = "./"):
-    operator = Manager.init_manager("User", is_testnet, project_root_path=project_root_path)
+def operator_cmd(is_testnet: bool, ):
+    operator = Manager.init_manager("User", is_testnet)
     print(">>>  Operator's Address: {}".format(operator.active_account.address.with_checksum()))
 
     while True:
