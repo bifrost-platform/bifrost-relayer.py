@@ -3,7 +3,7 @@ import json
 from time import sleep
 from typing import Union, List, Any, Tuple
 
-from bridgeconst.consts import Chain, Asset, Symbol, RBCMethodV1
+from bridgeconst.consts import Chain, Asset, Symbol, RBCMethodV1, AssetType
 from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
 from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
 
@@ -109,7 +109,7 @@ def display_receipt_status(receipt: EthReceipt):
 
 
 def get_typed_item_from_console(prompt: str, item_type: type) -> Any:
-    input_str = input(">>> " + prompt + ": ")
+    input_str = input("\n>>> " + prompt + ": ")
     input_obj = item_type(input_str) if input_str != "" else None
     print(">>> {}: [{}]".format("selected item", input_obj))
     return input_obj
@@ -158,6 +158,10 @@ def asset_list_on(chain: Chain = None, token_only: bool = False, is_testnet: boo
     coins, tokens = [], []
     for asset in supporting_asset:
         if asset.chain == chain:
+            if asset.asset_type == AssetType.BRIDGED:
+                continue
+            if asset.asset_type == AssetType.UNIFIED and asset.symbol == Symbol.BFC:
+                continue
             if asset.is_coin():
                 coins.append(asset)
             else:

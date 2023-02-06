@@ -6,6 +6,7 @@ from bridgeconst.consts import RBCMethodDirection, Asset, Symbol, RBCMethodV1
 from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.switchable_enum import SwitchableChain
+from relayer.user_utils import symbol_to_asset
 from .utils import (
     get_typed_item_from_console,
     display_receipt_status,
@@ -23,9 +24,9 @@ class SupportedUserCmd(enum.Enum):
     RBC_LOAD_TEST = "rbc batch request"
     # RBC_ROLLBACK = "rbc reqeust rollback"
 
-    MY_BALANCES = "balance of myself"
     TOKEN_APPROVE = "token approve"
     ASSET_TRANSFER = "transfer asset to target address"
+    MY_BALANCES = "balance of myself"
 
     QUIT = "quit"
 
@@ -86,47 +87,55 @@ def user_cmd(is_testnet: bool, project_root_path: str = "./"):
 
         elif cmd == SupportedUserCmd.TOKEN_APPROVE:
             # approve
-            chain, asset = get_chain_and_asset_from_console(user, True)
+            chain, symbol = get_chain_and_symbol_from_console(user, token_only=True)
 
-            if asset == Asset.NONE:
+            if symbol == Symbol.NONE:
                 print("No token on the chain: {}".format(chain))
                 continue
 
             vault_addr = user.get_vault_addr(chain)  # spender
+            asset = symbol_to_asset(chain, symbol)
             tx_hash = user.token_approve(chain, asset, vault_addr, EthAmount(2 ** 255))
+            print(">>> Approve {} on {}".format(
+                asset.name, chain.name
+            ))
+            receipt = user.world_receipt_with_wait(chain, tx_hash, False)
+            display_receipt_status(receipt)
+
+        elif cmd == SupportedUserCmd.ASSET_TRANSFER:
+            chain, symbol = get_chain_and_symbol_from_console(user, token_only=False)
+
+            # insert address
+            receiver_addr = get_typed_item_from_console("Enter an address to receive asset: ", EthAddress)
+
+            # insert amount
+            result = get_typed_item_from_console("Insert amount (int or float) to be sent to socket: ", float)
+            amount = EthAmount(result, symbol.decimal)
+
+            # build and send transaction
+            asset = symbol_to_asset(chain, symbol)
+            if asset.is_coin():
+                tx_hash = user.world_transfer_coin(chain, receiver_addr, amount)
+            else:
+                tx = user.world_build_transaction(
+                    chain,
+                    asset.name,
+                    "transfer",
+                    [receiver_addr.with_checksum(), amount.int()]
+                )
+                tx_hash = user.world_send_transaction(chain, tx)
+
+            print(">>> Transfer {} to {}".format(
+                asset.name, receiver_addr.with_checksum()
+            ))
+
+            # check the receipt
             receipt = user.world_receipt_with_wait(chain, tx_hash, False)
             display_receipt_status(receipt)
 
         elif cmd == SupportedUserCmd.MY_BALANCES:
             # balanceOf
             display_multichain_asset_balances(user, user.active_account.address)
-
-        elif cmd == SupportedUserCmd.ASSET_TRANSFER:
-            chain, asset = get_chain_and_asset_from_console(user)
-
-            # insert address
-            addr_str = input("enter an address to receive asset: ")
-            addr = EthAddress(addr_str)
-
-            # insert amount
-            amount = get_typed_item_from_console(">>> Insert amount (in float) to be sent: ", float)
-            amount = EthAmount(amount, asset.decimal) if amount is not None else EthAmount(0.1, asset.decimal)
-
-            # build and send transaction
-            if asset.is_coin_on(chain):
-                _, tx_hash = user.world_transfer_coin(chain, addr, amount)
-            else:
-                tx = user.world_build_transaction(
-                    chain,
-                    asset.name,
-                    "transfer",
-                    [addr.with_checksum(), amount.int()]
-                )
-                _, tx_hash = user.world_send_transaction(chain, tx)
-
-            # check the receipt
-            receipt = user.world_receipt_with_wait(chain, tx_hash, False)
-            display_receipt_status(receipt)
 
         else:
             # quit
