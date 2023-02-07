@@ -146,7 +146,7 @@ when combined.
 ### Launch relayer
 ```shell
 # git clone repository
-$ git clone git@github.com:bifrost-platform/bifrost-relayer.git@0.7.1
+$ git clone git@github.com:bifrost-platform/bifrost-relayer.git@0.7.2
 
 # generate virtual environment at repository root 
 $ cd bifrost-relayer
