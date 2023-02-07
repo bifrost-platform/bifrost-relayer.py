@@ -3,7 +3,7 @@ FROM python:3.10-slim
 ENV PRIVATE_KEY=
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y build-essential gcc \
+    && apt-get install --no-install-recommends -y git build-essential gcc \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/
 
@@ -12,4 +12,4 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["/bin/bash","-c","python relayer-launcher.py"]
-CMD ["launch -k $PRIVATE_KEY"]
+CMD ["--slow-relayer --prometheus"]
