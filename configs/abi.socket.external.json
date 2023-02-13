@@ -3,7 +3,7 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
@@ -281,6 +281,19 @@
     },
     {
         "inputs": [],
+        "name": "BFC_MAIN",
+        "outputs": [
+            {
+                "internalType": "ChainIndex",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "ZeroAddress",
         "outputs": [
             {
@@ -371,7 +384,7 @@
     },
     {
         "inputs": [],
-        "name": "commit_hash",
+        "name": "code_hash",
         "outputs": [
             {
                 "internalType": "bytes20",
@@ -1314,11 +1327,11 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
-        "name": "set_commit_hash",
+        "name": "set_code_hash",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1357,7 +1370,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "set_rollback_timeout",
+        "name": "set_request_timeout",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
