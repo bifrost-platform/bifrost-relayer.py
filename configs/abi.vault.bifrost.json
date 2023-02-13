@@ -3,7 +3,7 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
@@ -264,11 +264,6 @@
                     },
                     {
                         "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
                         "name": "total_fee",
                         "type": "uint256"
                     }
@@ -321,6 +316,19 @@
     {
         "stateMutability": "payable",
         "type": "fallback"
+    },
+    {
+        "inputs": [],
+        "name": "BFC_MAIN",
+        "outputs": [
+            {
+                "internalType": "ChainIndex",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [],
@@ -456,11 +464,6 @@
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
                 "name": "total_fee",
                 "type": "uint256"
             }
@@ -539,7 +542,7 @@
     },
     {
         "inputs": [],
-        "name": "commit_hash",
+        "name": "code_hash",
         "outputs": [
             {
                 "internalType": "bytes20",
@@ -548,6 +551,42 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "Asset_Index[]",
+                "name": "_asset_indices",
+                "type": "bytes32[]"
+            },
+            {
+                "internalType": "RBCmethod[][]",
+                "name": "_methods",
+                "type": "bytes16[][]"
+            }
+        ],
+        "name": "delete_assets_methods_filter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "Asset_Index[]",
+                "name": "_asset_indices",
+                "type": "bytes32[]"
+            },
+            {
+                "internalType": "Asset_Index[]",
+                "name": "_split_indices",
+                "type": "bytes32[]"
+            }
+        ],
+        "name": "delete_unify_split_filter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -842,11 +881,6 @@
                         "internalType": "address",
                         "name": "target",
                         "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
@@ -1446,11 +1480,6 @@
                     },
                     {
                         "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
                         "name": "total_fee",
                         "type": "uint256"
                     }
@@ -1522,11 +1551,11 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
-        "name": "set_commit_hash",
+        "name": "set_code_hash",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"

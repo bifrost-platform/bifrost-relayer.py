@@ -3,7 +3,7 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
@@ -414,7 +414,7 @@
     },
     {
         "inputs": [],
-        "name": "commit_hash",
+        "name": "code_hash",
         "outputs": [
             {
                 "internalType": "bytes20",
@@ -920,11 +920,11 @@
         "inputs": [
             {
                 "internalType": "bytes20",
-                "name": "_commit_hash",
+                "name": "_code_hash",
                 "type": "bytes20"
             }
         ],
-        "name": "set_commit_hash",
+        "name": "set_code_hash",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
