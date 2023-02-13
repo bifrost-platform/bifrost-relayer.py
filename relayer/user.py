@@ -137,9 +137,12 @@ class User(MultiChainManager):
 
         receipt = self.world_receipt_with_wait(src_chain, tx_hash, False)
 
+        target_topic = EthHashBytes(0x918454f530580823dd0d8cf59cacb45a6eb7cc62f222d7129efba5821e77f191)
+        log_data = receipt.get_log_data_by_topic(target_topic)
+
         result = self.get_contract_obj_on(src_chain, "socket"). \
             get_method_abi("Socket"). \
-            decode_event_data(receipt.logs[3].data)[0]
+            decode_event_data(log_data)[0]
         return receipt, (Chain.from_bytes(result[0][0]), result[0][1], result[0][2])
 
     def build_rollback_params(self, chain: Chain, tx_hash: EthHashBytes) -> \

@@ -202,6 +202,29 @@ def fetch_and_display_rounds(manager: Union[User, Relayer]):
     print("-----------------------------------------------")
 
 
+def fetch_asset_config(manager: Union[User, Relayer], asset: Asset, chain: Chain):
+    return manager.world_call(chain, "vault", "assets_config", [asset.formatted_bytes()])
+
+
+def fetch_bridge_amount_config(
+        manager: Union[User, Relayer], asset: Asset, src_chain: Chain, dst_chain: Chain
+) -> Tuple[EthAmount, EthAmount, EthAmount]:
+
+    if asset.asset_type == AssetType.UNIFIED:
+        asset = Asset.from_name("BRIDGED_{}_{}_ON_{}".format(dst_chain.name, asset.symbol.name, src_chain.name))
+
+    decimal = asset.decimal
+    config = manager.world_call(src_chain, "vault", "assets_config", [asset.formatted_bytes()])
+    return EthAmount(config[1][0], decimal), EthAmount(config[1][1], decimal), EthAmount(config[1][2], decimal)
+
+
+def fetch_bridge_fee_config(
+        manager: Union[User, Relayer], chain: Chain, asset: Asset) -> Tuple[EthAmount, EthAmount, EthAmount]:
+    decimal = asset.decimal
+    config = manager.world_call(chain, "vault", "assets_config", [asset.formatted_bytes()])
+    return EthAmount(config[0][0], decimal), EthAmount(config[0][1], decimal), EthAmount(config[0][2], decimal)
+
+
 def display_addrs(title: str, addrs: List[str]):
     print("<{}>".format(title))
     for addr in addrs:

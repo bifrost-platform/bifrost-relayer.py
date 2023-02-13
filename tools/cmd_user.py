@@ -14,7 +14,8 @@ from .utils import (
     fetch_and_display_rounds,
     Manager,
     get_option_from_console,
-    get_chain_and_symbol_from_console, cccp_batch_send, get_chain_from_console
+    get_chain_and_symbol_from_console, cccp_batch_send, get_chain_from_console,
+    fetch_bridge_amount_config
 )
 
 
@@ -62,7 +63,13 @@ def user_cmd(is_testnet: bool):
                 src_chain, dst_chain = SwitchableChain.BIFROST, chain
 
             # get an amount
-            result = get_typed_item_from_console("Insert amount (int or float) to be sent to socket: ", float)
+            amount_config = fetch_bridge_amount_config(user, symbol_to_asset(src_chain, symbol), src_chain, dst_chain)
+            amount_config_str = "min: {}, max: {}".format(
+                amount_config[0].change_decimal(4).float_str, amount_config[1].change_decimal(4).float_str,
+            )
+            result = get_typed_item_from_console(
+                "{}\n>>> Insert amount (int or float) to be sent to socket".format(amount_config_str), float
+            )
             amount = EthAmount(result, symbol.decimal)
 
             if cmd == SupportedUserCmd.RBC_REQUEST:
