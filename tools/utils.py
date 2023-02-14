@@ -81,15 +81,12 @@ def display_multichain_balances_on(
     print(chain_index.name + "-" * (BALANCE_FORMAT_STRING_LEN * INLINE_BALANCES_NUM + 1 - len(chain_index.name)))
     bal_str, bal_num = "", 0
     target_asset_list = asset_list_on(chain_index)
-    for token in target_asset_list:
-        if token.is_coin():
-            bal = manager.world_native_balance(chain_index, target_addr)
-        else:
-            if coin_only:
-                continue
-            bal = manager.world_token_balance_of(chain_index, token, target_addr)
+    for asset in target_asset_list:
+        if not asset.is_coin() and coin_only:
+            continue
+        bal = manager.world_balance(chain_index, asset=asset, user_addr=target_addr)
         balance_str = "> 1M" if bal > EthAmount(1000000.0) else bal.change_decimal(2).float_str
-        bal_str += BALANCE_FORMAT.format(token.symbol, balance_str)
+        bal_str += BALANCE_FORMAT.format(asset.symbol, balance_str)
         bal_num += 1
         if bal_num % INLINE_BALANCES_NUM == 0:
             print(bal_str + "|")

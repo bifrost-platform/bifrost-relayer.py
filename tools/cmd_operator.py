@@ -2,16 +2,14 @@ import enum
 from typing import List
 
 from bridgeconst.consts import Chain, Oracle
-from chainpy.btc.managers.simplerpccli import SimpleBtcClient
-from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
+from chainpy.eth.ethtype.hexbytes import EthAddress
 
 from rbclib.bifrostutils import (
     fetch_submitted_oracle_feed,
     fetch_btc_hash_from_oracle,
     fetch_price_from_oracle,
     fetch_oracle_latest_round,
-    fetch_sorted_relayer_list_lower,
-    fetch_oracle_history
+    fetch_sorted_relayer_list_lower
 )
 from rbclib.switchable_enum import SwitchableChain
 
@@ -38,7 +36,6 @@ class SupportedOperatorCmd(enum.Enum):
     GET_LATEST_BTC_HASH = "get latest BTC hash from oracle"
     GET_BTC_HASH_OF_THE_HEIGHT = "get BTC hash of the height from oracle"
     GET_BTC_FEEDS_BY = "get btc hash feed of each relayer"
-    TEST = "test price oracle"
     QUIT = "quit"
 
     @staticmethod
@@ -77,7 +74,7 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_PRICE_OF:
             # get price from oracle
-            symbols = symbol_list_on(is_testnet)
+            symbols = symbol_list_on(SwitchableChain.BIFROST, is_testnet=is_testnet)
             symbol = get_option_from_console("Select Asset Symbol", symbols)
             price = fetch_price_from_oracle(operator, symbol)
             print(">>> Price: {}".format(price.change_decimal(6).float_str))
@@ -91,7 +88,7 @@ def operator_cmd(is_testnet: bool, ):
             print("TODO")
 
         elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS_BY:
-            relayers = fetch_sorted_relayer_list_lower(operator, Chain.BFC_TEST)
+            relayers = fetch_sorted_relayer_list_lower(operator, SwitchableChain.BIFROST)
             latest_round = fetch_oracle_latest_round(operator, Oracle.BITCOIN_BLOCK_HASH)
             print("latest_round: {}".format(latest_round))
             for relayer in relayers:
@@ -99,27 +96,6 @@ def operator_cmd(is_testnet: bool, ):
                     operator, Oracle.BITCOIN_BLOCK_HASH, latest_round, EthAddress(relayer)
                 )
                 print("addr: {} {}".format(relayer, result.hex()))
-
-        elif cmd == SupportedOperatorCmd.TEST:
-            base_round = 773963
-            iters = 2000
-
-            url = "https://patient-patient-model.bcoin.discover.quiknode.pro/f7bac2bd75d75e8b8bf43383fb692d830b057fd7/"
-            btc_cli = SimpleBtcClient(url, 1)
-
-            for i in range(iters):
-                actual_hash = fetch_oracle_history(operator, Oracle.BITCOIN_BLOCK_HASH, base_round - i)
-                if actual_hash == EthHashBytes("00" * 32):
-                    raise Exception("zero hash: {}".format(base_round - i))
-
-                result = btc_cli.get_block_hash_by_height(base_round - i)
-                expected_hash = EthHashBytes(result)
-
-                if actual_hash != expected_hash:
-                    raise Exception("Not equal\n  - expected: {}\n  -   actual: {}".format(
-                        expected_hash.hex(), actual_hash.hex()
-                    ))
-                print("{}: {}".format(actual_hash.hex(), base_round - i))
 
         else:
             return
