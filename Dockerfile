@@ -11,5 +11,4 @@ WORKDIR /app
 COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["/bin/bash","-c","python relayer-launcher.py"]
-CMD ["--slow-relayer --prometheus"]
+CMD ["python", "relayer-launcher.py", "--slow-relayer", "--prometheus"]
