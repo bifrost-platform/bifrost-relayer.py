@@ -19,13 +19,13 @@
     "BFC_TEST": {
         "url_with_access_key": "http://127.0.0.1:9933"
     },
-    "ETH_TEST": {
+    "ETH_GOERLI": {
         "url_with_access_key": "<ETHEREUM_GOERLI_RPC_ENDPOINT>"
     },
     "BNB_TEST": {
         "url_with_access_key": "<BINANCE_TESTNET_RPC_ENDPOINT>"
     },
-    "MATIC_TEST": {
+    "MATIC_MUMBAI": {
         "url_with_access_key": "<POLYGON_MUMBAI_RPC_ENDPOINT>"
     }
 }
