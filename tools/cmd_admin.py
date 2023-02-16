@@ -18,8 +18,8 @@ class SupportedAdminCmd(enum.Enum):
         return [cmd for cmd in SupportedAdminCmd]
 
 
-def admin_cmd():
-    admin = Manager.init_manager("admin")
+def admin_cmd(is_testnet: bool):
+    admin = Manager.init_manager("admin", is_testnet)
     print(">>>  Admin Address: {}".format(admin.active_account.address.with_checksum()))
 
     while True:
@@ -53,9 +53,9 @@ def admin_cmd():
                 receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
                 display_receipt_status(receipt)
 
-            bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
-            target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
+                bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
+                target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
+                print(">>> bifnet_round({}), {}_round({})\n".format(bifnet_round, chain_index.name, target_round))
 
         else:
             return

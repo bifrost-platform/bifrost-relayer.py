@@ -23,7 +23,7 @@ if __name__ == "__main__":
             operator_cmd(is_testnet)
 
         if selected_tools == "Admin":
-            admin_cmd()
+            admin_cmd(is_testnet)
 
         else:
             print("quited")

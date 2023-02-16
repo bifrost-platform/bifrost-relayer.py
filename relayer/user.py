@@ -184,7 +184,7 @@ class User(MultiChainManager):
                     [current_bif_round + 1, is_initial]
                 )[0]
             except Exception as e:
-                if str(e) == 'Not handled error: evm error: Other("Out of round index")':
+                if str(e) == '[BFC_TEST] revert Tried to read round_index out of bounds':
                     validator_tuple = self.world_call(
                         SwitchableChain.BIFROST,
                         "relayer_authority",
@@ -206,7 +206,4 @@ class User(MultiChainManager):
             [current_tar_round + 1, sorted_validator_list]
         )
 
-        sent_tx, tx_hash = self.world_send_transaction(chain, pre_tx)
-        print("tx_hash: {}, nonce: {}".format(tx_hash.hex(), sent_tx.nonce))
-
-        return tx_hash
+        return self.world_send_transaction(chain, pre_tx)
