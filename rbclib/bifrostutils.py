@@ -110,7 +110,7 @@ def fetch_sorted_relayer_list_lower(
 
 
 def fetch_relayer_num(manager: EventBridge, target_chain_index: Chain, is_initial: bool = True) -> int:
-    validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain_index, is_initial)
+    validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain_index, is_initial=is_initial)
     return len(validator_tuple)
 
 
