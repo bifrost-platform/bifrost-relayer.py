@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  bifrost-node:
+    container_name: bifrost-node
+    image: thebifrost/bifrost-node:latest
+    ports:
+      - "30333:30333" # p2p
+    volumes:
+      - /var/lib/bifrost-data:/data
+    command: [
+      "--port", "30333",
+      "--rpc-port", "9933",
+      "--rpc-cors", "all",
+      "--unsafe-rpc-external",
+      "--base-path", "/data",
+      "--chain", "/specs/bifrost-mainnet.json",
+      "--validator",
+      "--state-cache-size", "0",
+      "--runtime-cache-size", "64",
+      "--name", "compose-test",
+    ]
+    networks:
+      - bifrost-network
+
+  bifrost-relayer:
+    restart: always
+    container_name: bifrost-relayer
+    image: thebifrost/bifrost-relayer
+    volumes:
+      - ./configs:/app/configs
+    environment:
+      - PRIVATE_KEY=YOUR_PRIVATE_KEY
+    depends_on:
+      - bifrost-node
+    networks:
+      - bifrost-network
+
+networks:
+  bifrost-network:
+    driver: bridge

@@ -3,9 +3,9 @@ version: '3.8'
 services:
   bifrost-node:
     container_name: bifrost-node
-    image: thebifrost/bifrost-node
+    image: thebifrost/bifrost-node:pre-v1.2.0
     ports:
-      - 30333:30333 # p2p
+      - "30333:30333" # p2p
     volumes:
       - /var/lib/bifrost-data:/data
     command: [
@@ -16,7 +16,8 @@ services:
       "--base-path", "/data",
       "--chain", "/specs/bifrost-testnet.json",
       "--validator",
-      "--state-cache-size", "0",
+      "--state-pruning", "archive",
+      "--trie-cache-size", "0",
       "--runtime-cache-size", "64",
       "--name", "compose-test",
     ]
