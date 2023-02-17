@@ -364,29 +364,18 @@ class RbcEvent(ChainEventABC):
         }
 
     @staticmethod
-    def bootstrap(manager: "Relayer", _range: Dict[Chain, List[int]]) -> List['RbcEvent']:
+    def bootstrap(manager: "Relayer", detected_events: List[DetectedEvent]) -> List['RbcEvent']:
         if manager.__class__.__name__ != "Relayer":
             raise Exception("Relayer only as a manger")
 
-        # Announcing the start of the event collection
-        global_logger.formatted_log(
-            "BootStrap",
-            address=manager.active_account.address,
-            related_chain=SwitchableChain.NONE,
-            msg="Collect{}Logs:range({})".format(RbcEvent.EVENT_NAME, _range)
-        )
-
-        # collect events on every chains
-        events_raw = manager.collect_unchecked_multichain_event_in_range(RbcEvent.EVENT_NAME, _range)
-
         # the collected events are made into objects and stored in the list
-        events = list()
-        for event in events_raw:
-            event_obj = RbcEvent.init(event, 0, manager)
-            events.append(event_obj)
+        rbc_events = list()
+        for detected_event in detected_events:
+            event_obj = RbcEvent.init(detected_event, 0, manager)
+            rbc_events.append(event_obj)
 
         # remove finalized event objects
-        not_finalized_event_objs = RbcEvent._remove_finalized_rids(events)
+        not_finalized_event_objs = RbcEvent._remove_finalized_rids(rbc_events)
 
         # remove too late event
         not_handled_events_objs = list()
@@ -885,36 +874,22 @@ class RoundUpEvent(ChainEventABC):
         return "{}:{}".format(self.detected_event.event_name, self.round)
 
     @staticmethod
-    def bootstrap(manager: EventBridge, _range: Dict[Chain, List[int]]) -> List['ChainEventABC']:
-        # Announcing the start of the event collection
-        event_name = RoundUpEvent.EVENT_NAME
-        target_chain = SwitchableChain.BIFROST
-
-        global_logger.formatted_log(
-            "Bootstrap",
-            address=manager.active_account.address,
-            msg="Collect{}Logs:range({})".format(event_name, _range[target_chain])
-        )
-
-        # collect events on only bifrost network
-        chain_manager = manager.get_chain_manager_of(target_chain)
-        from_block, to_block = _range[target_chain][0], _range[target_chain][1]
-        events_raw = chain_manager.ranged_collect_events(event_name, from_block, to_block)
-
+    def bootstrap(manager: EventBridge, detected_events: List[DetectedEvent]) -> List['ChainEventABC']:
         # remove event object except target status event object
         target_event_objects = list()
-        for event in events_raw:
-            event_obj = RoundUpEvent.init(event, 0, manager)
+        for detected_event in detected_events:
+            event_obj = RoundUpEvent.init(detected_event, 0, manager)
             if event_obj.status == ChainEventStatus.NEXT_AUTHORITY_COMMITTED:
                 target_event_objects.append((event_obj.round, event_obj))
 
         latest_event_object = sorted(target_event_objects)[-1][1] if target_event_objects else None
+
         global_logger.formatted_log(
             "Bootstrap",
             address=manager.active_account.address,
             related_chain=SwitchableChain.BIFROST,
             msg="Unchecked{}Log:{}".format(
-                event_name, latest_event_object.summary() if latest_event_object is not None else ""
+                RoundUpEvent.EVENT_NAME, latest_event_object.summary() if latest_event_object is not None else ""
             )
         )
 
