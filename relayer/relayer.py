@@ -6,8 +6,7 @@ import time
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eth.managers.configsanitycheck import ConfigChecker
-from chainpy.eth.managers.configsanitycheck import is_meaningful
+from chainpy.eth.managers.configsanitycheck import is_meaningful, ConfigSanityChecker
 from chainpy.logger import global_logger
 
 from rbclib.bifrostutils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
@@ -184,4 +183,4 @@ class Relayer(EventBridge):
     @staticmethod
     def config_sanity_check(config: dict):
         config_clone = copy.deepcopy(config)
-        ConfigChecker.check_config(config_clone)
+        ConfigSanityChecker(config_clone).check_config()
