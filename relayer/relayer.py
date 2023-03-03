@@ -97,7 +97,7 @@ class Relayer(EventBridge):
 
     def _wait_until_node_sync(self):
         """ Wait node's block synchronization"""
-        chain_manager = self.get_chain_manager_of(SwitchableChain.BIFROST)
+        chain_manager = self.get_chain_manager_of(SwitchableChain.BIFROST.name)
         while True:
             try:
                 result = chain_manager.send_request("system_health", [])["isSyncing"]
@@ -137,12 +137,12 @@ class Relayer(EventBridge):
         current_height, _, round_length = fetch_round_info(self)
         bootstrap_start_height = max(current_height - round_length * BOOTSTRAP_OFFSET_ROUNDS, 1)
 
-        for chain_index in self.supported_chain_list:
-            chain_manager = self.get_chain_manager_of(chain_index)
-            if chain_index == SwitchableChain.BIFROST:
+        for chain_name in self.supported_chain_list:
+            chain_manager = self.get_chain_manager_of(chain_name)
+            if chain_name == SwitchableChain.BIFROST.name:
                 chain_manager.latest_height = bootstrap_start_height
             else:
-                bootstrap_start_time = self.get_chain_manager_of(SwitchableChain.BIFROST). \
+                bootstrap_start_time = self.get_chain_manager_of(SwitchableChain.BIFROST.name). \
                     eth_get_block_by_height(bootstrap_start_height).timestamp
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 

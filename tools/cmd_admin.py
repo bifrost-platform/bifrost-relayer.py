@@ -26,36 +26,36 @@ def admin_cmd(is_testnet: bool):
         cmd = get_option_from_console("select a command number", SupportedAdminCmd.supported_cmds())
         if cmd == SupportedAdminCmd.FETCH_ROUNDS:
             print("-----------------------------------------------")
-            for chain_index in admin.supported_chain_list:
-                _round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-                print("{:>8}: {}".format(chain_index.name, _round))
+            for chain_name in admin.supported_chain_list:
+                _round = admin.world_call(chain_name, "relayer_authority", "latest_round", [])[0]
+                print("{:>8}: {}".format(chain_name, _round))
             print("-----------------------------------------------")
 
         elif cmd == SupportedAdminCmd.ROUND_UP:
             # round up
-            chain_index = get_chain_from_console(admin)
-            tx_hash = admin.round_up(chain_index)
+            chain = get_chain_from_console(admin)
+            tx_hash = admin.round_up(chain)
 
-            receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
+            receipt = admin.world_receipt_with_wait(chain.name, tx_hash, False)
             display_receipt_status(receipt)
 
         elif cmd == SupportedAdminCmd.BATCH_ROUND_UP:
             # batch round up
-            chain_index = get_chain_from_console(admin)
-            bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
-            target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
+            chain = get_chain_from_console(admin)
+            bifnet_round = admin.world_call(Chain.BFC_TEST.name, "relayer_authority", "latest_round", [])[0]
+            target_round = admin.world_call(chain.name, "relayer_authority", "latest_round", [])[0]
             if bifnet_round < target_round:
                 raise Exception("target chain's round is bigger than bifrost network")
 
-            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain_index.name, target_round))
+            print(">>> bifnet_round({}), {}_round({})".format(bifnet_round, chain.name, target_round))
             for _ in range(bifnet_round - target_round):
-                tx_hash = admin.round_up(chain_index)
-                receipt = admin.world_receipt_with_wait(chain_index, tx_hash, False)
+                tx_hash = admin.round_up(chain)
+                receipt = admin.world_receipt_with_wait(chain.name, tx_hash, False)
                 display_receipt_status(receipt)
 
-                bifnet_round = admin.world_call(Chain.BFC_TEST, "relayer_authority", "latest_round", [])[0]
-                target_round = admin.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-                print(">>> bifnet_round({}), {}_round({})\n".format(bifnet_round, chain_index.name, target_round))
+                bifnet_round = admin.world_call(Chain.BFC_TEST.name, "relayer_authority", "latest_round", [])[0]
+                target_round = admin.world_call(chain.name, "relayer_authority", "latest_round", [])[0]
+                print(">>> bifnet_round({}), {}_round({})\n".format(bifnet_round, chain.name, target_round))
 
         else:
             return

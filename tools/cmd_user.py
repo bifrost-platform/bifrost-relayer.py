@@ -100,7 +100,7 @@ def user_cmd(is_testnet: bool):
             print("rollback_address: {}".format(rollback_address.with_checksum()))
 
             rollback_asset = Asset.from_bytes(params[1][1][0])
-            before_balance = user.world_balance(chain, rollback_asset, rollback_address)
+            before_balance = user.world_balance(chain.name, rollback_asset, rollback_address)
             print("before balance: {} {}".format(
                 before_balance.change_decimal(4).float_str, rollback_asset.symbol.name
             ))
@@ -110,17 +110,17 @@ def user_cmd(is_testnet: bool):
                 rollback_asset.symbol.name
             ))
 
-            tx = user.world_build_transaction(chain, "socket", "timeout_rollback", params)
-            tx_hash = user.world_send_transaction(chain, tx)
+            tx = user.world_build_transaction(chain.name, "socket", "timeout_rollback", params)
+            tx_hash = user.world_send_transaction(chain.name, tx)
             print(">>> Rollback {} {} to {}".format(
                 (expected_balance - before_balance).change_decimal(4).float_str,
                 rollback_asset.symbol, rollback_address.with_checksum()
             ))
 
-            receipt = user.world_receipt_with_wait(chain, tx_hash)
+            receipt = user.world_receipt_with_wait(chain.name, tx_hash)
             display_receipt_status(receipt)
 
-            actual_balance = user.world_balance(chain, rollback_asset, rollback_address)
+            actual_balance = user.world_balance(chain.name, rollback_asset, rollback_address)
             print("actual balance: {} {}".format(
                 actual_balance.change_decimal(4).float_str, rollback_asset.symbol.name
             ))
@@ -139,7 +139,7 @@ def user_cmd(is_testnet: bool):
             print(">>> Approve {} on {}".format(
                 asset.name, chain.name
             ))
-            receipt = user.world_receipt_with_wait(chain, tx_hash, False)
+            receipt = user.world_receipt_with_wait(chain.name, tx_hash, False)
             display_receipt_status(receipt)
 
         elif cmd == SupportedUserCmd.ASSET_TRANSFER:
@@ -155,22 +155,22 @@ def user_cmd(is_testnet: bool):
             # build and send transaction
             asset = symbol_to_asset(chain, symbol)
             if asset.is_coin():
-                tx_hash = user.world_transfer_coin(chain, receiver_addr, amount)
+                tx_hash = user.world_transfer_coin(chain.name, receiver_addr, amount)
             else:
                 tx = user.world_build_transaction(
-                    chain,
+                    chain.name,
                     asset.name,
                     "transfer",
                     [receiver_addr.with_checksum(), amount.int()]
                 )
-                tx_hash = user.world_send_transaction(chain, tx)
+                tx_hash = user.world_send_transaction(chain.name, tx)
 
             print(">>> Transfer {} to {}".format(
                 asset.name, receiver_addr.with_checksum()
             ))
 
             # check the receipt
-            receipt = user.world_receipt_with_wait(chain, tx_hash, False)
+            receipt = user.world_receipt_with_wait(chain.name, tx_hash, False)
             display_receipt_status(receipt)
 
         elif cmd == SupportedUserCmd.MY_BALANCES:

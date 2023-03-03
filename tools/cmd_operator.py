@@ -68,9 +68,10 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_SOCKETS:
             # socket balance
-            for chain_index in operator.supported_chain_list:
-                vault_addr = operator.get_vault_addr(chain_index)  # spender
-                display_multichain_balances_on(operator, chain_index, addr=vault_addr)
+            for chain_name in operator.supported_chain_list:
+                chain = Chain[chain_name]
+                vault_addr = operator.get_vault_addr(chain)  # spender
+                display_multichain_balances_on(operator, chain, addr=vault_addr)
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_PRICE_OF:
             # get price from oracle
