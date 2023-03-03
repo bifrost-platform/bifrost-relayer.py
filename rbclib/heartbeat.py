@@ -41,7 +41,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         if not is_pulsed_hear_beat(self.relayer):
-            return SwitchableChain.BIFROST, "relayer_authority", "heartbeat", []
+            return SwitchableChain.BIFROST.name, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
 

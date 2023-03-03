@@ -1,6 +1,6 @@
 import copy
 import json
-from time import sleep
+import time
 from typing import Union, List, Any, Tuple
 
 from bridgeconst.consts import Chain, Asset, Symbol, RBCMethodV1, AssetType
@@ -9,7 +9,7 @@ from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
 
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.chaindata import EthReceipt
+from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 
@@ -60,15 +60,17 @@ INLINE_BALANCES_NUM = 3
 def display_multichain_coins_balances(manager: Manager, addr: EthAddress = None):
     target_addr = manager.active_account.address if addr is None else addr
     print("\n<Multi-chain coin balances>\n - {}".format(target_addr.hex()))
-    for chain_index in manager.supported_chain_list:
-        display_multichain_balances_on(manager, chain_index, target_addr, no_print_title=True, coin_only=True)
+    for chain_name in manager.supported_chain_list:
+        chain = Chain[chain_name]
+        display_multichain_balances_on(manager, chain, target_addr, no_print_title=True, coin_only=True)
 
 
 def display_multichain_asset_balances(manager: Manager, addr: EthAddress = None):
     target_addr = manager.active_account.address if addr is None else addr
     print("\n<Multi-chain asset balances>\n - {}".format(target_addr.hex()))
-    for chain_index in manager.supported_chain_list:
-        display_multichain_balances_on(manager, chain_index, target_addr, no_print_title=True, coin_only=False)
+    for chain_name in manager.supported_chain_list:
+        chain = Chain[chain_name]
+        display_multichain_balances_on(manager, chain, target_addr, no_print_title=True, coin_only=False)
 
 
 def display_multichain_balances_on(
@@ -84,7 +86,7 @@ def display_multichain_balances_on(
     for asset in target_asset_list:
         if not asset.is_coin() and coin_only:
             continue
-        bal = manager.world_balance(chain_index, asset=asset, user_addr=target_addr)
+        bal = manager.world_balance(chain_index.name, asset=asset, user_addr=target_addr)
         balance_str = "> 1M" if bal > EthAmount(1000000.0) else bal.change_decimal(2).float_str
         bal_str += BALANCE_FORMAT.format(asset.symbol, balance_str)
         bal_num += 1
@@ -133,11 +135,11 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
     # remove BIFROST from the supported chain list
     supported_chain_list_clone = copy.deepcopy(manager.supported_chain_list)
     if not_included_bifrost:
-        supported_chain_list_clone.remove(SwitchableChain.BIFROST)
+        supported_chain_list_clone.remove(SwitchableChain.BIFROST.name)
 
     prompt = "select a chain"
-    chain_index = get_option_from_console(prompt, supported_chain_list_clone)
-    return chain_index
+    chain_name = get_option_from_console(prompt, supported_chain_list_clone)
+    return Chain.from_name(chain_name)
 
 
 def asset_list_on(chain: Chain = None, token_only: bool = False, is_testnet: bool = False) -> List[Asset]:
@@ -193,14 +195,14 @@ def get_chain_and_symbol_from_console(
 
 def fetch_and_display_rounds(manager: Union[User, Relayer]):
     print("-----------------------------------------------")
-    for chain_index in manager.supported_chain_list:
-        _round = manager.world_call(chain_index, "relayer_authority", "latest_round", [])[0]
-        print("{:>8}: {}".format(chain_index.name, _round))
+    for chain_name in manager.supported_chain_list:
+        _round = manager.world_call(chain_name, "relayer_authority", "latest_round", [])[0]
+        print("{:>8}: {}".format(chain_name, _round))
     print("-----------------------------------------------")
 
 
 def fetch_asset_config(manager: Union[User, Relayer], asset: Asset, chain: Chain):
-    return manager.world_call(chain, "vault", "assets_config", [asset.formatted_bytes()])
+    return manager.world_call(chain.name, "vault", "assets_config", [asset.formatted_bytes()])
 
 
 def fetch_bridge_amount_config(
@@ -211,14 +213,14 @@ def fetch_bridge_amount_config(
         asset = Asset.from_name("BRIDGED_{}_{}_ON_{}".format(dst_chain.name, asset.symbol.name, src_chain.name))
 
     decimal = asset.decimal
-    config = manager.world_call(src_chain, "vault", "assets_config", [asset.formatted_bytes()])
+    config = manager.world_call(src_chain.name, "vault", "assets_config", [asset.formatted_bytes()])
     return EthAmount(config[1][0], decimal), EthAmount(config[1][1], decimal), EthAmount(config[1][2], decimal)
 
 
 def fetch_bridge_fee_config(
         manager: Union[User, Relayer], chain: Chain, asset: Asset) -> Tuple[EthAmount, EthAmount, EthAmount]:
     decimal = asset.decimal
-    config = manager.world_call(chain, "vault", "assets_config", [asset.formatted_bytes()])
+    config = manager.world_call(chain.name, "vault", "assets_config", [asset.formatted_bytes()])
     return EthAmount(config[0][0], decimal), EthAmount(config[0][1], decimal), EthAmount(config[0][2], decimal)
 
 
@@ -247,17 +249,18 @@ def cccp_batch_send(
     tx_hashes = list()
     print("\n>>> send transaction for each request")
     for i in range(batch_num):
-        tx_hash = user.world_send_transaction(src_chain, request_txs[i])
+        tx_hash = user.world_send_transaction(src_chain.name, request_txs[i])
         tx_hashes.append(tx_hash)
-    print(">>>> completes")
+    print(">>>> completes, sleep 30 sec")
+    time.sleep(30)
 
     receipts = list()
     rids = list()
 
     print("\n>>> start check receipt for each request")
     for i in range(batch_num):
-        receipt = user.world_receipt_with_wait(src_chain, tx_hashes[i])
-        result = user.get_contract_obj_on(src_chain, "socket"). \
+        receipt = user.world_receipt_with_wait(src_chain.name, tx_hashes[i])
+        result = user.get_contract_obj_on(src_chain.name, "socket"). \
             get_method_abi("Socket"). \
             decode_event_data(receipt.logs[3].data)[0]
         receipts.append(receipt)

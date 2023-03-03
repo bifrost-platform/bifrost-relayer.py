@@ -127,8 +127,8 @@ if __name__ == "__main__":
             'private_config_path': None,
             'no_heartbeat': False,
             'prometheus': False,
-            'slow_relayer': False,
-            'fast_relayer': True,
+            'slow_relayer': True,
+            'fast_relayer': False,
             'testnet': True,
             "log_file_name": "console.log"
         }

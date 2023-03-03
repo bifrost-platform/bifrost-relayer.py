@@ -4,7 +4,7 @@ import eth_abi
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
 
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eventbridge.chaineventabc import ChainEventABC
+from chainpy.eventbridge.chaineventabc import ChainEventABC, CallParamTuple, SendParamTuple
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from relayer.relayer import Relayer
 
 RangesDict = Dict[Chain, Tuple[int, int]]
-NoneParams = (SwitchableChain.NONE, "", "", [])
+NoneParams = ("", "", "", [])
 
 SOCKET_CONTRACT_NAME = "socket"
 SUBMIT_FUNCTION_NAME = "poll"
@@ -166,11 +166,11 @@ class RbcEvent(ChainEventABC):
         if relayer_config_global.is_fast_relayer():
             return True
 
-        if self.src_chain not in self.manager.supported_chain_list:
+        if self.src_chain.name not in self.manager.supported_chain_list:
             global_logger.formatted_log(
                 "WrongRequest",
                 address=self.relayer.active_account.address,
-                related_chain=self.src_chain,
+                related_chain=self.src_chain.name,
                 msg="CheckMyEvent:RequestOnNotSupportedChain: {}".format(self.summary())
             )
             return False
@@ -205,14 +205,14 @@ class RbcEvent(ChainEventABC):
         )
         return False
 
-    def build_call_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_call_transaction_params(self) -> CallParamTuple:
         """ builds and returns call transaction parameters related to this event. """
         if not self.check_my_event():
             return NoneParams
         log_invalid_flow("Protocol", self)
         return NoneParams
 
-    def build_transaction_params(self):
+    def build_transaction_params(self) -> SendParamTuple:
         """ builds and returns send transaction parameters related to this event. """
         raise Exception("Not Implemented")
 
@@ -262,7 +262,7 @@ class RbcEvent(ChainEventABC):
     def is_outbound(self) -> bool:
         return self.src_chain == SwitchableChain.BIFROST
 
-    def req_id(self) -> Tuple[Union[int, Chain], int, int]:
+    def req_id(self) -> Tuple[Chain, int, int]:
         unzipped_decoded_data = self.decoded_data[0]
         req_id_tuple = unzipped_decoded_data[0]
         return Chain.from_bytes(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
@@ -321,13 +321,13 @@ class RbcEvent(ChainEventABC):
         method_params = self.method_params
         return {
             "req_id": {
-                "src_chain": self.src_chain,
+                "src_chain": self.src_chain.name,
                 "round": self.rnd,
                 "seq_num": self.seq
             },
             "event_status": self.status,
             "instruction": {
-                "dst_chain": self.dst_chain,
+                "dst_chain": self.dst_chain.name,
                 "method": self.rbc_method
             },
             "action_params": {
@@ -442,12 +442,17 @@ class RbcEvent(ChainEventABC):
 
         return primary_index == my_index
 
-    def build_transaction_param_with_sig(self):
+    def build_transaction_param_with_sig(self) -> SendParamTuple:
         next_status = ChainEventStatus(self.status.value + 2)
         data_with_next_status = self.change_status_of_data(self.detected_event, next_status)
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return (
+            SwitchableChain.BIFROST.name,
+            SOCKET_CONTRACT_NAME,
+            SUBMIT_FUNCTION_NAME,
+            submit_data.submit_tuple()
+        )
 
 
 class ChainRequestedEvent(RbcEvent):
@@ -460,24 +465,38 @@ class ChainRequestedEvent(RbcEvent):
         if not self.check_my_event():
             return NoneParams
         chain, rnd, seq = self.req_id()
-        return self.dst_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
+        return (
+            self.dst_chain.name,
+            SOCKET_CONTRACT_NAME,
+            GET_REQ_INFO_FUNCTION_NAME,
+            [(chain.formatted_bytes(), rnd, seq)]
+        )
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, list]:
+    def build_transaction_params(self) -> SendParamTuple:
         """ A method to build a transaction which handles the event """
         if not self.check_my_event():
             return NoneParams
 
         if self.is_inbound():
-            # TODO inbound forced fail
-            return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, PollSubmit(self).submit_tuple()
+            return (
+                SwitchableChain.BIFROST.name,
+                SOCKET_CONTRACT_NAME,
+                SUBMIT_FUNCTION_NAME,
+                PollSubmit(self).submit_tuple()
+            )
         else:
             # generate signature if it's needed
             status_changed_data = RbcEvent.change_status_of_data(self.detected_event, ChainEventStatus.ACCEPTED)
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
             submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-            return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+            return (
+                SwitchableChain.BIFROST.name,
+                SOCKET_CONTRACT_NAME,
+                SUBMIT_FUNCTION_NAME,
+                submit_data.submit_tuple()
+            )
 
-    def handle_call_result(self, result: tuple):
+    def handle_call_result(self, result: tuple) -> Optional["RbcEvent"]:
         if not self.check_my_event():
             return None
 
@@ -544,7 +563,7 @@ class ChainFailedEvent(RbcEvent):
         if self.status != ChainEventStatus.FAILED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         """ A method to build a transaction which handles the event """
         if not self.check_my_event():
             return NoneParams
@@ -556,7 +575,12 @@ class ChainFailedEvent(RbcEvent):
         msg_to_sign = self.detected_event.data
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
-        return SwitchableChain.BIFROST, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return (
+            SwitchableChain.BIFROST.name,
+            SOCKET_CONTRACT_NAME,
+            SUBMIT_FUNCTION_NAME,
+            submit_data.submit_tuple()
+        )
 
 
 class ChainExecutedEvent(RbcEvent):
@@ -565,7 +589,7 @@ class ChainExecutedEvent(RbcEvent):
         if self.status != ChainEventStatus.EXECUTED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         if not self.check_my_event():
             return NoneParams
         return self.build_transaction_param_with_sig()
@@ -583,7 +607,7 @@ class ChainRevertedEvent(RbcEvent):
         if self.status != ChainEventStatus.REVERTED:
             raise Exception("Event status not matches")
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         if not self.check_my_event():
             return NoneParams
         return self.build_transaction_param_with_sig()
@@ -600,19 +624,19 @@ class _AggregatedRelayEvent(RbcEvent):
         super().__init__(detected_event, time_lock, manager)
         self.aggregated = True
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         if not self.check_my_event():
             return NoneParams
 
         # Check if the fast relayer has already processed.
-        chain_index, contract_name, method_name, params_tuple = self.build_call_transaction_params()
-        result = self.relayer.world_call(chain_index, contract_name, method_name, params_tuple)
+        chain_name, contract_name, method_name, params_tuple = self.build_call_transaction_params()
+        result = self.relayer.world_call(chain_name, contract_name, method_name, params_tuple)
         status, expected_status = self.check_already_done(result)
         if status == expected_status:
             global_logger.formatted_log(
                 "Protocol",
                 address=self.relayer.active_account.address,
-                related_chain=chain_index,
+                related_chain=chain_name,
                 msg="SlowRelay:{}:AlreadyProcessed".format(self.status.name)
             )
             return NoneParams
@@ -628,12 +652,17 @@ class _AggregatedRelayEvent(RbcEvent):
 
             return NoneParams
 
-    def build_call_transaction_params(self):
+    def build_call_transaction_params(self) -> CallParamTuple:
         if not self.check_my_event():
             return NoneParams
         target_chain = self.src_chain if self.is_inbound() else self.dst_chain
         chain, rnd, seq = self.req_id()
-        return target_chain, SOCKET_CONTRACT_NAME, GET_REQ_INFO_FUNCTION_NAME, [(chain.formatted_bytes(), rnd, seq)]
+        return (
+            target_chain.name,
+            SOCKET_CONTRACT_NAME,
+            GET_REQ_INFO_FUNCTION_NAME,
+            [(chain.formatted_bytes(), rnd, seq)]
+        )
 
     def check_already_done(self, result: tuple) -> Tuple[ChainEventStatus, ChainEventStatus]:
         status = ChainEventStatus(result[0][0][0])
@@ -669,7 +698,9 @@ class _AggregatedRelayEvent(RbcEvent):
         self.switch_to_send(timestamp_msec())
         return self
 
-    def aggregated_relay(self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus):
+    def aggregated_relay(
+            self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus
+    ) -> SendParamTuple:
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         chain, rnd, seq = self.req_id()
         sigs = fetch_socket_rbc_sigs(self.relayer, (chain.formatted_bytes(), rnd, seq), chain_event_status)
@@ -686,7 +717,12 @@ class _AggregatedRelayEvent(RbcEvent):
                 relayer_index if not relayer_config_global.is_fast_relayer() else "FAST"
             )
         )
-        return target_chain, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, submit_data.submit_tuple()
+        return (
+            target_chain.name,
+            SOCKET_CONTRACT_NAME,
+            SUBMIT_FUNCTION_NAME,
+            submit_data.submit_tuple()
+        )
 
 
 class ChainAcceptedEvent(_AggregatedRelayEvent):
@@ -719,7 +755,7 @@ class _FinalStatusEvent(RbcEvent):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         super().__init__(detected_event, time_lock, manager)
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         if not self.check_my_event():
             return NoneParams
         PrometheusExporterRelayer.exporting_request_metric(self.src_chain, self.status)
@@ -746,9 +782,9 @@ class RoundUpEvent(ChainEventABC):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, time_lock, manager)
-        self.updating_chains = self.relayer.supported_chain_list
+        self.updating_chains = [Chain[chain] for chain in self.relayer.supported_chain_list]
         self.updating_chains.remove(SwitchableChain.BIFROST)
-        self.selected_chain = None
+        self.selected_chain: Chain = Chain.NONE
         self.aggregated = True
 
     @classmethod
@@ -808,7 +844,7 @@ class RoundUpEvent(ChainEventABC):
         primary_index = self.detected_event.block_number % len(previous_validator_list)
         return primary_index == self.relayer.get_value_by_key(self.round - 1)
 
-    def build_transaction_params(self) -> Tuple[Chain, str, str, Union[tuple, list]]:
+    def build_transaction_params(self) -> SendParamTuple:
         # ignore event except one with status: 10
         if self.status != ChainEventStatus.NEXT_AUTHORITY_COMMITTED:
             return NoneParams
@@ -818,7 +854,7 @@ class RoundUpEvent(ChainEventABC):
             return NoneParams
 
         # split task for each native chain
-        if self.selected_chain is None:
+        if self.selected_chain == Chain.NONE:
             for chain_index in self.updating_chains:
                 self.relayer.queue.enqueue(self.clone(chain_index))
             return NoneParams
@@ -840,11 +876,16 @@ class RoundUpEvent(ChainEventABC):
             # primary relayer do
             result = fetch_socket_vsp_sigs(self.relayer, self.round)
             submit_data = AggregatedRoundUpSubmit(self).add_tuple_sigs(result)
-            return self.selected_chain, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME, submit_data.submit_tuple()
+            return (
+                       self.selected_chain.name,
+                       SOCKET_CONTRACT_NAME,
+                       ROUND_UP_VOTING_FUNCTION_NAME,
+                       submit_data.submit_tuple()
+            )
         else:
             # secondary relayer do (prepare to call after a few minutes)
             next_time_lock = timestamp_msec() \
-                             + self.relayer.get_chain_manager_of(self.selected_chain).tx_commit_time_sec \
+                             + self.relayer.get_chain_manager_of(self.selected_chain.name).tx_commit_time_sec \
                              + 1000 * relayer_config_global.roundup_event_call_delay_sec
 
             self.switch_to_send(next_time_lock)
@@ -853,7 +894,7 @@ class RoundUpEvent(ChainEventABC):
 
             return NoneParams
 
-    def build_call_transaction_params(self):
+    def build_call_transaction_params(self) -> CallParamTuple:
         pass
 
     def handle_call_result(self, result):
