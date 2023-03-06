@@ -87,8 +87,8 @@ class User(MultiChainManager):
         token_decimal = self.world_call(chain.name, asset.name, "decimals", [])[0]
         return EthAmount(value[0], token_decimal)
 
-    def get_token_address(self, chain_index: Chain, asset: Asset) -> EthAddress:
-        contract = self.get_contract_obj_on(chain_index.name, asset.name)
+    def get_token_address(self, chain: Chain, asset: Asset) -> EthAddress:
+        contract = self.get_contract_obj_on(chain.name, asset.name)
         return contract.address if contract is not None else EthAddress("0x00")
 
     def get_vault_addr(self, chain: Chain) -> EthAddress:

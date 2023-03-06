@@ -110,15 +110,15 @@ def fetch_sorted_relayer_list_lower(
     return sorted(validator_list_lower)
 
 
-def fetch_relayer_num(manager: EventBridge, target_chain_index: Chain, is_initial: bool = True) -> int:
-    validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain_index, is_initial=is_initial)
+def fetch_relayer_num(manager: EventBridge, target_chain: Chain, is_initial: bool = True) -> int:
+    validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain, is_initial=is_initial)
     return len(validator_tuple)
 
 
-def fetch_quorum(manager: EventBridge, target_chain_index: Chain, rnd: int = None, is_initial: bool = True) -> int:
+def fetch_quorum(manager: EventBridge, target_chain: Chain, rnd: int = None, is_initial: bool = True) -> int:
     method = "majority" if rnd is None else "previous_majority"
     params = [is_initial] if rnd is None else [rnd, is_initial]
-    return manager.world_call(target_chain_index.name, "relayer_authority", method, params)[0]
+    return manager.world_call(target_chain.name, "relayer_authority", method, params)[0]
 
 
 def fetch_socket_rbc_sigs(manager: EventBridge, request_id: tuple, chain_event_status: ChainEventStatus):
