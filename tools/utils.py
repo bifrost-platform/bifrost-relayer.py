@@ -74,19 +74,19 @@ def display_multichain_asset_balances(manager: Manager, addr: EthAddress = None)
 
 
 def display_multichain_balances_on(
-        manager: Manager, chain_index: Chain,
+        manager: Manager, chain: Chain,
         addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False):
     target_addr = manager.active_account.address if addr is None else addr
     if not no_print_title:
-        print("\n<{} balances on {}>".format(target_addr.hex(), chain_index))
+        print("\n<{} balances on {}>".format(target_addr.hex(), chain))
 
-    print(chain_index.name + "-" * (BALANCE_FORMAT_STRING_LEN * INLINE_BALANCES_NUM + 1 - len(chain_index.name)))
+    print(chain.name + "-" * (BALANCE_FORMAT_STRING_LEN * INLINE_BALANCES_NUM + 1 - len(chain.name)))
     bal_str, bal_num = "", 0
-    target_asset_list = asset_list_on(chain_index)
+    target_asset_list = asset_list_on(chain)
     for asset in target_asset_list:
         if not asset.is_coin() and coin_only:
             continue
-        bal = manager.world_balance(chain_index.name, asset=asset, user_addr=target_addr)
+        bal = manager.world_balance(chain.name, asset=asset, user_addr=target_addr)
         balance_str = "> 1M" if bal > EthAmount(1000000.0) else bal.change_decimal(2).float_str
         bal_str += BALANCE_FORMAT.format(asset.symbol, balance_str)
         bal_num += 1

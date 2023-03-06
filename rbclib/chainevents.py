@@ -855,8 +855,8 @@ class RoundUpEvent(ChainEventABC):
 
         # split task for each native chain
         if self.selected_chain == Chain.NONE:
-            for chain_index in self.updating_chains:
-                self.relayer.queue.enqueue(self.clone(chain_index))
+            for chain in self.updating_chains:
+                self.relayer.queue.enqueue(self.clone(chain))
             return NoneParams
 
         # check to need to sync validator list to the selected chain

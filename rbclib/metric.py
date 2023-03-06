@@ -38,10 +38,10 @@ class PrometheusExporterRelayer(PrometheusExporter):
             port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
         PrometheusExporter.init_prometheus_exporter(port)
 
-        for chain_index in supported_chains:
+        for chain in supported_chains:
             """ add 2 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
-            chain_name = chain_index.name.upper()
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain_name).set(0)
+            chain = chain.name.upper()
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain).set(0)
 
         ignored = [
             ChainEventStatus.NONE,
@@ -52,7 +52,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
             PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name).inc(0)
 
     @staticmethod
-    def exporting_request_metric(_chain_index: Chain, _status: ChainEventStatus):
+    def exporting_request_metric(_chain: Chain, _status: ChainEventStatus):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
 
@@ -69,9 +69,9 @@ class PrometheusExporterRelayer(PrometheusExporter):
             # do nothing
             pass
         elif _status == ChainEventStatus.REQUESTED:
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain_index.name.lower()).inc(2)
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain.name.lower()).inc(2)
         else:
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain_index.name.lower()).dec(1)
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain.name.lower()).dec(1)
 
     @staticmethod
     def exporting_heartbeat_metric():
@@ -104,7 +104,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
         PrometheusExporterRelayer.BTC_HEIGHT.set(height)
 
     @staticmethod
-    def exporting_external_chain_rnd(chain_index: Chain, rnd: int):
+    def exporting_external_chain_rnd(chain: Chain, rnd: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
-        PrometheusExporterRelayer.CHAIN_ROUNDS.labels(chain_index.name.lower()).set(rnd)
+        PrometheusExporterRelayer.CHAIN_ROUNDS.labels(chain.name.lower()).set(rnd)
