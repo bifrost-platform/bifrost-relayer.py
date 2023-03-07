@@ -2,7 +2,7 @@ import enum
 from typing import List
 
 from bridgeconst.consts import Chain, Oracle
-from chainpy.eth.ethtype.hexbytes import EthAddress
+from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
 from rbclib.bifrostutils import (
     fetch_submitted_oracle_feed,
@@ -21,7 +21,7 @@ from .utils import (
     Manager,
     display_addrs,
     symbol_list_on,
-    get_option_from_console
+    get_option_from_console, get_typed_item_from_console, get_chain_from_console
 )
 
 
@@ -36,6 +36,7 @@ class SupportedOperatorCmd(enum.Enum):
     GET_LATEST_BTC_HASH = "get latest BTC hash from oracle"
     GET_BTC_HASH_OF_THE_HEIGHT = "get BTC hash of the height from oracle"
     GET_BTC_FEEDS_BY = "get btc hash feed of each relayer"
+    FETCH_AND_DECODE_EVENT = "decode socket event"
     QUIT = "quit"
 
     @staticmethod
@@ -97,6 +98,35 @@ def operator_cmd(is_testnet: bool, ):
                     operator, Oracle.BITCOIN_BLOCK_HASH, latest_round, EthAddress(relayer)
                 )
                 print("addr: {} {}".format(relayer, result.hex()))
+
+        elif cmd == SupportedOperatorCmd.FETCH_AND_DECODE_EVENT:
+            input_type = get_option_from_console("select input type", ["tx_hash", "log_data"])
+            if input_type == "tx_hash":
+                tx_hash = get_typed_item_from_console("enter tx_hash", EthHashBytes)
+                chain = get_chain_from_console(operator)
+
+                receipt = operator.world_receipt_without_wait(chain.name, tx_hash)
+                if receipt is None:
+                    print("No receipt")
+                    return
+                if receipt.status == 0:
+                    print("failed transaction")
+                    return
+                log_data = receipt.get_log_data_by_topic("0x918454f530580823dd0d8cf59cacb45a6eb7cc62f222d7129efba5821e77f191")
+
+            elif input_type == "log_data":
+                log_data = get_typed_item_from_console("enter log_data", EthHashBytes)
+                chain = SwitchableChain.BIFROST
+            else:
+                raise Exception("Invalid input type")
+
+            result = operator.get_contract_obj_on(chain.name, "socket").get_method_abi("Socket").decode_event_data(
+                log_data)
+            print(result)
+            return
+
+
+
 
         else:
             return

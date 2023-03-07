@@ -53,7 +53,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="HeartBeat({})".format(True)
         )
         return None
@@ -62,7 +62,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="HeartBeat({})".format(False)
         )
         return None
@@ -71,7 +71,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="HeartBeat({})".format(None)
         )
         return None

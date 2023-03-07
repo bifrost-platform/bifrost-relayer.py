@@ -128,7 +128,7 @@ class Relayer(EventBridge):
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="round({}):index({})".format(self.round_cache - i, relayer_index)
             )
             self.set_value_by_key(self.round_cache - i, relayer_index)
