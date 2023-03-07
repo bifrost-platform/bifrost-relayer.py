@@ -135,7 +135,7 @@ class RbcEvent(ChainEventABC):
             global_logger.formatted_log(
                 "Protocol",
                 address=manager.active_account.address,
-                related_chain=SwitchableChain.NONE,
+                related_chain_name=SwitchableChain.NONE.name,
                 msg="SlowRelay:{}:delay-{}-sec".format(ret.summary(), relayer_config_global.slow_relayer_delay_sec)
             )
             return ret
@@ -170,7 +170,7 @@ class RbcEvent(ChainEventABC):
             global_logger.formatted_log(
                 "WrongRequest",
                 address=self.relayer.active_account.address,
-                related_chain=self.src_chain.name,
+                related_chain_name=self.src_chain.name,
                 msg="CheckMyEvent:RequestOnNotSupportedChain: {}".format(self.summary())
             )
             return False
@@ -179,7 +179,7 @@ class RbcEvent(ChainEventABC):
         global_logger.formatted_log(
             "CheckAuth",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="CheckMyEvent:RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
         )
         if cached_index is not None:
@@ -189,7 +189,7 @@ class RbcEvent(ChainEventABC):
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="CheckMyEvent:FetchRelayerIdx:round({}):index({})".format(self.rnd, relayer_index)
         )
 
@@ -200,7 +200,7 @@ class RbcEvent(ChainEventABC):
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="CheckMyEvent:IgnoreRequest:{}".format(self.summary())
         )
         return False
@@ -512,7 +512,7 @@ class ChainRequestedEvent(RbcEvent):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.manager.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="{}:voting-num({})".format(self.summary(), voting_num)
             )
             ret = None
@@ -520,7 +520,7 @@ class ChainRequestedEvent(RbcEvent):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.manager.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="{}:voting-num({}):change-status".format(self.summary(), voting_num)
             )
             ret = self.handle_tx_result_fail()
@@ -636,7 +636,7 @@ class _AggregatedRelayEvent(RbcEvent):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.relayer.active_account.address,
-                related_chain=chain_name,
+                related_chain_name=chain_name,
                 msg="SlowRelay:{}:AlreadyProcessed".format(self.status.name)
             )
             return NoneParams
@@ -685,7 +685,7 @@ class _AggregatedRelayEvent(RbcEvent):
         global_logger.formatted_log(
             "Protocol",
             address=self.manager.active_account.address,
-            related_chain=self.src_chain if self.is_inbound() else self.dst_chain,
+            related_chain_name=self.src_chain.name if self.is_inbound() else self.dst_chain.name,
             msg="{}:{}-thRelayer:expected({}):actual({})".format(
                 self.summary(),
                 self.relayer.get_latest_value(),
@@ -710,7 +710,7 @@ class _AggregatedRelayEvent(RbcEvent):
         global_logger.formatted_log(
             "Protocol",
             address=self.manager.active_account.address,
-            related_chain=target_chain,
+            related_chain_name=target_chain.name,
             msg="{}:{}-Vote({})".format(
                 self.summary(),
                 msg,
@@ -866,7 +866,7 @@ class RoundUpEvent(ChainEventABC):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.relayer.active_account.address,
-                related_chain=self.selected_chain,
+                related_chain_name=self.selected_chain.name,
                 msg="SlowRelay:{}:round({}):AlreadyProcessed".format(self.__class__.EVENT_NAME, target_round)
             )
             return NoneParams
@@ -928,7 +928,7 @@ class RoundUpEvent(ChainEventABC):
         global_logger.formatted_log(
             "Bootstrap",
             address=manager.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="Unchecked{}Log:{}".format(
                 RoundUpEvent.EVENT_NAME, latest_event_object.summary() if latest_event_object is not None else ""
             )

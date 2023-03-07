@@ -86,7 +86,7 @@ class PriceUpOracle(PeriodicEventABC):
         global_logger.formatted_log(
             "PriceUp",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="{}:price-feeding".format(self.__class__.__name__)
         )
         return (
@@ -165,7 +165,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.relayer.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="oracle-error:OracleHeight({})>BtcHeight({})".format(
                     latest_height_from_socket, latest_height_from_chain
                 )
@@ -183,7 +183,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
 
@@ -202,7 +202,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="submitted:height({})".format(feed_target_height)
             )
             return NoneParams
@@ -281,7 +281,7 @@ class VSPFeed(PeriodicEventABC):
         global_logger.formatted_log(
             "CheckRound",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST.name,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="VSPFeed:cached({}):fetched({})".format(self.__current_round, round_from_bn)
         )
 
@@ -296,7 +296,7 @@ class VSPFeed(PeriodicEventABC):
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain=SwitchableChain.BIFROST,
+            related_chain_name=SwitchableChain.BIFROST.name,
             msg="VSPFeed:FetchRelayerIdx:round({}):index({})".format(round_from_bn, relayer_index)
         )
 
@@ -305,14 +305,14 @@ class VSPFeed(PeriodicEventABC):
             global_logger.formatted_log(
                 "CheckAuth",
                 address=self.relayer.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="VSPFeed:UpdatedRelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
             )
         else:
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
-                related_chain=SwitchableChain.BIFROST,
+                related_chain_name=SwitchableChain.BIFROST.name,
                 msg="NotValidator:round({})".format(round_from_bn)
             )
 
