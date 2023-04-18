@@ -11,6 +11,7 @@
                 "BNB_ON_BNB_MAIN",
                 "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
+                "USDT_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
             "collection_period_sec": 300
@@ -83,7 +84,8 @@
 			{"name": "socket", "address": "0x4A31FfeAc276CC5e508cAC0568d932d398C4DD84", "abi_file": "abi.socket.external.json", "deploy_height": 16431054},
 			{"name": "BFC_ON_ETH_MAIN", "address": "0x0c7D5ae016f806603CB1782bEa29AC69471CAb9c", "abi_file": "abi.erc20.json"},
             {"name": "BIFI_ON_ETH_MAIN", "address": "0x2791BfD60D232150Bff86b39B7146c0eaAA2BA81", "abi_file": "abi.erc20.json"},
-            {"name": "USDC_ON_ETH_MAIN", "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "abi_file": "abi.erc20.json"}
+            {"name": "USDC_ON_ETH_MAIN", "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "abi_file": "abi.erc20.json"},
+            {"name": "USDT_ON_ETH_MAIN", "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7", "abi_file": "abi.erc20.json"}
 		],
         "events": [
             {

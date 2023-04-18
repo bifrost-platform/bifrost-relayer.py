@@ -102,6 +102,7 @@ Use the oracle_config provided.
             "BNB_ON_BNB_MAIN",
             "MATIC_ON_MATIC_MAIN",
             "USDC_ON_ETH_MAIN",
+            "USDT_ON_ETH_MAIN",
             "BIFI_ON_ETH_MAIN"
         ],
         "collection_period_sec": 120
