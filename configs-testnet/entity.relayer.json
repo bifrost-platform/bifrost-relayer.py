@@ -84,6 +84,11 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_ETH_GOERLI_SAT_ON_BFC_TEST",
+                "address": "0xd2Ae6529057BE0b4Ef44bB4A127ee76B1c2863CB",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "BRIDGED_BNB_TEST_USDC_ON_BFC_TEST",
                 "address": "0xC67f0b7c01f6888D43B563B3a8B851856BcfAB64",
                 "abi_file": "abi.erc20.json"
@@ -126,6 +131,11 @@
             {
                 "name": "UNIFIED_MATIC_ON_BFC_TEST",
                 "address": "0xad115F901a1Af99dc83D055C89641031fd1a50Dc",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_SAT_ON_BFC_TEST",
+                "address": "0x3325B631CD1B972628f021c3bB776e21290baB21",
                 "abi_file": "abi.unified.erc20.json"
             }
         ],
@@ -192,6 +202,11 @@
             {
                 "name": "USDT_ON_ETH_GOERLI",
                 "address": "0xF26d15E6484e00Af2772b840eb4F2B36F0BD569C",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "SAT_ON_ETH_GOERLI",
+                "address": "0x4a5FC8893Db2Fa06ebe3D7Ec21a1d9466ee54442",
                 "abi_file": "abi.erc20.json"
             }
         ],
