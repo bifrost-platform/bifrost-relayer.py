@@ -34,13 +34,13 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
     @staticmethod
     def init_prometheus_exporter_on_relayer(
-            supported_chains: List[Chain],
+            supported_chains: List[str],
             port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
         PrometheusExporter.init_prometheus_exporter(port)
 
         for chain in supported_chains:
             """ add 2 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain).set(0)
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain.upper()).set(0)
 
         ignored = [
             ChainEventStatus.NONE,
@@ -103,7 +103,7 @@ class PrometheusExporterRelayer(PrometheusExporter):
         PrometheusExporterRelayer.BTC_HEIGHT.set(height)
 
     @staticmethod
-    def exporting_external_chain_rnd(chain: Chain, rnd: int):
+    def exporting_external_chain_rnd(chain: str, rnd: int):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
-        PrometheusExporterRelayer.CHAIN_ROUNDS.labels(chain.name.lower()).set(rnd)
+        PrometheusExporterRelayer.CHAIN_ROUNDS.labels(chain.lower()).set(rnd)
