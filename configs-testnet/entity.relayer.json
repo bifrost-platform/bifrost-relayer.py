@@ -11,6 +11,7 @@
                 "BNB_ON_BNB_MAIN",
                 "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
+                "USDT_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
             "collection_period_sec": 300
@@ -186,6 +187,11 @@
             {
                 "name": "USDC_ON_ETH_GOERLI",
                 "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDT_ON_ETH_GOERLI",
+                "address": "0xF26d15E6484e00Af2772b840eb4F2B36F0BD569C",
                 "abi_file": "abi.erc20.json"
             }
         ],

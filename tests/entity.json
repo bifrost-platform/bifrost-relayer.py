@@ -13,6 +13,7 @@
                 "BFC_ON_ETH_MAIN",
                 "BNB_ON_BNB_MAIN",
                 "USDC_ON_ETH_MAIN",
+                "USDT_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
             "source_names": [
@@ -95,7 +96,8 @@
 			{"name": "socket", "address": "0xeF5260Db045200142a6B5DDB297e860099ffd51d", "abi_file": "abi.socket.external.json", "deploy_height": 8052951},
 			{"name": "BFC_ON_ETH_GOERLI", "address": "0x3A815eBa66EaBE966a6Ae7e5Df9652eca24e9c54", "abi_file": "abi.erc20.json"},
             {"name": "BIFI_ON_ETH_GOERLI", "address": "0x055ED934c426855caB467FdF8441D4FD6a7D2659", "abi_file": "abi.erc20.json"},
-            {"name": "USDC_ON_ETH_GOERLI", "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70", "abi_file": "abi.erc20.json"}
+            {"name": "USDC_ON_ETH_GOERLI", "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70", "abi_file": "abi.erc20.json"},
+            {"name": "USDT_ON_ETH_GOERLI", "address": "0xF26d15E6484e00Af2772b840eb4F2B36F0BD569C", "abi_file": "abi.erc20.json"}
 		],
         "events": [
             {

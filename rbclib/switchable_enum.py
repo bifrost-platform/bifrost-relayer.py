@@ -60,7 +60,7 @@ class _SwitchableAsset:
         self.BRIDGED_BNB_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_BNB_ON_BFC_MAIN
         self.UNIFIED_BNB_ON_BIFROST = Asset.UNIFIED_BNB_ON_BFC_MAIN
 
-        # MATIC------------------------------------------------------------------------------------------------------------
+        # MATIC-------------------------------------------------------------------------------------------------------------
         self.MATIC_ON_POLYGON = Asset.MATIC_ON_MATIC_MAIN
         self.BRIDGED_MATIC_ON_BIFROST = Asset.BRIDGED_MATIC_MAIN_MATIC_ON_BFC_MAIN
         self.UNIFIED_MATIC_ON_BIFROST = Asset.UNIFIED_MATIC_ON_BFC_MAIN
@@ -73,6 +73,11 @@ class _SwitchableAsset:
         self.BRIDGED_ETHEREUM_USDC_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDC_ON_BFC_MAIN
         self.BRIDGED_BINANCE_USDC_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_USDC_ON_BFC_MAIN
         self.UNIFIED_USDC_ON_BIFROST = Asset.UNIFIED_USDC_ON_BFC_MAIN
+
+        # USDT--------------------------------------------------------------------------------------------------------------
+        self.USDT_ON_ETHEREUM = Asset.USDT_ON_ETH_MAIN
+        # self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN
+        # self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_MAIN
 
         if test_flag:
             self.switch_testnet_config()
@@ -110,7 +115,7 @@ class _SwitchableAsset:
         self.BRIDGED_BNB_ON_BIFROST = Asset.BRIDGED_BNB_TEST_BNB_ON_BFC_TEST
         self.UNIFIED_BNB_ON_BIFROST = Asset.UNIFIED_BNB_ON_BFC_TEST
 
-        # MATIC------------------------------------------------------------------------------------------------------------
+        # MATIC-------------------------------------------------------------------------------------------------------------
         self.MATIC_ON_POLYGON = Asset.MATIC_ON_MATIC_MUMBAI
         self.BRIDGED_MATIC_ON_BIFROST = Asset.BRIDGED_MATIC_MUMBAI_MATIC_ON_BFC_TEST
         self.UNIFIED_MATIC_ON_BIFROST = Asset.UNIFIED_MATIC_ON_BFC_TEST
@@ -123,6 +128,11 @@ class _SwitchableAsset:
         self.BRIDGED_ETHEREUM_USDC_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_USDC_ON_BFC_TEST
         self.BRIDGED_BINANCE_USDC_ON_BIFROST = Asset.BRIDGED_BNB_TEST_USDC_ON_BFC_TEST
         self.UNIFIED_USDC_ON_BIFROST = Asset.UNIFIED_USDC_ON_BFC_TEST
+
+        # USDT--------------------------------------------------------------------------------------------------------------
+        self.USDT_ON_ETHEREUM = Asset.USDT_ON_ETH_GOERLI
+        # self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_USDT_ON_BFC_TEST
+        # self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_TEST
 
 
 SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])
