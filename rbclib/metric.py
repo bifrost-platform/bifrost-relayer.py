@@ -40,7 +40,6 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
         for chain in supported_chains:
             """ add 2 when a REQUESTED is discovered. subtract 1 when the others are discovered. """
-            chain = chain.name.upper()
             PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain).set(0)
 
         ignored = [
