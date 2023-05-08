@@ -11,6 +11,7 @@
                 "BNB_ON_BNB_MAIN",
                 "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
+                "USDT_ON_ETH_MAIN",
                 "BIFI_ON_ETH_MAIN"
             ],
             "collection_period_sec": 300
@@ -83,6 +84,11 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN",
+                "address": "0x228F3875392CFb0Ad0e4aF2E95A050EdbCc8668B",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "BRIDGED_ETH_MAIN_SAT_ON_BFC_MAIN",
                 "address": "0xAD01dE2A0413B764F16643dBdc1667adc6D88FE9",
                 "abi_file": "abi.erc20.json"
@@ -125,6 +131,11 @@
             {
                 "name": "UNIFIED_USDC_ON_BFC_MAIN",
                 "address": "0x640952E7984f2ECedeAd8Fd97aA618Ab1210A21C",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_USDT_ON_BFC_MAIN",
+                "address": "0x3eA8654d5755e673599473ab37d92788B5bA12aE",
                 "abi_file": "abi.unified.erc20.json"
             },
             {
