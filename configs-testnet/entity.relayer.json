@@ -89,6 +89,21 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_ETH_GOERLI_USDT_ON_BNB_TEST",
+                "address": "0x48E13910C4AE9C753AdF036CdBC127CFA4c71373",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BRIDGED_ETH_GOERLI_USDT_ON_MATIC_MUMBAI",
+                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BRIDGED_ETH_GOERLI_WITCH_ON_BFC_TEST",
+                "address": "0xb8fFfC7111FCCC3ceBeE680c5221bB5E6f9F5935",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "BRIDGED_BNB_TEST_USDC_ON_BFC_TEST",
                 "address": "0xC67f0b7c01f6888D43B563B3a8B851856BcfAB64",
                 "abi_file": "abi.erc20.json"
@@ -136,6 +151,11 @@
             {
                 "name": "UNIFIED_SAT_ON_BFC_TEST",
                 "address": "0x3325B631CD1B972628f021c3bB776e21290baB21",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_WITCH_ON_BFC_TEST",
+                "address": "0x97C46701A8599DF99abB306ce8980B5f57D833fB",
                 "abi_file": "abi.unified.erc20.json"
             }
         ],
@@ -207,6 +227,11 @@
             {
                 "name": "SAT_ON_ETH_GOERLI",
                 "address": "0x4a5FC8893Db2Fa06ebe3D7Ec21a1d9466ee54442",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "WITCH_ON_ETH_GOERLI",
+                "address": "0x8d9a156587C4593F34294D6b1DCBc7A5F29e0356",
                 "abi_file": "abi.erc20.json"
             }
         ],
