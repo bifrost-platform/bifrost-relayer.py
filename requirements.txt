@@ -1,1 +1,1 @@
-git+https://github.com/bifrost-platform/bifrost-python-lib.git@0.7.10
+git+https://github.com/bifrost-platform/bifrost-python-lib.git@0.7.11
