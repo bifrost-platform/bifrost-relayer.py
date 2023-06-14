@@ -104,6 +104,11 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_BNB_MAIN_P2D_ON_BFC_MAIN",
+                "address": "0x8bf78DAa2f98758ac116acdb64e9E9979a697d81",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "BRIDGED_MATIC_MAIN_MATIC_ON_BFC_MAIN",
                 "address": "0xf549E4B5B4Cb7fd4e83b8AA047C742C06D527429",
                 "abi_file": "abi.erc20.json"
@@ -146,6 +151,11 @@
             {
                 "name": "UNIFIED_MATIC_ON_BFC_MAIN",
                 "address": "0x21ad243b81eff53482F6F6E7C76539f2CfC0B734",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_P2D_ON_BFC_MAIN",
+                "address": "0xAa2E0911AC56C6f8A9C4f0006A8C907D5d180A6a",
                 "abi_file": "abi.unified.erc20.json"
             }
         ],
@@ -263,6 +273,11 @@
             {
                 "name": "USDC_ON_BNB_MAIN",
                 "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "P2D_ON_BNB_MAIN",
+                "address": "0x3ce414000C518FC55846388ef0aaB5d0abf275Be",
                 "abi_file": "abi.erc20.json"
             }
         ],
