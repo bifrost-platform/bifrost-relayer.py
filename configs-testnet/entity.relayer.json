@@ -124,6 +124,16 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_MATIC_MUMBAI_USDT_ON_BFC_TEST",
+                "address": "0xC3C12EF3BC5A8914eB3f4C190358ce5A41B19b46",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BRIDGED_MATIC_MUMBAI_USDC_ON_BFC_TEST",
+                "address": "0x6442Fdd287E04e68f0C6f40b4a8e5a375d16482C",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "UNIFIED_BFC_ON_BFC_TEST",
                 "address": "0xB0fF18CB2d0F3f51a9c54Af862ed98f3caa027A1",
                 "abi_file": "abi.unified.coin.json"
@@ -346,6 +356,16 @@
                 "address": "0xA25357F3C313Bd13885678f935178211f0dF6722",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 30814949
+            },
+            {
+                "name": "USDT_ON_MATIC_TEST",
+                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "USDC_ON_MATIC_TEST",
+                "address": "0xc508ab50142721A0213A47AaFF4E93C3eDb978E2",
+                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
