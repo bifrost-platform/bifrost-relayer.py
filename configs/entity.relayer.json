@@ -114,6 +114,11 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_MATIC_MAIN_USDC_ON_BFC_MAIN",
+                "address": "0x7E3A761afceC9f3E2fb7E853fFc45a62319143fA",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "UNIFIED_BFC_ON_BFC_MAIN",
                 "address": "0xAe172D8c5E428D4b7C70f9E593b207F9daC9BF3e",
                 "abi_file": "abi.unified.coin.json"
@@ -321,6 +326,11 @@
                 "address": "0x050606CC2Bcd9504991Be2c309D6c6c832Bb5bd0",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 38217005
+            },
+            {
+                "name": "USDC_ON_MATIC_MAIN",
+                "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
