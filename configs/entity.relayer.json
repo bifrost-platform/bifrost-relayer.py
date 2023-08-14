@@ -94,6 +94,16 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_ETH_MAIN_EGG_ON_BFC_MAIN",
+                "address": "0xa24c671711DF240fD6967D655aD1Ef056675be01",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BRIDGED_ETH_MAIN_WITCH_ON_BFC_MAIN",
+                "address": "0xA041E39E010B9B1B2483074a28F88c2ABA1F5a8c",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "BRIDGED_BNB_MAIN_USDC_ON_BFC_MAIN",
                 "address": "0x4F7aB59b5AC112970F5dD66D8a7ac505c8E5e08B",
                 "abi_file": "abi.erc20.json"
@@ -161,6 +171,16 @@
             {
                 "name": "UNIFIED_P2D_ON_BFC_MAIN",
                 "address": "0xAa2E0911AC56C6f8A9C4f0006A8C907D5d180A6a",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_EGG_ON_BFC_MAIN",
+                "address": "0x9DD4d64e41EA7Fc90ACEC15B08552172Ce94556a",
+                "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_WITCH_ON_BFC_MAIN",
+                "address": "0xB1f3A83597Bce2AD842c29bD750AE17afc474137",
                 "abi_file": "abi.unified.erc20.json"
             }
         ],
@@ -232,6 +252,16 @@
             {
                 "name": "SAT_ON_ETH_MAIN",
                 "address": "0x5abf88cf3444611d13f6d1b39f3f3ee8575c91a2",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "EGG_ON_ETH_MAIN",
+                "address": "0x65ccd72c0813ce6f2703593b633202a0f3ca6a0c",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "WITCH_ON_ETH_MAIN",
+                "address": "0xdc524e3c6910257744C1F93Cf15E9F472b5bD236",
                 "abi_file": "abi.erc20.json"
             }
         ],
