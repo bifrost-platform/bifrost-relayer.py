@@ -1,5 +1,5 @@
 name: Bug Report
-description: File a bug report related to BIFROST Network
+description: File a bug report related to the Bifrost Network
 labels: ["Bug"]
 body:
   - type: checkboxes

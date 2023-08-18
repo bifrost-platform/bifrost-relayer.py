@@ -1,5 +1,5 @@
 name: Documentation
-description: Correction, suggestion, anything related to BIFROST Network documentation
+description: Correction, suggestion, anything related to the Bifrost Network documentation
 labels: ["Documentation"]
 body:
   - type: checkboxes
@@ -11,7 +11,7 @@ body:
           required: true
   - type: textarea
     attributes:
-      label: What would you like to say about BIFROST Network documentation?
+      label: What would you like to say about the Bifrost Network documentation?
       description: Missing/wrong information? Dead/incorrect links? Feedback?
     validations:
       required: true
