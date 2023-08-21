@@ -390,6 +390,53 @@
             }
         ]
     },
+    "BASE_GOERLI": {
+        "chain_name": "BASE_GOERLI",
+        "block_period_sec": 2,
+        "bootstrap_latest_height": 0,
+        "block_aging_period": 5,
+        "transaction_block_delay": 5,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "fee_config": {
+            "type": 2,
+            "max_gas_price": 2000000000,
+            "max_priority_price": 1500000000
+        },
+        "abi_dir": "configs-testnet/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0xb3f5C3a2237Df09F94dDAC32F63E5D962Ae66a42",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 8693872
+            },
+            {
+                "name": "vault",
+                "address": "0x6EeE91b7c69e3576C13cE7a9C7C0E305dF6996F9",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 8693879
+            },
+            {
+                "name": "socket",
+                "address": "0x9c8B701961C20d006cb7c4B5B91c6cb93EdB44Ac",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 8693887
+            },
+            {
+                "name": "DAI_ON_BASE_GOERLI",
+                "address": "0x263deEAd49900486A1E9C312BB70CC172E333917",
+                "abi_file": "abi.erc20.json"
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
+    },
     "entity": {
         "role": "slow-relayer",
         "account_name": "relayer-launched-on-console",
@@ -398,7 +445,8 @@
             "BFC_TEST",
             "ETH_GOERLI",
             "BNB_TEST",
-            "MATIC_MUMBAI"
+            "MATIC_MUMBAI",
+            "BASE_GOERLI"
         ]
     },
     "multichain_config": {
