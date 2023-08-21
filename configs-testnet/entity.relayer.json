@@ -393,7 +393,7 @@
     "BASE_GOERLI": {
         "chain_name": "BASE_GOERLI",
         "block_period_sec": 2,
-        "bootstrap_latest_height": 0,
+        "bootstrap_latest_height": 8693872,
         "block_aging_period": 5,
         "transaction_block_delay": 5,
         "receipt_max_try": 20,
