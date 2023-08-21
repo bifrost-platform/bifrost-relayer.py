@@ -27,5 +27,8 @@
     },
     "MATIC_MUMBAI": {
         "url_with_access_key": "<POLYGON_MUMBAI_RPC_ENDPOINT>"
+    },
+    "BASE_GOERLI": {
+        "url_with_access_key": "<BASE_GOERLI_RPC_ENDPOINT>"
     }
 }
