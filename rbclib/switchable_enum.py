@@ -79,6 +79,9 @@ class _SwitchableAsset:
         self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN
         self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_MAIN
 
+        # DAI---------------------------------------------------------------------------------------------------------------
+        self.DAI_ON_BASE = Asset.DAI_ON_BASE_MAIN
+
         if test_flag:
             self.switch_testnet_config()
 
@@ -133,6 +136,9 @@ class _SwitchableAsset:
         self.USDT_ON_ETHEREUM = Asset.USDT_ON_ETH_GOERLI
         self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_USDT_ON_BFC_TEST
         self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_TEST
+
+        # DAI---------------------------------------------------------------------------------------------------------------
+        self.DAI_ON_BASE = Asset.DAI_ON_BASE_GOERLI
 
 
 SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])

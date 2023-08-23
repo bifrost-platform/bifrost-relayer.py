@@ -129,11 +129,12 @@ Use the oracle_config provided.
                 "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
                 "USDT_ON_ETH_MAIN",
-                "BIFI_ON_ETH_MAIN"
+                "BIFI_ON_ETH_MAIN",
+                "DAI_ON_BASE_MAIN"
             ],
             "collection_period_sec": 300
         }
-    },
+    }
     // ...
 }
 ```
