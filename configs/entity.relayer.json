@@ -12,7 +12,8 @@
                 "MATIC_ON_MATIC_MAIN",
                 "USDC_ON_ETH_MAIN",
                 "USDT_ON_ETH_MAIN",
-                "BIFI_ON_ETH_MAIN"
+                "BIFI_ON_ETH_MAIN",
+                "DAI_ON_BASE_MAIN"
             ],
             "collection_period_sec": 300
         }
@@ -129,6 +130,16 @@
                 "abi_file": "abi.erc20.json"
             },
             {
+                "name": "BRIDGED_BASE_MAIN_ETH_ON_BFC_MAIN",
+                "address": "0x2b864bb73CeE4b1867CCe9944678dBEfEdaF2517",
+                "abi_file": "abi.erc20.json"
+            },
+            {
+                "name": "BRIDGED_BASE_MAIN_DAI_ON_BFC_MAIN",
+                "address": "0x99a286cd4eD4BCDEfC179b39242B4Ce5f82A9F7C",
+                "abi_file": "abi.erc20.json"
+            },
+            {
                 "name": "UNIFIED_BFC_ON_BFC_MAIN",
                 "address": "0xAe172D8c5E428D4b7C70f9E593b207F9daC9BF3e",
                 "abi_file": "abi.unified.coin.json"
@@ -182,6 +193,11 @@
                 "name": "UNIFIED_WITCH_ON_BFC_MAIN",
                 "address": "0xB1f3A83597Bce2AD842c29bD750AE17afc474137",
                 "abi_file": "abi.unified.erc20.json"
+            },
+            {
+                "name": "UNIFIED_DAI_ON_BFC_MAIN",
+                "address": "0xcDB9579Db96EB5C8298dF889D915D0FF668AfF2a",
+                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
@@ -370,6 +386,53 @@
             }
         ]
     },
+    "BASE_MAIN": {
+        "chain_name": "BASE_MAIN",
+        "block_period_sec": 2,
+        "bootstrap_latest_height": 3003941,
+        "block_aging_period": 5,
+        "transaction_block_delay": 5,
+        "receipt_max_try": 20,
+        "max_log_num": 1000,
+        "rpc_server_downtime_allow_sec": 180,
+        "fee_config": {
+            "type": 2,
+            "max_gas_price": 150000,
+            "max_priority_price": 100000
+        },
+        "abi_dir": "configs/",
+        "contracts": [
+            {
+                "name": "relayer_authority",
+                "address": "0x4C7a44F3FB37A53F33D3fe3cCdE97A444F105239",
+                "abi_file": "abi.relayer.external.json",
+                "deploy_height": 3003941
+            },
+            {
+                "name": "vault",
+                "address": "0x4F7aB59b5AC112970F5dD66D8a7ac505c8E5e08B",
+                "abi_file": "abi.vault.external.json",
+                "deploy_height": 3003949
+            },
+            {
+                "name": "socket",
+                "address": "0xAe172D8c5E428D4b7C70f9E593b207F9daC9BF3e",
+                "abi_file": "abi.socket.external.json",
+                "deploy_height": 3031730
+            },
+            {
+                "name": "DAI_ON_BASE_MAIN",
+                "address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+                "abi_file": "abi.erc20.json"
+            }
+        ],
+        "events": [
+            {
+                "contract_name": "socket",
+                "event_name": "Socket"
+            }
+        ]
+    },
     "entity": {
         "role": "slow-relayer",
         "account_name": "mainnet-relayer-launched-on-console",
@@ -378,7 +441,8 @@
             "BFC_MAIN",
             "ETH_MAIN",
             "BNB_MAIN",
-            "MATIC_MAIN"
+            "MATIC_MAIN",
+            "BASE_MAIN"
         ]
     },
     "multichain_config": {

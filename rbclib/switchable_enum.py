@@ -11,6 +11,7 @@ class _SwitchableChain:
         self.BINANCE = Chain.BNB_MAIN
         self.MATIC = Chain.MATIC_MAIN
         self.AVALANCHE = Chain.AVAX_MAIN
+        self.BASE = Chain.BASE_MAIN
 
         if test_flag:
             self.switch_testnet_config()
@@ -34,6 +35,7 @@ class _SwitchableChain:
         self.BINANCE = Chain.BNB_TEST
         self.MATIC = Chain.MATIC_MUMBAI
         self.AVALANCHE = Chain.AVAX_FUJI
+        self.BASE = Chain.BASE_GOERLI
 
 
 class _SwitchableAsset:
@@ -53,6 +55,7 @@ class _SwitchableAsset:
         # ETH---------------------------------------------------------------------------------------------------------------
         self.ETH_ON_ETHEREUM = Asset.ETH_ON_ETH_MAIN
         self.BRIDGED_ETHEREUM_ETH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_ETH_ON_BFC_MAIN
+        self.BRIDGED_BASE_ETH_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_ETH_ON_BFC_MAIN
         self.UNIFIED_ETHEREUM_ETH_ON_BIFROST = Asset.UNIFIED_ETH_ON_BFC_MAIN
 
         # BNB---------------------------------------------------------------------------------------------------------------
@@ -79,8 +82,18 @@ class _SwitchableAsset:
         self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN
         self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_MAIN
 
+        # EGG---------------------------------------------------------------------------------------------------------------
+        self.BRIDGED_ETHEREUM_EGG_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_EGG_ON_BFC_MAIN
+        self.UNIFIED_EGG_ON_BIFROST = Asset.UNIFIED_EGG_ON_BFC_MAIN
+
+        # WITCH-------------------------------------------------------------------------------------------------------------
+        self.BRIDGED_ETHEREUM_WITCH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_WITCH_ON_BFC_MAIN
+        self.UNIFIED_WITCH_ON_BIFROST = Asset.UNIFIED_WITCH_ON_BFC_MAIN
+
         # DAI---------------------------------------------------------------------------------------------------------------
         self.DAI_ON_BASE = Asset.DAI_ON_BASE_MAIN
+        self.BRIDGED_BASE_DAI_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_DAI_ON_BFC_MAIN
+        self.UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_MAIN
 
         if test_flag:
             self.switch_testnet_config()
@@ -111,6 +124,7 @@ class _SwitchableAsset:
         # ETH---------------------------------------------------------------------------------------------------------------
         self.ETH_ON_ETHEREUM = Asset.ETH_ON_ETH_GOERLI
         self.BRIDGED_ETHEREUM_ETH_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_ETH_ON_BFC_TEST
+        self.BRIDGED_BASE_ETH_ON_BIFROST = Asset.BRIDGED_BASE_GOERLI_ETH_ON_BFC_TEST
         self.UNIFIED_ETHEREUM_ETH_ON_BIFROST = Asset.UNIFIED_ETH_ON_BFC_TEST
 
         # BNB---------------------------------------------------------------------------------------------------------------
@@ -137,8 +151,18 @@ class _SwitchableAsset:
         self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_USDT_ON_BFC_TEST
         self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_TEST
 
+        # EGG---------------------------------------------------------------------------------------------------------------
+        self.BRIDGED_ETHEREUM_EGG_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_EGG_ON_BFC_TEST
+        self.UNIFIED_EGG_ON_BIFROST = Asset.UNIFIED_EGG_ON_BFC_TEST
+
+        # WITCH-------------------------------------------------------------------------------------------------------------
+        self.BRIDGED_ETHEREUM_WITCH_ON_BIFROST = Asset.BRIDGED_ETH_GOERLI_WITCH_ON_BFC_TEST
+        self.UNIFIED_WITCH_ON_BIFROST = Asset.UNIFIED_WITCH_ON_BFC_TEST
+
         # DAI---------------------------------------------------------------------------------------------------------------
         self.DAI_ON_BASE = Asset.DAI_ON_BASE_GOERLI
+        self.BRIDGED_BASE_DAI_ON_BIFROST = Asset.BRIDGED_BASE_GOERLI_DAI_ON_BFC_TEST
+        self.UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_TEST
 
 
 SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])
