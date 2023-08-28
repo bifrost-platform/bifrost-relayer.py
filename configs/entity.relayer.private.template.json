@@ -27,5 +27,8 @@
     },
     "MATIC_MAIN": {
         "url_with_access_key": "<POLYGON_MAINNET_RPC_ENDPOINT>"
+    },
+    "BASE_MAIN": {
+        "url_with_access_key": "<BASE_MAINNET_RPC_ENDPOINT>"
     }
 }
