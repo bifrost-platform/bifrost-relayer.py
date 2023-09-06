@@ -1,9 +1,9 @@
-from tools.cmd_admin import admin_cmd
-from tools.cmd_operator import operator_cmd
-from tools.cmd_user import user_cmd
-from tools.utils import get_option_from_console
+from script.tools.cmd_admin import admin_cmd
+from script.tools.cmd_operator import operator_cmd
+from script.tools.cmd_user import user_cmd
+from script.tools.utils import get_option_from_console
 
-PROJECT_ROOT_PATH = "./"
+PROJECT_ROOT_PATH = "../"
 
 if __name__ == "__main__":
     user_roles = ["User", "Operator", "Admin"]

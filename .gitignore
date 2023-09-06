@@ -40,7 +40,7 @@ caches/
 # relayer private config files
 configs/entity.relayer.private.json
 configs/entity.user.private.json
-tools/keys.json
+script/tools/keys.json
 
 configs-testnet/entity.relayer.private.json
 configs-testnet/entity.user.private.json

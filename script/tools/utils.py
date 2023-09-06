@@ -16,7 +16,7 @@ from chainpy.eth.managers.multichainmanager import MultiChainManager
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 from relayer.relayer import Relayer
 from relayer.user_utils import symbol_to_asset
-from tools.consts import (
+from script.tools.consts import (
     USER_MAINNET_CONFIG_PATH,
     USER_TESTNET_CONFIG_PATH,
     PRIVATE_MAINNET_CONFIG_PATH,
