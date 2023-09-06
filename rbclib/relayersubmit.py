@@ -6,7 +6,7 @@ from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 
-from .chainevents import RbcEvent, RoundUpEvent
+from .chain_events import RbcEvent, RoundUpEvent
 
 SigType = Union[list, tuple]
 

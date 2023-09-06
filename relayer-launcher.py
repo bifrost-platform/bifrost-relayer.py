@@ -3,7 +3,7 @@ import argparse
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.logger import logger_config_global, global_logger
 
-from rbclib.chainevents import RbcEvent, RoundUpEvent
+from rbclib.chain_events import RbcEvent, RoundUpEvent
 from rbclib.external_rbc_events import ExternalRbcEvents
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.periodic.heartbeat import RelayerHeartBeat

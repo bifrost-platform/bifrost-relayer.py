@@ -8,7 +8,7 @@ from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
-from rbclib.switchable_enum import chain_primitives
+from rbclib.primitives.relay_chain import chain_primitives
 
 
 def log_invalid_flow(log_id: str, event):

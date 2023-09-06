@@ -1,7 +1,6 @@
 from typing import Tuple
 
-from bridgeconst.consts import Chain, Symbol
-from bridgeconst.consts import RBCMethodV1, Asset
+from bridgeconst.consts import Chain, Symbol, RBCMethodV1, Asset
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
 from chainpy.eth.ethtype.receipt import EthReceipt
@@ -9,7 +8,7 @@ from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 
-from rbclib.switchable_enum import chain_primitives
+from rbclib.primitives.relay_chain import chain_primitives
 from relayer.user_utils import symbol_to_asset
 
 

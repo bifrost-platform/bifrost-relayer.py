@@ -4,17 +4,18 @@ import time
 from typing import Union, List, Any, Tuple
 
 from bridgeconst.consts import Chain, Asset, Symbol, RBCMethodV1, AssetType
-from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
 from bridgeconst.mainbridgespec import SUPPORTING_ASSETS as MAINNET_ASSETS
-
+from bridgeconst.testbridgespec import SUPPORTING_ASSETS as TESTNET_ASSETS
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.ethtype.hexbytes import EthAddress
+from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 
-from rbclib.switchable_enum import chain_primitives, asset_primitives
+from rbclib.primitives.relay_asset import asset_primitives
+from rbclib.primitives.relay_chain import chain_primitives
 from relayer.relayer import Relayer
+from relayer.user import User
 from relayer.user_utils import symbol_to_asset
 from script.tools.consts import (
     USER_MAINNET_CONFIG_PATH,
@@ -23,8 +24,6 @@ from script.tools.consts import (
     PRIVATE_TESTNET_CONFIG_PATH,
     KEY_JSON_PATH
 )
-
-from relayer.user import User
 
 
 class Manager(User, Relayer):
@@ -74,8 +73,8 @@ def display_multichain_asset_balances(manager: Manager, addr: EthAddress = None)
 
 
 def display_multichain_balances_on(
-        manager: Manager, chain: Chain,
-        addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False):
+    manager: Manager, chain: Chain,
+    addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False):
     target_addr = manager.active_account.address if addr is None else addr
     if not no_print_title:
         print("\n<{} balances on {}>".format(target_addr.hex(), chain))
@@ -185,9 +184,9 @@ def get_asset_from_console(chain: Chain = None, token_only: bool = False) -> Ass
 
 
 def get_chain_and_symbol_from_console(
-        manager: MultiChainManager,
-        token_only: bool = False,
-        not_included_bifrost: bool = False) -> Tuple[Chain, Symbol]:
+    manager: MultiChainManager,
+    token_only: bool = False,
+    not_included_bifrost: bool = False) -> Tuple[Chain, Symbol]:
     chain = get_chain_from_console(manager, not_included_bifrost)
     symbol = get_symbol_from_console(chain, token_only)
     return chain, symbol
@@ -206,9 +205,8 @@ def fetch_asset_config(manager: Union[User, Relayer], asset: Asset, chain: Chain
 
 
 def fetch_bridge_amount_config(
-        manager: Union[User, Relayer], asset: Asset, src_chain: Chain, dst_chain: Chain
+    manager: Union[User, Relayer], asset: Asset, src_chain: Chain, dst_chain: Chain
 ) -> Tuple[EthAmount, EthAmount, EthAmount]:
-
     if asset.asset_type == AssetType.UNIFIED:
         asset = Asset.from_name("BRIDGED_{}_{}_ON_{}".format(dst_chain.name, asset.symbol.name, src_chain.name))
 
@@ -218,7 +216,7 @@ def fetch_bridge_amount_config(
 
 
 def fetch_bridge_fee_config(
-        manager: Union[User, Relayer], chain: Chain, asset: Asset) -> Tuple[EthAmount, EthAmount, EthAmount]:
+    manager: Union[User, Relayer], chain: Chain, asset: Asset) -> Tuple[EthAmount, EthAmount, EthAmount]:
     decimal = asset.decimal
     config = manager.world_call(chain.name, "vault", "assets_config", [asset.formatted_bytes()])
     return EthAmount(config[0][0], decimal), EthAmount(config[0][1], decimal), EthAmount(config[0][2], decimal)
@@ -231,13 +229,13 @@ def display_addrs(title: str, addrs: List[str]):
 
 
 def cccp_batch_send(
-        user: Manager,
-        batch_num: int,
-        src_chain: Chain,
-        dst_chain: Chain,
-        symbol: Symbol,
-        rbc_method: RBCMethodV1,
-        amount: EthAmount
+    user: Manager,
+    batch_num: int,
+    src_chain: Chain,
+    dst_chain: Chain,
+    symbol: Symbol,
+    rbc_method: RBCMethodV1,
+    amount: EthAmount
 ) -> Tuple[List[EthReceipt], List[Tuple[Chain, int, int]]]:
     request_txs = list()
     print(">>> build transaction for each request")

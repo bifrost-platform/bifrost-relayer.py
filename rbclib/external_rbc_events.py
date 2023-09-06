@@ -1,7 +1,7 @@
 from bridgeconst.consts import ChainEventStatus
 from chainpy.eth.managers.eventobj import DetectedEvent
 
-from rbclib.chainevents import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX
+from rbclib.chain_events import RbcEvent, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX
 from relayer.relayer import Relayer
 
 

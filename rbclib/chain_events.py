@@ -12,16 +12,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
-from relayer.global_config import relayer_config_global, RelayerRole
-from relayer.relayer import Relayer
-from .utils import (
-    fetch_socket_vsp_sigs,
-    fetch_socket_rbc_sigs,
-    fetch_quorum,
-    fetch_relayer_num,
-    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index, log_invalid_flow
-)
-from .consts import (
+from rbclib.primitives.consts import (
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS,
     RBC_EVENT_STATUS_START_DATA_START_INDEX,
     RBC_EVENT_STATUS_START_DATA_END_INDEX,
@@ -30,8 +21,17 @@ from .consts import (
     GET_REQ_INFO_FUNCTION_NAME,
     ROUND_UP_VOTING_FUNCTION_NAME
 )
+from relayer.global_config import relayer_config_global, RelayerRole
+from relayer.relayer import Relayer
+from .primitives.relay_chain import chain_primitives
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
-from .switchable_enum import chain_primitives
+from .utils import (
+    fetch_socket_vsp_sigs,
+    fetch_socket_rbc_sigs,
+    fetch_quorum,
+    fetch_relayer_num,
+    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index, log_invalid_flow
+)
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = ("", "", "", [])
