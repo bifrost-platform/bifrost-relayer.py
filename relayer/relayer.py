@@ -10,7 +10,7 @@ from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
 from rbclib.__init__ import __version__
-from rbclib.bifrostutils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
+from rbclib.utils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
 from rbclib.switchable_enum import chain_primitives
 from relayer.global_config import RelayerRole, relayer_config_global

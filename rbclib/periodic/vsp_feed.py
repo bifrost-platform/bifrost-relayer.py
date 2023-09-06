@@ -8,13 +8,13 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
-from rbclib.bifrostutils import fetch_bottom_round, fetch_latest_round, fetch_relayer_index, is_selected_relayer, fetch_sorted_relayer_list_lower
+from rbclib.utils import fetch_bottom_round, fetch_latest_round, fetch_relayer_index, is_selected_relayer, fetch_sorted_relayer_list_lower, \
+    log_invalid_flow
 from rbclib.chainevents import NoneParams
 from rbclib.consts import SOCKET_CONTRACT_NAME, ROUND_UP_FUNCTION_NAME
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.relayersubmit import SocketSignature
 from rbclib.switchable_enum import chain_primitives
-from rbclib.utils import log_invalid_flow
 from relayer.global_config import relayer_config_global
 
 
