@@ -12,6 +12,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
+from relayer.global_config import relayer_config_global, RelayerRole
 from relayer.relayer import Relayer
 from .bifrostutils import (
     fetch_socket_vsp_sigs,
@@ -29,7 +30,6 @@ from .consts import (
     GET_REQ_INFO_FUNCTION_NAME,
     ROUND_UP_VOTING_FUNCTION_NAME
 )
-from .globalconfig import relayer_config_global, RelayerRole
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import chain_primitives
 from .utils import log_invalid_flow
