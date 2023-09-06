@@ -53,25 +53,26 @@ class FastRelayerConfig:
 
         self.heart_beat_period_sec: int = heart_beat_period_sec
 
-    def reset(self,
-              relayer_role: RelayerRole = RelayerRole.GENERAL_RELAYER,
-              is_testnet: bool = False,
-              slow_relayer_delay_sec: int = 0,
+    def reset(
+        self,
+        relayer_role: RelayerRole = RelayerRole.GENERAL_RELAYER,
+        is_testnet: bool = False,
+        slow_relayer_delay_sec: int = 0,
 
-              rbc_event_call_delay_sec: int = 0,
-              roundup_event_call_delay_sec: int = 0,
+        rbc_event_call_delay_sec: int = 0,
+        roundup_event_call_delay_sec: int = 0,
 
-              price_oracle_assets: List[str] = None,
-              price_source_url_dict: Dict[str, str] = None,
-              price_source_collection_period_sec: int = 0,
+        price_oracle_assets: List[str] = None,
+        price_source_url_dict: Dict[str, str] = None,
+        price_source_collection_period_sec: int = 0,
 
-              btc_hash_source_url: str = None,
-              btc_hash_source_collection_period_sec: int = 0,
+        btc_hash_source_url: str = None,
+        btc_hash_source_collection_period_sec: int = 0,
 
-              validator_set_check_period_sec: int = 0,
+        validator_set_check_period_sec: int = 0,
 
-              heart_beat_period_sec: int = 30
-              ):
+        heart_beat_period_sec: int = 30
+    ):
         if not isinstance(relayer_role, RelayerRole):
             raise Exception("In reset")
         self.relayer_role: RelayerRole = relayer_role

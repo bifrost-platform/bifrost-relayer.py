@@ -16,10 +16,12 @@ if TYPE_CHECKING:
 
 
 class RelayerHeartBeat(PeriodicEventABC):
-    def __init__(self,
-                 relayer: "Relayer",
-                 period_sec: int = relayer_config_global.heart_beat_period_sec,
-                 time_lock: int = timestamp_msec()):
+    def __init__(
+        self,
+        relayer: "Relayer",
+        period_sec: int = relayer_config_global.heart_beat_period_sec,
+        time_lock: int = timestamp_msec()
+    ):
         super().__init__(relayer, period_sec, time_lock)
 
     @property
