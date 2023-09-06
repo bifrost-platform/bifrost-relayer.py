@@ -9,12 +9,11 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
-from rbclib.bifrostutils import is_selected_relayer, fetch_oracle_latest_round, is_submitted_oracle_feed
+from rbclib.utils import is_selected_relayer, fetch_oracle_latest_round, is_submitted_oracle_feed, log_invalid_flow
 from rbclib.chainevents import NoneParams
 from rbclib.consts import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.switchable_enum import chain_primitives
-from rbclib.utils import log_invalid_flow
 from relayer.global_config import relayer_config_global
 
 

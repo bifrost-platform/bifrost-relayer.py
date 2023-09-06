@@ -5,7 +5,7 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
-from rbclib.bifrostutils import is_pulsed_hear_beat
+from rbclib.utils import is_pulsed_hear_beat
 from rbclib.chainevents import NoneParams
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.switchable_enum import chain_primitives

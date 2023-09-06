@@ -4,7 +4,7 @@ from typing import List
 from bridgeconst.consts import Chain, Oracle
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
-from rbclib.bifrostutils import (
+from rbclib.utils import (
     fetch_submitted_oracle_feed,
     fetch_btc_hash_from_oracle,
     fetch_price_from_oracle,

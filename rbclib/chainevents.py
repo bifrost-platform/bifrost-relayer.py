@@ -14,12 +14,12 @@ from chainpy.logger import global_logger
 from rbclib.metric import PrometheusExporterRelayer
 from relayer.global_config import relayer_config_global, RelayerRole
 from relayer.relayer import Relayer
-from .bifrostutils import (
+from .utils import (
     fetch_socket_vsp_sigs,
     fetch_socket_rbc_sigs,
     fetch_quorum,
     fetch_relayer_num,
-    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index
+    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index, log_invalid_flow
 )
 from .consts import (
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS,
@@ -32,7 +32,6 @@ from .consts import (
 )
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import chain_primitives
-from .utils import log_invalid_flow
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = ("", "", "", [])

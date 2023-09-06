@@ -8,11 +8,10 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
-from rbclib.bifrostutils import is_selected_relayer
+from rbclib.utils import is_selected_relayer, log_invalid_flow
 from rbclib.chainevents import NoneParams
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.switchable_enum import chain_primitives
-from rbclib.utils import log_invalid_flow
 from relayer.global_config import relayer_config_global
 
 
