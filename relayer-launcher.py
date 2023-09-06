@@ -3,12 +3,11 @@ import argparse
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.logger import logger_config_global, global_logger
 
-from rbclib.aggchainevents import ExternalRbcEvents
 from rbclib.chainevents import RbcEvent, RoundUpEvent
+from rbclib.external_rbc_events import ExternalRbcEvents
 from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.periodicevents import PriceUpOracle, VSPFeed
-from rbclib.switchable_enum import chain_primitives, asset_primitives
 from relayer.relayer import Relayer, relayer_config_global, RelayerRole
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
@@ -85,11 +84,6 @@ def setup_relayer(config: dict) -> Relayer:
 
     # Determine relayer role
     role = determine_relayer_role(config)
-
-    # When testnet relay is launched via console, enums are automatically switched.
-    if config['testnet']:
-        chain_primitives.switch_testnet_config()
-        asset_primitives.switch_testnet_config()
 
     # Initiate and configure the relayer
     relayer = Relayer.init_from_config_files(
