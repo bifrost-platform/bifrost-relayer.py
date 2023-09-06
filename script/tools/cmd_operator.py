@@ -4,6 +4,7 @@ from typing import List
 from bridgeconst.consts import Chain, Oracle
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
+from rbclib.primitives.relay_chain import chain_primitives
 from rbclib.utils import (
     fetch_submitted_oracle_feed,
     fetch_btc_hash_from_oracle,
@@ -11,7 +12,6 @@ from rbclib.utils import (
     fetch_oracle_latest_round,
     fetch_sorted_relayer_list_lower
 )
-from rbclib.switchable_enum import chain_primitives
 from .consts import TESTNET_TEAM_RELAYER, MAINNET_TEAM_RELAYER
 from .utils import (
     display_multichain_coins_balances,

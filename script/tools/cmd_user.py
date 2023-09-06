@@ -1,11 +1,11 @@
 import enum
 from typing import List
 
-from chainpy.eth.ethtype.amount import EthAmount
 from bridgeconst.consts import RBCMethodDirection, Asset, Symbol, RBCMethodV1
+from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
-from rbclib.switchable_enum import chain_primitives
+from rbclib.primitives.relay_chain import chain_primitives
 from relayer.user_utils import symbol_to_asset
 from .utils import (
     get_typed_item_from_console,

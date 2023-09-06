@@ -1,6 +1,6 @@
 from bridgeconst.consts import Chain, Symbol, Asset
 
-from rbclib.switchable_enum import chain_primitives
+from rbclib.primitives.relay_chain import chain_primitives
 
 
 def symbol_to_asset(chain: Chain, symbol: Symbol) -> Asset:

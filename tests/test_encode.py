@@ -3,8 +3,7 @@ import json
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eventbridge.eventbridge import EventBridge
 
-from rbclib.chainevents import RbcEvent
-
+from rbclib.chain_events import RbcEvent
 
 REQUESTED1_DETECTED_EVENT_JSON = "./events_json/detected_requested1.json"
 EXECUTED_DETECTED_EVENT_JSON = "./events_json/detected_executed.json"
@@ -15,7 +14,6 @@ REQUESTED2_DETECTED_EVENT_JSON = "./events_json/detected_requested2.json"
 REJECTED_DETECTED_EVENT_JSON = "./events_json/detected_rejected.json"
 REVERTED_DETECTED_EVENT_JSON = "./events_json/detected_reverted.json"
 ROLLBACKED_DETECTED_EVENT_JSON = "./events_json/detected_event6.json"
-
 
 PUBLIC_CONFIG_FILE_PATH = "./entity.json"
 
