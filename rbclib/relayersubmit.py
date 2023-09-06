@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 import eth_abi
 from chainpy.eth.ethtype.account import EthAccount
@@ -6,8 +6,7 @@ from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 
-if TYPE_CHECKING:
-    from .chainevents import RbcEvent, RoundUpEvent
+from .chainevents import RbcEvent, RoundUpEvent
 
 SigType = Union[list, tuple]
 

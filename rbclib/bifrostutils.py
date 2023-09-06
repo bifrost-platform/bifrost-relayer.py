@@ -1,7 +1,6 @@
 from typing import Optional
 
-from bridgeconst.consts import Chain
-from bridgeconst.consts import Oracle, ChainEventStatus, Symbol
+from bridgeconst.consts import Chain, Oracle, ChainEventStatus, Symbol
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager

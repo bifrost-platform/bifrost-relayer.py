@@ -32,12 +32,13 @@ ROUND_UP_FUNCTION_NAME = "round_control_poll"
 
 
 class PriceUpOracle(PeriodicEventABC):
-    def __init__(self,
-                 manager: EventBridge,
-                 period_sec: int = 300,
-                 time_lock: int = timestamp_msec(),
-                 price_cli: PriceOracleAgg = None
-                 ):
+    def __init__(
+        self,
+        manager: EventBridge,
+        period_sec: int = 300,
+        time_lock: int = timestamp_msec(),
+        price_cli: PriceOracleAgg = None
+    ):
         if period_sec == 0:
             period_sec = relayer_config_global.price_source_collection_period_sec
         super().__init__(manager, period_sec, time_lock)
@@ -111,12 +112,13 @@ class PriceUpOracle(PeriodicEventABC):
 
 
 class BtcHashUpOracle(PeriodicEventABC):
-    def __init__(self,
-                 manager: EventBridge,
-                 period_sec: int = 300,
-                 time_lock: int = timestamp_msec(),
-                 btc_cli: SimpleBtcClient = None
-                 ):
+    def __init__(
+        self,
+        manager: EventBridge,
+        period_sec: int = 300,
+        time_lock: int = timestamp_msec(),
+        btc_cli: SimpleBtcClient = None
+    ):
         if period_sec == 0:
             period_sec = relayer_config_global.btc_hash_source_collection_period_sec
         super().__init__(manager, period_sec, time_lock)
@@ -225,11 +227,13 @@ class BtcHashUpOracle(PeriodicEventABC):
 
 
 class VSPFeed(PeriodicEventABC):
-    def __init__(self,
-                 manager: EventBridge,
-                 period_sec: int = 60,
-                 time_lock: int = timestamp_msec(),
-                 _round: int = None):
+    def __init__(
+        self,
+        manager: EventBridge,
+        period_sec: int = 60,
+        time_lock: int = timestamp_msec(),
+        _round: int = None
+    ):
         if period_sec == 0:
             period_sec = relayer_config_global.validator_set_check_period_sec
         super().__init__(manager, period_sec, time_lock)
