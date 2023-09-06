@@ -1,8 +1,6 @@
 import argparse
-import sys
 
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
-from chainpy.eth.managers.configsanitycheck import is_meaningful
 from chainpy.logger import logger_config_global, global_logger
 
 from rbclib.aggchainevents import ExternalRbcEvents
@@ -12,17 +10,6 @@ from rbclib.metric import PrometheusExporterRelayer
 from rbclib.periodicevents import PriceUpOracle, VSPFeed
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
 from relayer.relayer import Relayer, relayer_config_global, RelayerRole
-
-parser = argparse.ArgumentParser(description="Relayer's launching package.")
-parser.add_argument("-k", "--private-key", type=str, help="private key to be used by the relayer")
-parser.add_argument("-c", "--config-path", type=str, help="insert configuration directory")
-parser.add_argument("-a", "--private-config-path", type=str, help="insert sensitive configuration directory")
-parser.add_argument("-b", "--no-heartbeat", action="store_true")
-parser.add_argument("-p", "--prometheus", action="store_true")
-parser.add_argument("-s", "--slow-relayer", action="store_true")
-parser.add_argument("-f", "--fast-relayer", action="store_true")
-parser.add_argument("-t", "--testnet", action="store_true")
-parser.add_argument("-l", "--log-file-name", type=str)
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
 DEFAULT_PRIVATE_CONFIG_PATH = "configs/entity.relayer.private.json"
@@ -70,72 +57,75 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
 
 
 def determine_relayer_role(config: dict) -> RelayerRole:
-    if config.get("fast_relayer") and config.get("slow_relayer"):
+    if config['fast_relayer'] and config['slow_relayer']:
         raise Exception("launch relayer with not both options: -f and -s")
 
-    if config.get("slow_relayer"):
+    if config['slow_relayer']:
         return RelayerRole.SLOW_RELAYER
-    elif config.get("fast_relayer"):
+    elif config['fast_relayer']:
         return RelayerRole.FAST_RELAYER
     else:
         return RelayerRole.GENERAL_RELAYER
 
 
-def main():
-    if not sys.argv[1:]:
-        config = {
-            'private_key': None,
-            'config_path': None,
-            'private_config_path': None,
-            'no_heartbeat': False,
-            'prometheus': False,
-            'slow_relayer': True,
-            'fast_relayer': False,
-            'testnet': True,
-            "log_file_name": "console.log"
-        }
-        if config["testnet"]:
-            # When testnet relay is launched via console, enums are automatically switched.
-            SwitchableChain.switch_testnet_config()
-            SwitchableAsset.switch_testnet_config()
-    else:
-        args = parser.parse_args()
-        config = vars(args)
-
-    is_test_config = True if config.get("testnet") else False
-
-    log_file_name = config.get("log_file_name")
-    if is_meaningful(log_file_name):
+def setup_logger(log_file_name: str):
+    if log_file_name and log_file_name != '':
         # enable logger with file handler
         logger_config_global.reset(log_file_name=log_file_name, backup_count=8760)
     global_logger.init(log_file_name=log_file_name)
 
-    # secret_key_obj is None if config["private_key"] is None
-    secret_key_obj = EthHexBytes(config.get("private_key"))
 
-    public_config_path, private_config_path = config.get("config_path"), config.get("private_config_path")
-    if public_config_path is None:
-        public_config_path = DEFAULT_RELAYER_CONFIG_PATH \
-            if not is_test_config else DEFAULT_TEST_RELAYER_CONFIG_PATH
-    if private_config_path is None:
-        private_config_path = DEFAULT_PRIVATE_CONFIG_PATH \
-            if not is_test_config else DEFAULT_TEST_RELAYER_PRIVATE_CONFIG_PATH
+def setup_relayer(config: dict) -> Relayer:
+    # Secret key handling
+    secret_key = EthHexBytes(config['private_key'])
 
-    # initiate relayer with two config file
+    # Configuration path handling
+    public_config_path = config.get("config_path", DEFAULT_RELAYER_CONFIG_PATH)
+    private_config_path = config.get("private_config_path", DEFAULT_PRIVATE_CONFIG_PATH)
+
+    # Determine relayer role
+    role = determine_relayer_role(config)
+
+    # When testnet relay is launched via console, enums are automatically switched.
+    if config['testnet']:
+        SwitchableChain.switch_testnet_config()
+        SwitchableAsset.switch_testnet_config()
+
+    # Initiate and configure the relayer
     relayer = Relayer.init_from_config_files(
-        public_config_path,
+        relayer_config_path=public_config_path,
         private_config_path=private_config_path,
-        private_key=secret_key_obj.hex() if isinstance(secret_key_obj, EthHexBytes) else None,
-        role=determine_relayer_role(config)
+        private_key=secret_key.hex() if isinstance(secret_key, EthHexBytes) else None,
+        role=role
     )
 
-    heart_beat_opt = False if config.get("no_heartbeat") else True
-    prometheus_on = True if config.get("prometheus") else False
-    if config.get("fast_relayer"):
+    heart_beat_opt = not config.get("no_heartbeat", False)
+    prometheus_on = config.get("prometheus", False)
+
+    if config["fast_relayer"]:
         config_fast_relayer(relayer, prometheus_on)
     else:
         config_relayer(relayer, heart_beat_opt, prometheus_on)
 
+    return relayer
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Relayer's launching package.")
+    parser.add_argument("-k", "--private-key", type=str, help="private key to be used by the relayer", default=None)
+    parser.add_argument("-c", "--config-path", type=str, help="insert configuration directory", default=None)
+    parser.add_argument("-a", "--private-config-path", type=str, help="insert sensitive configuration directory", default=None)
+    parser.add_argument("-b", "--no-heartbeat", action="store_true", default=False)
+    parser.add_argument("-p", "--prometheus", action="store_true", default=False)
+    parser.add_argument("-s", "--slow-relayer", action="store_true", default=True)
+    parser.add_argument("-f", "--fast-relayer", action="store_true", default=False)
+    parser.add_argument("-t", "--testnet", action="store_true", default=True)
+    parser.add_argument("-l", "--log-file-name", type=str, default='console.log')
+    config = vars(parser.parse_args())
+
+    setup_logger(config['log_file_name'])
+
+    relayer = setup_relayer(config)
     relayer.run_relayer()
 
 
