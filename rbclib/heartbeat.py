@@ -9,7 +9,7 @@ from rbclib.metric import PrometheusExporterRelayer
 from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
 from .globalconfig import relayer_config_global
-from .switchable_enum import SwitchableChain
+from .switchable_enum import chain_primitives
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
@@ -43,7 +43,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         if not is_pulsed_hear_beat(self.relayer):
-            return SwitchableChain.BIFROST.name, "relayer_authority", "heartbeat", []
+            return chain_primitives.BIFROST.name, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
 
@@ -55,7 +55,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="HeartBeat({})".format(True)
         )
         return None
@@ -64,7 +64,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="HeartBeat({})".format(False)
         )
         return None
@@ -73,7 +73,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="HeartBeat({})".format(None)
         )
         return None

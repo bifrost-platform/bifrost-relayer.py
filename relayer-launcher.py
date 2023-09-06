@@ -8,7 +8,7 @@ from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.periodicevents import PriceUpOracle, VSPFeed
-from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
+from rbclib.switchable_enum import chain_primitives, asset_primitives
 from relayer.relayer import Relayer, relayer_config_global, RelayerRole
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
@@ -88,8 +88,8 @@ def setup_relayer(config: dict) -> Relayer:
 
     # When testnet relay is launched via console, enums are automatically switched.
     if config['testnet']:
-        SwitchableChain.switch_testnet_config()
-        SwitchableAsset.switch_testnet_config()
+        chain_primitives.switch_testnet_config()
+        asset_primitives.switch_testnet_config()
 
     # Initiate and configure the relayer
     relayer = Relayer.init_from_config_files(
