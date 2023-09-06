@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
@@ -6,13 +6,11 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
+from relayer.relayer import Relayer
 from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
 from .globalconfig import relayer_config_global
 from .switchable_enum import chain_primitives
-
-if TYPE_CHECKING:
-    from relayer.relayer import Relayer
 
 
 class RelayerHeartBeat(PeriodicEventABC):
