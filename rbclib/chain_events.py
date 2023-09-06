@@ -33,7 +33,6 @@ from .utils import (
     fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index, log_invalid_flow
 )
 
-RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = ("", "", "", [])
 
 
