@@ -5,7 +5,7 @@ from bridgeconst.consts import RBCMethodDirection, Asset, Symbol, RBCMethodV1
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.relay_chain import chain_enum
 from relayer.user_utils import symbol_to_asset
 from .utils import (
     get_typed_item_from_console,
@@ -57,10 +57,10 @@ def user_cmd(is_testnet: bool):
             # get a rbc-method (source chain and destination chain are determined)
             if direction == RBCMethodDirection.INBOUND:
                 rbc_method = RBCMethodV1.WARP_UNIFY_SPLIT if symbol == Symbol.BFC else RBCMethodV1.WARP_UNIFY
-                src_chain, dst_chain = chain, chain_primitives.BIFROST,
+                src_chain, dst_chain = chain, chain_enum.BIFROST,
             else:
                 rbc_method = RBCMethodV1.UNIFY_SPLIT_WARP if symbol == Symbol.BFC else RBCMethodV1.SPLIT_WARP
-                src_chain, dst_chain = chain_primitives.BIFROST, chain
+                src_chain, dst_chain = chain_enum.BIFROST, chain
 
             # get an amount
             amount_config = fetch_bridge_amount_config(user, symbol_to_asset(src_chain, symbol), src_chain, dst_chain)

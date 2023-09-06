@@ -37,4 +37,4 @@ class ChainPrimitivesFactory:
         self.BASE = Chain.BASE_GOERLI
 
 
-chain_primitives = ChainPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])
+chain_enum = ChainPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])

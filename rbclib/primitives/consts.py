@@ -24,3 +24,5 @@ ASSET_PRICES_QUERY_NAME = "relayer_prices_of_symbol"
 
 CHAIN_ROUNDS_QUERY_NAME = "relayer_chain_rounds_of_chain"
 REQUEST_COUNTERS_QUERY_NAME = "relayer_status_counter"
+
+NoneParams = ("", "", "", [])

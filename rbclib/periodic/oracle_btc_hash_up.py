@@ -9,10 +9,9 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
-from rbclib.chain_events import NoneParams
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.primitives.consts import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.consts import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, NoneParams
+from rbclib.primitives.relay_chain import chain_enum
 from rbclib.utils import is_selected_relayer, fetch_oracle_latest_round, is_submitted_oracle_feed, log_invalid_flow
 from relayer.global_config import relayer_config_global
 
@@ -54,7 +53,7 @@ class BtcHashUpOracle(PeriodicEventABC):
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
         auth = is_selected_relayer(
-            self.relayer, chain_primitives.BIFROST, relayer_address=self.relayer.active_account.address
+            self.relayer, chain_enum.BIFROST, relayer_address=self.relayer.active_account.address
         )
         if not auth:
             return NoneParams
@@ -71,7 +70,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.relayer.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="oracle-error:OracleHeight({})>BtcHeight({})".format(
                     latest_height_from_socket, latest_height_from_chain
                 )
@@ -89,12 +88,12 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
 
             return (
-                chain_primitives.BIFROST.name,
+                chain_enum.BIFROST.name,
                 SOCKET_CONTRACT_NAME,
                 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME,
                 [
@@ -108,7 +107,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="submitted:height({})".format(feed_target_height)
             )
             return NoneParams

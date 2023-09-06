@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, Dict, List
+from typing import Optional, Union, Tuple, List
 
 import eth_abi
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
@@ -19,11 +19,12 @@ from rbclib.primitives.consts import (
     SOCKET_CONTRACT_NAME,
     SUBMIT_FUNCTION_NAME,
     GET_REQ_INFO_FUNCTION_NAME,
-    ROUND_UP_VOTING_FUNCTION_NAME
+    ROUND_UP_VOTING_FUNCTION_NAME,
+    NoneParams
 )
 from relayer.global_config import relayer_config_global, RelayerRole
 from relayer.relayer import Relayer
-from .primitives.relay_chain import chain_primitives
+from .primitives.relay_chain import chain_enum
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .utils import (
     fetch_socket_vsp_sigs,
@@ -32,8 +33,6 @@ from .utils import (
     fetch_relayer_num,
     fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index, log_invalid_flow
 )
-
-NoneParams = ("", "", "", [])
 
 
 def sorting_by_status(arr: List["RbcEvent"]) -> List["RbcEvent"]:
@@ -124,7 +123,7 @@ class RbcEvent(ChainEventABC):
             global_logger.formatted_log(
                 "Protocol",
                 address=manager.active_account.address,
-                related_chain_name=chain_primitives.NONE.name,
+                related_chain_name=chain_enum.NONE.name,
                 msg="SlowRelay:{}:delay-{}-sec".format(ret.summary(), relayer_config_global.slow_relayer_delay_sec)
             )
             return ret
@@ -168,17 +167,17 @@ class RbcEvent(ChainEventABC):
         global_logger.formatted_log(
             "CheckAuth",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="CheckMyEvent:RelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
         )
         if cached_index is not None:
             return True
 
-        relayer_index = fetch_relayer_index(self.manager, chain_primitives.BIFROST, rnd=self.rnd)
+        relayer_index = fetch_relayer_index(self.manager, chain_enum.BIFROST, rnd=self.rnd)
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="CheckMyEvent:FetchRelayerIdx:round({}):index({})".format(self.rnd, relayer_index)
         )
 
@@ -189,7 +188,7 @@ class RbcEvent(ChainEventABC):
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="CheckMyEvent:IgnoreRequest:{}".format(self.summary())
         )
         return False
@@ -246,10 +245,10 @@ class RbcEvent(ChainEventABC):
         return self.handle_tx_result_fail()
 
     def is_inbound(self) -> bool:
-        return self.src_chain != chain_primitives.BIFROST
+        return self.src_chain != chain_enum.BIFROST
 
     def is_outbound(self) -> bool:
-        return self.src_chain == chain_primitives.BIFROST
+        return self.src_chain == chain_enum.BIFROST
 
     def req_id(self) -> Tuple[Chain, int, int]:
         unzipped_decoded_data = self.decoded_data[0]
@@ -424,7 +423,7 @@ class RbcEvent(ChainEventABC):
     def is_primary_relayer(self):
         if relayer_config_global.is_fast_relayer():
             return True
-        total_validator_num = fetch_relayer_num(self.relayer, chain_primitives.BIFROST)
+        total_validator_num = fetch_relayer_num(self.relayer, chain_enum.BIFROST)
 
         primary_index = self.detected_event.block_number % total_validator_num
         my_index = self.relayer.get_value_by_key(self.rnd)
@@ -437,7 +436,7 @@ class RbcEvent(ChainEventABC):
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_with_next_status)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
         return (
-            chain_primitives.BIFROST.name,
+            chain_enum.BIFROST.name,
             SOCKET_CONTRACT_NAME,
             SUBMIT_FUNCTION_NAME,
             submit_data.submit_tuple()
@@ -468,7 +467,7 @@ class ChainRequestedEvent(RbcEvent):
 
         if self.is_inbound():
             return (
-                chain_primitives.BIFROST.name,
+                chain_enum.BIFROST.name,
                 SOCKET_CONTRACT_NAME,
                 SUBMIT_FUNCTION_NAME,
                 PollSubmit(self).submit_tuple()
@@ -479,7 +478,7 @@ class ChainRequestedEvent(RbcEvent):
             sig = self.relayer.active_account.ecdsa_recoverable_sign(status_changed_data)
             submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
             return (
-                chain_primitives.BIFROST.name,
+                chain_enum.BIFROST.name,
                 SOCKET_CONTRACT_NAME,
                 SUBMIT_FUNCTION_NAME,
                 submit_data.submit_tuple()
@@ -493,7 +492,7 @@ class ChainRequestedEvent(RbcEvent):
         voting_num = voting_list[self.status.value]
 
         # get quorum
-        quorum = fetch_quorum(self.relayer, chain_primitives.BIFROST, self.rnd)
+        quorum = fetch_quorum(self.relayer, chain_enum.BIFROST, self.rnd)
         if quorum == 0:
             return None
 
@@ -501,7 +500,7 @@ class ChainRequestedEvent(RbcEvent):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.manager.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="{}:voting-num({})".format(self.summary(), voting_num)
             )
             ret = None
@@ -509,7 +508,7 @@ class ChainRequestedEvent(RbcEvent):
             global_logger.formatted_log(
                 "Protocol",
                 address=self.manager.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="{}:voting-num({}):change-status".format(self.summary(), voting_num)
             )
             ret = self.handle_tx_result_fail()
@@ -565,7 +564,7 @@ class ChainFailedEvent(RbcEvent):
         sig = self.relayer.active_account.ecdsa_recoverable_sign(msg_to_sign)
         submit_data = PollSubmit(self).add_single_sig(sig.r, sig.s, to_eth_v(sig.v))
         return (
-            chain_primitives.BIFROST.name,
+            chain_enum.BIFROST.name,
             SOCKET_CONTRACT_NAME,
             SUBMIT_FUNCTION_NAME,
             submit_data.submit_tuple()
@@ -772,7 +771,7 @@ class RoundUpEvent(ChainEventABC):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, time_lock, manager)
         self.updating_chains = [Chain[chain] for chain in self.relayer.supported_chain_list]
-        self.updating_chains.remove(chain_primitives.BIFROST)
+        self.updating_chains.remove(chain_enum.BIFROST)
         self.selected_chain: Chain = Chain.NONE
         self.aggregated = True
 
@@ -827,7 +826,7 @@ class RoundUpEvent(ChainEventABC):
         if relayer_config_global.is_fast_relayer():
             return True
         previous_validator_list = fetch_sorted_relayer_list_lower(
-            self.relayer, chain_primitives.BIFROST, rnd=(self.round - 1)
+            self.relayer, chain_enum.BIFROST, rnd=(self.round - 1)
         )
         previous_validator_list = [EthAddress(addr) for addr in previous_validator_list]
         primary_index = self.detected_event.block_number % len(previous_validator_list)
@@ -917,7 +916,7 @@ class RoundUpEvent(ChainEventABC):
         global_logger.formatted_log(
             "Bootstrap",
             address=manager.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="Unchecked{}Log:{}".format(
                 RoundUpEvent.EVENT_NAME, latest_event_object.summary() if latest_event_object is not None else ""
             )

@@ -12,8 +12,8 @@ from chainpy.eth.ethtype.hexbytes import EthAddress
 from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 
-from rbclib.primitives.relay_asset import asset_primitives
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.relay_asset import asset_enum
+from rbclib.primitives.relay_chain import chain_enum
 from relayer.relayer import Relayer
 from relayer.user import User
 from relayer.user_utils import symbol_to_asset
@@ -33,8 +33,8 @@ class Manager(User, Relayer):
     @classmethod
     def init_manager(cls, role: str, is_testnet: bool, account: EthAccount = None):
         if is_testnet:
-            chain_primitives.switch_testnet_config()
-            asset_primitives.switch_testnet_config()
+            chain_enum.switch_testnet_config()
+            asset_enum.switch_testnet_config()
             manager = Manager.from_config_files(USER_TESTNET_CONFIG_PATH, PRIVATE_TESTNET_CONFIG_PATH)
         else:
             manager = Manager.from_config_files(USER_MAINNET_CONFIG_PATH, PRIVATE_MAINNET_CONFIG_PATH)
@@ -134,7 +134,7 @@ def get_chain_from_console(manager: MultiChainManager, not_included_bifrost: boo
     # remove BIFROST from the supported chain list
     supported_chain_list_clone = copy.deepcopy(manager.supported_chain_list)
     if not_included_bifrost:
-        supported_chain_list_clone.remove(chain_primitives.BIFROST.name)
+        supported_chain_list_clone.remove(chain_enum.BIFROST.name)
 
     prompt = "select a chain"
     chain_name = get_option_from_console(prompt, supported_chain_list_clone)
