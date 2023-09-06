@@ -1,18 +1,17 @@
 from typing import Optional
-import eth_abi
 
+import eth_abi
 from bridgeconst.consts import Oracle, Asset, Chain
+from chainpy.btc.managers.simplerpccli import SimpleBtcClient
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
-from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
+from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
-from chainpy.btc.managers.simplerpccli import SimpleBtcClient
 from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
-
 from .bifrostutils import (
     is_submitted_oracle_feed,
     fetch_oracle_latest_round,
@@ -26,7 +25,6 @@ from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
 from .switchable_enum import SwitchableChain
-
 from .utils import log_invalid_flow
 
 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"

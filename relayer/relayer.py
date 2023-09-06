@@ -4,17 +4,16 @@ import logging
 import time
 
 from chainpy.eth.ethtype.account import EthAccount
+from chainpy.eth.managers.configsanitycheck import is_meaningful, ConfigSanityChecker
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eth.managers.configsanitycheck import is_meaningful, ConfigSanityChecker
 from chainpy.logger import global_logger
 
+from rbclib.__init__ import __version__
 from rbclib.bifrostutils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
 from rbclib.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
 from rbclib.globalconfig import RelayerRole, relayer_config_global
 from rbclib.switchable_enum import SwitchableChain
-
-from rbclib.__init__ import __version__
 
 
 class Relayer(EventBridge):
@@ -24,12 +23,12 @@ class Relayer(EventBridge):
 
     @classmethod
     def init_from_config_files(
-            cls,
-            relayer_config_path: str,
-            private_config_path: str = None,
-            private_key: str = None,
-            role: RelayerRole = None,
-            slow_relayer_delay_sec: int = None
+        cls,
+        relayer_config_path: str,
+        private_config_path: str = None,
+        private_key: str = None,
+        role: RelayerRole = None,
+        slow_relayer_delay_sec: int = None
     ):
         with open(relayer_config_path, "r") as f:
             relayer_config_dict = json.load(f)
@@ -49,13 +48,13 @@ class Relayer(EventBridge):
 
     @classmethod
     def init_from_dicts(
-            cls,
-            relayer_config_dict: dict,
-            private_config_dict: dict = None,
-            private_key: str = None,
-            role: RelayerRole = None,
-            slow_relayer_delay_sec: int = None,
-            is_testnet: bool = False
+        cls,
+        relayer_config_dict: dict,
+        private_config_dict: dict = None,
+        private_key: str = None,
+        role: RelayerRole = None,
+        slow_relayer_delay_sec: int = None,
+        is_testnet: bool = False
     ):
         merged_dict = merge_dict(relayer_config_dict, private_config_dict)
         if private_key is not None:

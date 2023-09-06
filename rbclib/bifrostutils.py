@@ -1,17 +1,16 @@
 from typing import Optional
 
 from bridgeconst.consts import Chain
+from bridgeconst.consts import Oracle, ChainEventStatus, Symbol
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
-from bridgeconst.consts import Oracle, ChainEventStatus, Symbol
 
 from rbclib.switchable_enum import SwitchableChain
 
 
-def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, front_height: int = 0,
-                             front_time: int = 0):
+def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, front_height: int = 0, front_time: int = 0):
     current_block = chain_manager.eth_get_block_by_height()
     current_height, current_time = current_block.number, current_block.timestamp  # as a rear
 
@@ -28,10 +27,8 @@ def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, f
 
 
 def binary_search(
-        chain_manager: EthChainManager,
-        front_height: int, front_time: int,
-        rear_height: int, rear_time: int,
-        target_time: int) -> int:
+    chain_manager: EthChainManager, front_height: int, front_time: int, rear_height: int, rear_time: int, target_time: int
+) -> int:
     if front_time > rear_time or front_height > rear_height:
         raise Exception("binary search prams error: front > rear")
 
@@ -77,8 +74,8 @@ def fetch_round_info(manager: EventBridge) -> (int, int, int):
 
 
 def is_selected_relayer(
-        manager: EventBridge, chain: Chain, rnd: int = None,
-        relayer_address: EthAddress = None, is_initial: bool = True) -> bool:
+    manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None, is_initial: bool = True
+) -> bool:
     method = "is_selected_relayer" if rnd is None else "is_previous_selected_relayer"
     params = [relayer_address.hex(), is_initial] if rnd is None else [rnd, relayer_address.hex(), is_initial]
 
@@ -86,7 +83,7 @@ def is_selected_relayer(
 
 
 def fetch_relayer_index(
-        manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None
+    manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None
 ) -> Optional[int]:
     """ if rnd is None"""
     sorted_relayer_list = fetch_sorted_relayer_list_lower(manager, chain, rnd, is_initial=True)
@@ -100,7 +97,8 @@ def fetch_relayer_index(
 
 
 def fetch_sorted_relayer_list_lower(
-        manager: EventBridge, chain: Chain, rnd: int = None, is_initial: bool = True) -> list:
+    manager: EventBridge, chain: Chain, rnd: int = None, is_initial: bool = True
+) -> list:
     method = "selected_relayers" if rnd is None else "previous_selected_relayers"
     params = [is_initial] if rnd is None else [rnd, is_initial]
 
@@ -158,8 +156,9 @@ def is_pulsed_hear_beat(manager: EventBridge) -> bool:
 
 
 def fetch_submitted_oracle_feed(
-        manager: EventBridge, oracle: Oracle, rnd: int,
-        relayer_address: EthAddress = None) -> EthHashBytes:
+    manager: EventBridge, oracle: Oracle, rnd: int,
+    relayer_address: EthAddress = None
+) -> EthHashBytes:
     relayer_address = manager.active_account.address if relayer_address is None else relayer_address
 
     oracle_id_bytes = oracle.formatted_bytes()
@@ -170,7 +169,8 @@ def fetch_submitted_oracle_feed(
 
 
 def is_submitted_oracle_feed(
-        manager: EventBridge, oracle: Oracle, rnd: int, relayer_addr: EthAddress = None) -> bool:
+    manager: EventBridge, oracle: Oracle, rnd: int, relayer_addr: EthAddress = None
+) -> bool:
     """ Check whether the external data of the round has been transmitted. """
     result = fetch_submitted_oracle_feed(manager, oracle, rnd, relayer_addr)
     return result != 0

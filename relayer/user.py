@@ -1,13 +1,13 @@
-from typing import Tuple, List
+from typing import Tuple
 
-from bridgeconst.consts import Chain, Symbol, RBCMethodDirection, AssetType
+from bridgeconst.consts import Chain, Symbol
+from bridgeconst.consts import RBCMethodV1, Asset
 from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHexBytes, EthHashBytes
+from chainpy.eth.ethtype.receipt import EthReceipt
 from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eth.managers.multichainmanager import MultiChainManager
-from bridgeconst.consts import RBCMethodV1, Asset
 
 from rbclib.switchable_enum import SwitchableChain
 from relayer.user_utils import symbol_to_asset
@@ -18,13 +18,15 @@ class UserSubmit:
     Data class for payload of user request (sent to the "First chain")
     """
 
-    def __init__(self,
-                 method: RBCMethodV1,
-                 src_chain: Chain,
-                 dst_chain: Chain,
-                 symbol: Symbol,
-                 apply_addr: EthAddress,
-                 amount: EthAmount):
+    def __init__(
+        self,
+        method: RBCMethodV1,
+        src_chain: Chain,
+        dst_chain: Chain,
+        symbol: Symbol,
+        apply_addr: EthAddress,
+        amount: EthAmount
+    ):
         asset0, asset1 = symbol_to_asset(src_chain, symbol), symbol_to_asset(dst_chain, symbol)
         action_param_tuple = (
             asset0.formatted_bytes(),  # first token_index
@@ -47,12 +49,13 @@ class User(MultiChainManager):
     def __init__(self, multichain_config: dict):
         super().__init__(multichain_config)
 
-    def token_approve(self,
-                      chain: Chain,
-                      asset: Asset,
-                      target_addr: EthAddress,
-                      amount: EthAmount
-                      ) -> (EthTransaction, EthHashBytes):
+    def token_approve(
+        self,
+        chain: Chain,
+        asset: Asset,
+        target_addr: EthAddress,
+        amount: EthAmount
+    ) -> (EthTransaction, EthHashBytes):
         tx_with_fee = self.world_build_transaction(
             chain.name,
             asset.name,
@@ -61,21 +64,25 @@ class User(MultiChainManager):
         )
         return self.world_send_transaction(chain.name, tx_with_fee)
 
-    def world_get_allowance(self,
-                            chain: Chain,
-                            asset: Asset,
-                            spender: EthAddress,
-                            owner: EthAddress = None):
+    def world_get_allowance(
+        self,
+        chain: Chain,
+        asset: Asset,
+        spender: EthAddress,
+        owner: EthAddress = None
+    ):
         if owner is None:
             owner = self.active_account.address
         token_contract_name = asset.name
         allowance = self.world_call(chain.name, token_contract_name, "allowance", [owner, spender])
         return int.from_bytes(allowance, byteorder="big")
 
-    def world_token_balance_of(self,
-                               chain: Chain,
-                               asset: Asset,
-                               target_addr: EthAddress = None) -> EthAmount:
+    def world_token_balance_of(
+        self,
+        chain: Chain,
+        asset: Asset,
+        target_addr: EthAddress = None
+    ) -> EthAmount:
         target_addr = self.active_account.address if target_addr is None else target_addr
         value = self.world_call(
             chain.name,
@@ -99,12 +106,14 @@ class User(MultiChainManager):
         contract = self.get_contract_obj_on(chain.name, "socket")
         return contract.address if contract is not None else None
 
-    def build_cross_action_tx(self,
-                              src_chain: Chain,
-                              dst_chain: Chain,
-                              symbol: Symbol,
-                              cross_action_index: RBCMethodV1,
-                              amount: EthAmount) -> EthTransaction:
+    def build_cross_action_tx(
+        self,
+        src_chain: Chain,
+        dst_chain: Chain,
+        symbol: Symbol,
+        cross_action_index: RBCMethodV1,
+        amount: EthAmount
+    ) -> EthTransaction:
         user_request = UserSubmit(
             cross_action_index,
             src_chain, dst_chain,
@@ -117,22 +126,26 @@ class User(MultiChainManager):
 
         return self.world_build_transaction(src_chain.name, "vault", "request", [user_request.tuple()], value)
 
-    def send_cross_action(self,
-                          src_chain: Chain,
-                          dst_chain: Chain,
-                          symbol: Symbol,
-                          cross_action_index: RBCMethodV1,
-                          amount: EthAmount) -> EthHashBytes:
+    def send_cross_action(
+        self,
+        src_chain: Chain,
+        dst_chain: Chain,
+        symbol: Symbol,
+        cross_action_index: RBCMethodV1,
+        amount: EthAmount
+    ) -> EthHashBytes:
         tx = self.build_cross_action_tx(src_chain, dst_chain, symbol, cross_action_index, amount)
         tx_hash = self.world_send_transaction(src_chain.name, tx)
         return tx_hash
 
-    def send_cross_action_and_wait_receipt(self,
-                                           src_chain: Chain,
-                                           dst_chain: Chain,
-                                           symbol: Symbol,
-                                           cross_action_index: RBCMethodV1,
-                                           amount: EthAmount) -> Tuple[EthReceipt, Tuple[Chain, int, int]]:
+    def send_cross_action_and_wait_receipt(
+        self,
+        src_chain: Chain,
+        dst_chain: Chain,
+        symbol: Symbol,
+        cross_action_index: RBCMethodV1,
+        amount: EthAmount
+    ) -> Tuple[EthReceipt, Tuple[Chain, int, int]]:
         tx_hash = self.send_cross_action(src_chain, dst_chain, symbol, cross_action_index, amount)
 
         receipt = self.world_receipt_with_wait(src_chain.name, tx_hash, False)
@@ -145,14 +158,15 @@ class User(MultiChainManager):
             decode_event_data(log_data)[0]
         return receipt, (Chain.from_bytes(result[0][0]), result[0][1], result[0][2])
 
-    def build_rollback_params(self, chain: Chain, tx_hash: EthHashBytes) -> \
-            Tuple[
-                EthAddress,
-                Tuple[
-                    Tuple[bytes, int, int],
-                    Tuple[Tuple[bytes, bytes], Tuple[bytes, bytes, str, str, int, bytes]]
-                ]
-            ]:
+    def build_rollback_params(
+        self, chain: Chain, tx_hash: EthHashBytes
+    ) -> Tuple[
+        EthAddress,
+        Tuple[
+            Tuple[bytes, int, int],
+            Tuple[Tuple[bytes, bytes], Tuple[bytes, bytes, str, str, int, bytes]]
+        ]
+    ]:
         chain_manager = self.get_chain_manager_of(chain.name)
 
         # find out request id
