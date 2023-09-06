@@ -3,8 +3,8 @@ import argparse
 from chainpy.eth.ethtype.hexbytes import EthHexBytes
 from chainpy.logger import logger_config_global, global_logger
 
-from rbclib.chain_events import RbcEvent, RoundUpEvent
-from rbclib.external_rbc_events import ExternalRbcEvents
+from rbclib.events.rbc_event import RbcEvent, ExternalRbcEvent
+from rbclib.events.roundup_event import RoundUpEvent
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.periodic.heartbeat import RelayerHeartBeat
 from rbclib.periodic.oracle_price_up import PriceUpOracle
@@ -44,7 +44,7 @@ def config_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
 
 def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
     # multichain monitor will detect "Socket" event from every socket contract.
-    relayer.register_chain_event_obj("Socket", ExternalRbcEvents)
+    relayer.register_chain_event_obj("Socket", ExternalRbcEvent)
 
     # multichain monitor will detect "RoundUp" event from the socket contract on bifrost network.
     relayer.register_chain_event_obj("RoundUp", RoundUpEvent)
