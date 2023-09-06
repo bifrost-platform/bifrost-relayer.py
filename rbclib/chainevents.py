@@ -1,19 +1,24 @@
 from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
+
 import eth_abi
-
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
-
-from chainpy.eventbridge.eventbridge import EventBridge
-from chainpy.eventbridge.chaineventabc import ChainEventABC, CallParamTuple, SendParamTuple
-from chainpy.eventbridge.utils import timestamp_msec
-from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash, to_eth_v
+from chainpy.eth.managers.eventobj import DetectedEvent
+from chainpy.eventbridge.chaineventabc import ChainEventABC, CallParamTuple, SendParamTuple
+from chainpy.eventbridge.eventbridge import EventBridge
+from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
-
+from .bifrostutils import (
+    fetch_socket_vsp_sigs,
+    fetch_socket_rbc_sigs,
+    fetch_quorum,
+    fetch_relayer_num,
+    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index
+)
 from .consts import (
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS,
     RBC_EVENT_STATUS_START_DATA_START_INDEX,
@@ -23,13 +28,6 @@ from .globalconfig import relayer_config_global, RelayerRole
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import SwitchableChain
 from .utils import log_invalid_flow
-from .bifrostutils import (
-    fetch_socket_vsp_sigs,
-    fetch_socket_rbc_sigs,
-    fetch_quorum,
-    fetch_relayer_num,
-    fetch_latest_round, fetch_sorted_relayer_list_lower, fetch_relayer_index
-)
 
 if TYPE_CHECKING:
     from relayer.relayer import Relayer
@@ -699,7 +697,7 @@ class _AggregatedRelayEvent(RbcEvent):
         return self
 
     def aggregated_relay(
-            self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus
+        self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus
     ) -> SendParamTuple:
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         chain, rnd, seq = self.req_id()
@@ -877,10 +875,10 @@ class RoundUpEvent(ChainEventABC):
             result = fetch_socket_vsp_sigs(self.relayer, self.round)
             submit_data = AggregatedRoundUpSubmit(self).add_tuple_sigs(result)
             return (
-                       self.selected_chain.name,
-                       SOCKET_CONTRACT_NAME,
-                       ROUND_UP_VOTING_FUNCTION_NAME,
-                       submit_data.submit_tuple()
+                self.selected_chain.name,
+                SOCKET_CONTRACT_NAME,
+                ROUND_UP_VOTING_FUNCTION_NAME,
+                submit_data.submit_tuple()
             )
         else:
             # secondary relayer do (prepare to call after a few minutes)

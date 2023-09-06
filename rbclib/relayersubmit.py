@@ -1,14 +1,13 @@
-import eth_abi
 from typing import TYPE_CHECKING, Union
 
-from chainpy.eventbridge.chaineventabc import ChainEventABC
+import eth_abi
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
+from chainpy.eventbridge.chaineventabc import ChainEventABC
 
 if TYPE_CHECKING:
     from .chainevents import RbcEvent, RoundUpEvent
-
 
 SigType = Union[list, tuple]
 
@@ -118,6 +117,7 @@ class PollSubmit(SubmitWithSig):
     """
     Data conversion class from "ChainEvent" to transaction parameters for "poll method"
     """
+
     def __init__(self, event: "RbcEvent"):
         super(PollSubmit, self).__init__(event)
 

@@ -1,11 +1,10 @@
 from typing import List
 
-from prometheus_client import Counter, Gauge
-
+from bridgeconst.consts import ChainEventStatus, Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
-from bridgeconst.consts import ChainEventStatus, Chain
+from prometheus_client import Counter, Gauge
 
 HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
 RUNNING_SESSIONS_QUERY_NAME = "relayer_running_sessions"
@@ -19,7 +18,6 @@ REQUEST_COUNTERS_QUERY_NAME = "relayer_status_counter"
 
 
 class PrometheusExporterRelayer(PrometheusExporter):
-
     START_TIME = timestamp_msec()
 
     HEARTBEAT_COUNTER = Counter(HEARTBEAT_COUNTER_QUERY_NAME, "Description")
@@ -34,8 +32,8 @@ class PrometheusExporterRelayer(PrometheusExporter):
 
     @staticmethod
     def init_prometheus_exporter_on_relayer(
-            supported_chains: List[str],
-            port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT):
+        supported_chains: List[str], port: int = PrometheusExporter.PROMETHEUS_SEVER_PORT
+    ):
         PrometheusExporter.init_prometheus_exporter(port)
 
         for chain in supported_chains:
