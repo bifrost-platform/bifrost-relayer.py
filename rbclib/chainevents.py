@@ -23,7 +23,11 @@ from .bifrostutils import (
 from .consts import (
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS,
     RBC_EVENT_STATUS_START_DATA_START_INDEX,
-    RBC_EVENT_STATUS_START_DATA_END_INDEX
+    RBC_EVENT_STATUS_START_DATA_END_INDEX,
+    SOCKET_CONTRACT_NAME,
+    SUBMIT_FUNCTION_NAME,
+    GET_REQ_INFO_FUNCTION_NAME,
+    ROUND_UP_VOTING_FUNCTION_NAME
 )
 from .globalconfig import relayer_config_global, RelayerRole
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
@@ -32,15 +36,6 @@ from .utils import log_invalid_flow
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = ("", "", "", [])
-
-SOCKET_CONTRACT_NAME = "socket"
-SUBMIT_FUNCTION_NAME = "poll"
-GET_REQ_INFO_FUNCTION_NAME = "get_request"
-ROUND_UP_VOTING_FUNCTION_NAME = "round_control_relay"
-
-AUTHORITY_CONTRACT_NAME = "authority"
-RELAYER_AUTHORITY_CONTRACT_NAME = "relayer_authority"
-GET_ROUND_FUNCTION_NAME = "latest_round"
 
 
 def sorting_by_status(arr: List["RbcEvent"]) -> List["RbcEvent"]:
