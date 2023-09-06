@@ -24,7 +24,7 @@ from .bifrostutils import (
 from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
 from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
-from .switchable_enum import SwitchableChain
+from .switchable_enum import chain_primitives
 from .utils import log_invalid_flow
 
 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"
@@ -67,7 +67,7 @@ class PriceUpOracle(PeriodicEventABC):
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
         auth = is_selected_relayer(
-            self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address
+            self.relayer, chain_primitives.BIFROST, relayer_address=self.relayer.active_account.address
         )
         if not auth:
             return NoneParams
@@ -85,11 +85,11 @@ class PriceUpOracle(PeriodicEventABC):
         global_logger.formatted_log(
             "PriceUp",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="{}:price-feeding".format(self.__class__.__name__)
         )
         return (
-            SwitchableChain.BIFROST.name,
+            chain_primitives.BIFROST.name,
             "socket",
             "oracle_aggregate_feeding",
             [oid_list, [price.bytes() for price in prices]]
@@ -148,7 +148,7 @@ class BtcHashUpOracle(PeriodicEventABC):
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
         auth = is_selected_relayer(
-            self.relayer, SwitchableChain.BIFROST, relayer_address=self.relayer.active_account.address
+            self.relayer, chain_primitives.BIFROST, relayer_address=self.relayer.active_account.address
         )
         if not auth:
             return NoneParams
@@ -165,7 +165,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.relayer.active_account.address,
-                related_chain_name=SwitchableChain.BIFROST.name,
+                related_chain_name=chain_primitives.BIFROST.name,
                 msg="oracle-error:OracleHeight({})>BtcHeight({})".format(
                     latest_height_from_socket, latest_height_from_chain
                 )
@@ -183,12 +183,12 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain_name=SwitchableChain.BIFROST.name,
+                related_chain_name=chain_primitives.BIFROST.name,
                 msg="btcHash({}):height({})".format(block_hash.hex(), feed_target_height)
             )
 
             return (
-                SwitchableChain.BIFROST.name,
+                chain_primitives.BIFROST.name,
                 SOCKET_CONTRACT_NAME,
                 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME,
                 [
@@ -202,7 +202,7 @@ class BtcHashUpOracle(PeriodicEventABC):
             global_logger.formatted_log(
                 "BtcHash",
                 address=self.manager.active_account.address,
-                related_chain_name=SwitchableChain.BIFROST.name,
+                related_chain_name=chain_primitives.BIFROST.name,
                 msg="submitted:height({})".format(feed_target_height)
             )
             return NoneParams
@@ -239,7 +239,7 @@ class VSPFeed(PeriodicEventABC):
         super().__init__(manager, period_sec, time_lock)
         if _round is None:
             supported_chain_list = self.relayer.supported_chain_list
-            supported_chain_list.remove(SwitchableChain.BIFROST.name)
+            supported_chain_list.remove(chain_primitives.BIFROST.name)
         self.__current_round = fetch_bottom_round(self.relayer) if _round is None else _round
 
         PrometheusExporterRelayer.exporting_running_time_metric()
@@ -272,7 +272,7 @@ class VSPFeed(PeriodicEventABC):
         return NoneParams
 
     def build_transaction_params(self) -> SendParamTuple:
-        round_from_bn = fetch_latest_round(self.relayer, SwitchableChain.BIFROST)
+        round_from_bn = fetch_latest_round(self.relayer, chain_primitives.BIFROST)
 
         # for prometheus exporter
         for chain_name in self.relayer.supported_chain_list:
@@ -283,7 +283,7 @@ class VSPFeed(PeriodicEventABC):
         global_logger.formatted_log(
             "CheckRound",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="VSPFeed:cached({}):fetched({})".format(self.__current_round, round_from_bn)
         )
 
@@ -294,11 +294,11 @@ class VSPFeed(PeriodicEventABC):
         self.current_round = round_from_bn
 
         # update relayer index cache
-        relayer_index = fetch_relayer_index(self.relayer, SwitchableChain.BIFROST, rnd=round_from_bn)
+        relayer_index = fetch_relayer_index(self.relayer, chain_primitives.BIFROST, rnd=round_from_bn)
         global_logger.formatted_log(
             "UpdateAuth",
             address=self.relayer.active_account.address,
-            related_chain_name=SwitchableChain.BIFROST.name,
+            related_chain_name=chain_primitives.BIFROST.name,
             msg="VSPFeed:FetchRelayerIdx:round({}):index({})".format(round_from_bn, relayer_index)
         )
 
@@ -307,34 +307,34 @@ class VSPFeed(PeriodicEventABC):
             global_logger.formatted_log(
                 "CheckAuth",
                 address=self.relayer.active_account.address,
-                related_chain_name=SwitchableChain.BIFROST.name,
+                related_chain_name=chain_primitives.BIFROST.name,
                 msg="VSPFeed:UpdatedRelayerIdxCache: {}".format([(rnd, idx) for rnd, idx in self.relayer.cache.cache.items()])
             )
         else:
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.relayer.active_account.address,
-                related_chain_name=SwitchableChain.BIFROST.name,
+                related_chain_name=chain_primitives.BIFROST.name,
                 msg="NotValidator:round({})".format(round_from_bn)
             )
 
         # vote for new validator list by only previous validator
         if not is_selected_relayer(
-                self.relayer, SwitchableChain.BIFROST,
+                self.relayer, chain_primitives.BIFROST,
                 relayer_address=self.relayer.active_account.address,
                 rnd=(round_from_bn - 1)
         ):
             return NoneParams
 
         # build VSP feed data with signature
-        sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, SwitchableChain.BIFROST)
+        sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, chain_primitives.BIFROST)
         data_to_sig = eth_abi.encode_abi(["uint256", "address[]"], [round_from_bn, sorted_validator_list])
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_to_sig)
         socket_sig = SocketSignature.from_single_sig(sig.r, sig.s, sig.v + 27)
 
         submit_data = [(round_from_bn, sorted_validator_list, socket_sig.tuple())]
         return (
-            SwitchableChain.BIFROST.name,
+            chain_primitives.BIFROST.name,
             SOCKET_CONTRACT_NAME,
             ROUND_UP_FUNCTION_NAME,
             submit_data

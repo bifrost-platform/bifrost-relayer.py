@@ -3,16 +3,16 @@ import sys
 from bridgeconst.consts import Chain, Asset
 
 
-class _SwitchableChain:
-    def __init__(self, test_flag: bool):
-        self.NONE = Chain.NONE
-        self.BIFROST = Chain.BFC_MAIN
-        self.ETHEREUM = Chain.ETH_MAIN
-        self.BINANCE = Chain.BNB_MAIN
-        self.MATIC = Chain.MATIC_MAIN
-        self.AVALANCHE = Chain.AVAX_MAIN
-        self.BASE = Chain.BASE_MAIN
+class ChainPrimitivesFactory:
+    NONE = Chain.NONE
+    BIFROST = Chain.BFC_MAIN
+    ETHEREUM = Chain.ETH_MAIN
+    BINANCE = Chain.BNB_MAIN
+    MATIC = Chain.MATIC_MAIN
+    AVALANCHE = Chain.AVAX_MAIN
+    BASE = Chain.BASE_MAIN
 
+    def __init__(self, test_flag: bool):
         if test_flag:
             self.switch_testnet_config()
 
@@ -29,7 +29,6 @@ class _SwitchableChain:
         return Chain.size()
 
     def switch_testnet_config(self):
-        self.NONE = Chain.NONE
         self.BIFROST = Chain.BFC_TEST
         self.ETHEREUM = Chain.ETH_GOERLI
         self.BINANCE = Chain.BNB_TEST
@@ -38,63 +37,63 @@ class _SwitchableChain:
         self.BASE = Chain.BASE_GOERLI
 
 
-class _SwitchableAsset:
+class AssetPrimitivesFactory:
+    NONE = Asset.NONE
+    # BFC---------------------------------------------------------------------------------------------------------------
+    BFC_ON_BIFROST = Asset.BFC_ON_BFC_MAIN
+    BFC_ON_ETHEREUM = Asset.BFC_ON_ETH_MAIN
+    BRIDGED_ETHEREUM_BFC_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_BFC_ON_BFC_MAIN
+    UNIFIED_BFC_ON_BIFROST = Asset.UNIFIED_BFC_ON_BFC_MAIN
+
+    # BIFI--------------------------------------------------------------------------------------------------------------
+    BIFI_ON_ETHEREUM = Asset.BIFI_ON_ETH_MAIN
+    BRIDGED_ETHEREUM_BIFI_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_BIFI_ON_BFC_MAIN
+    UNIFIED_BIFI_ON_BIFROST = Asset.UNIFIED_BIFI_ON_BFC_MAIN
+
+    # ETH---------------------------------------------------------------------------------------------------------------
+    ETH_ON_ETHEREUM = Asset.ETH_ON_ETH_MAIN
+    BRIDGED_ETHEREUM_ETH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_ETH_ON_BFC_MAIN
+    BRIDGED_BASE_ETH_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_ETH_ON_BFC_MAIN
+    UNIFIED_ETHEREUM_ETH_ON_BIFROST = Asset.UNIFIED_ETH_ON_BFC_MAIN
+
+    # BNB---------------------------------------------------------------------------------------------------------------
+    BNB_ON_BINANCE = Asset.BNB_ON_BNB_MAIN
+    BRIDGED_BNB_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_BNB_ON_BFC_MAIN
+    UNIFIED_BNB_ON_BIFROST = Asset.UNIFIED_BNB_ON_BFC_MAIN
+
+    # MATIC-------------------------------------------------------------------------------------------------------------
+    MATIC_ON_POLYGON = Asset.MATIC_ON_MATIC_MAIN
+    BRIDGED_MATIC_ON_BIFROST = Asset.BRIDGED_MATIC_MAIN_MATIC_ON_BFC_MAIN
+    UNIFIED_MATIC_ON_BIFROST = Asset.UNIFIED_MATIC_ON_BFC_MAIN
+
+    # USDC
+    # ------------------------------------------------------------------------------------------------------------------
+    USDC_ON_ETHEREUM = Asset.USDC_ON_ETH_MAIN
+    USDC_ON_BINANCE = Asset.USDC_ON_BNB_MAIN
+
+    BRIDGED_ETHEREUM_USDC_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDC_ON_BFC_MAIN
+    BRIDGED_BINANCE_USDC_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_USDC_ON_BFC_MAIN
+    UNIFIED_USDC_ON_BIFROST = Asset.UNIFIED_USDC_ON_BFC_MAIN
+
+    # USDT--------------------------------------------------------------------------------------------------------------
+    USDT_ON_ETHEREUM = Asset.USDT_ON_ETH_MAIN
+    BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN
+    UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_MAIN
+
+    # EGG---------------------------------------------------------------------------------------------------------------
+    BRIDGED_ETHEREUM_EGG_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_EGG_ON_BFC_MAIN
+    UNIFIED_EGG_ON_BIFROST = Asset.UNIFIED_EGG_ON_BFC_MAIN
+
+    # WITCH-------------------------------------------------------------------------------------------------------------
+    BRIDGED_ETHEREUM_WITCH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_WITCH_ON_BFC_MAIN
+    UNIFIED_WITCH_ON_BIFROST = Asset.UNIFIED_WITCH_ON_BFC_MAIN
+
+    # DAI---------------------------------------------------------------------------------------------------------------
+    DAI_ON_BASE = Asset.DAI_ON_BASE_MAIN
+    BRIDGED_BASE_DAI_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_DAI_ON_BFC_MAIN
+    UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_MAIN
+
     def __init__(self, test_flag: bool):
-        self.NONE = Asset.NONE
-        # BFC---------------------------------------------------------------------------------------------------------------
-        self.BFC_ON_BIFROST = Asset.BFC_ON_BFC_MAIN
-        self.BFC_ON_ETHEREUM = Asset.BFC_ON_ETH_MAIN
-        self.BRIDGED_ETHEREUM_BFC_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_BFC_ON_BFC_MAIN
-        self.UNIFIED_BFC_ON_BIFROST = Asset.UNIFIED_BFC_ON_BFC_MAIN
-
-        # BIFI--------------------------------------------------------------------------------------------------------------
-        self.BIFI_ON_ETHEREUM = Asset.BIFI_ON_ETH_MAIN
-        self.BRIDGED_ETHEREUM_BIFI_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_BIFI_ON_BFC_MAIN
-        self.UNIFIED_BIFI_ON_BIFROST = Asset.UNIFIED_BIFI_ON_BFC_MAIN
-
-        # ETH---------------------------------------------------------------------------------------------------------------
-        self.ETH_ON_ETHEREUM = Asset.ETH_ON_ETH_MAIN
-        self.BRIDGED_ETHEREUM_ETH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_ETH_ON_BFC_MAIN
-        self.BRIDGED_BASE_ETH_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_ETH_ON_BFC_MAIN
-        self.UNIFIED_ETHEREUM_ETH_ON_BIFROST = Asset.UNIFIED_ETH_ON_BFC_MAIN
-
-        # BNB---------------------------------------------------------------------------------------------------------------
-        self.BNB_ON_BINANCE = Asset.BNB_ON_BNB_MAIN
-        self.BRIDGED_BNB_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_BNB_ON_BFC_MAIN
-        self.UNIFIED_BNB_ON_BIFROST = Asset.UNIFIED_BNB_ON_BFC_MAIN
-
-        # MATIC-------------------------------------------------------------------------------------------------------------
-        self.MATIC_ON_POLYGON = Asset.MATIC_ON_MATIC_MAIN
-        self.BRIDGED_MATIC_ON_BIFROST = Asset.BRIDGED_MATIC_MAIN_MATIC_ON_BFC_MAIN
-        self.UNIFIED_MATIC_ON_BIFROST = Asset.UNIFIED_MATIC_ON_BFC_MAIN
-
-        # USDC
-        # ------------------------------------------------------------------------------------------------------------------
-        self.USDC_ON_ETHEREUM = Asset.USDC_ON_ETH_MAIN
-        self.USDC_ON_BINANCE = Asset.USDC_ON_BNB_MAIN
-
-        self.BRIDGED_ETHEREUM_USDC_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDC_ON_BFC_MAIN
-        self.BRIDGED_BINANCE_USDC_ON_BIFROST = Asset.BRIDGED_BNB_MAIN_USDC_ON_BFC_MAIN
-        self.UNIFIED_USDC_ON_BIFROST = Asset.UNIFIED_USDC_ON_BFC_MAIN
-
-        # USDT--------------------------------------------------------------------------------------------------------------
-        self.USDT_ON_ETHEREUM = Asset.USDT_ON_ETH_MAIN
-        self.BRIDGED_ETHEREUM_USDT_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_USDT_ON_BFC_MAIN
-        self.UNIFIED_USDT_ON_BIFROST = Asset.UNIFIED_USDT_ON_BFC_MAIN
-
-        # EGG---------------------------------------------------------------------------------------------------------------
-        self.BRIDGED_ETHEREUM_EGG_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_EGG_ON_BFC_MAIN
-        self.UNIFIED_EGG_ON_BIFROST = Asset.UNIFIED_EGG_ON_BFC_MAIN
-
-        # WITCH-------------------------------------------------------------------------------------------------------------
-        self.BRIDGED_ETHEREUM_WITCH_ON_BIFROST = Asset.BRIDGED_ETH_MAIN_WITCH_ON_BFC_MAIN
-        self.UNIFIED_WITCH_ON_BIFROST = Asset.UNIFIED_WITCH_ON_BFC_MAIN
-
-        # DAI---------------------------------------------------------------------------------------------------------------
-        self.DAI_ON_BASE = Asset.DAI_ON_BASE_MAIN
-        self.BRIDGED_BASE_DAI_ON_BIFROST = Asset.BRIDGED_BASE_MAIN_DAI_ON_BFC_MAIN
-        self.UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_MAIN
-
         if test_flag:
             self.switch_testnet_config()
 
@@ -165,5 +164,5 @@ class _SwitchableAsset:
         self.UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_TEST
 
 
-SwitchableChain = _SwitchableChain("--testnet" in sys.argv[1:])
-SwitchableAsset = _SwitchableAsset("--testnet" in sys.argv[1:])
+chain_primitives = ChainPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])
+asset_primitives = AssetPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])

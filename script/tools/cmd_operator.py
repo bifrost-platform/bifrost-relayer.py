@@ -11,7 +11,7 @@ from rbclib.bifrostutils import (
     fetch_oracle_latest_round,
     fetch_sorted_relayer_list_lower
 )
-from rbclib.switchable_enum import SwitchableChain
+from rbclib.switchable_enum import chain_primitives
 
 from .consts import TESTNET_TEAM_RELAYER, MAINNET_TEAM_RELAYER
 from .utils import (
@@ -60,7 +60,7 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_AUTHORITIES:
             # validator coin balances
-            validator_addr_list = fetch_sorted_relayer_list_lower(operator, SwitchableChain.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list_lower(operator, chain_primitives.BIFROST)
             validator_addr_list = [EthAddress(addr) for addr in validator_addr_list]
             print("----------------------------------------------------------------------------------")
             for i, addr in enumerate(validator_addr_list):
@@ -76,7 +76,7 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_PRICE_OF:
             # get price from oracle
-            symbols = symbol_list_on(SwitchableChain.BIFROST, is_testnet=is_testnet)
+            symbols = symbol_list_on(chain_primitives.BIFROST, is_testnet=is_testnet)
             symbol = get_option_from_console("Select Asset Symbol", symbols)
             price = fetch_price_from_oracle(operator, symbol)
             print(">>> Price: {}".format(price.change_decimal(6).float_str))
@@ -90,7 +90,7 @@ def operator_cmd(is_testnet: bool, ):
             print("TODO")
 
         elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS_BY:
-            relayers = fetch_sorted_relayer_list_lower(operator, SwitchableChain.BIFROST)
+            relayers = fetch_sorted_relayer_list_lower(operator, chain_primitives.BIFROST)
             latest_round = fetch_oracle_latest_round(operator, Oracle.BITCOIN_BLOCK_HASH)
             print("latest_round: {}".format(latest_round))
             for relayer in relayers:
@@ -116,7 +116,7 @@ def operator_cmd(is_testnet: bool, ):
 
             elif input_type == "log_data":
                 log_data = get_typed_item_from_console("enter log_data", EthHashBytes)
-                chain = SwitchableChain.BIFROST
+                chain = chain_primitives.BIFROST
             else:
                 raise Exception("Invalid input type")
 
