@@ -12,6 +12,7 @@ from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
+from relayer.global_config import relayer_config_global
 from .bifrostutils import (
     is_submitted_oracle_feed,
     fetch_oracle_latest_round,
@@ -23,7 +24,6 @@ from .bifrostutils import (
 )
 from .chainevents import NoneParams
 from .consts import SOCKET_CONTRACT_NAME
-from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
 from .switchable_enum import chain_primitives
 from .utils import log_invalid_flow

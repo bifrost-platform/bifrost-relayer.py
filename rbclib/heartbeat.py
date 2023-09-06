@@ -6,10 +6,10 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
+from relayer.global_config import relayer_config_global
 from relayer.relayer import Relayer
 from .bifrostutils import is_pulsed_hear_beat
 from .chainevents import NoneParams
-from .globalconfig import relayer_config_global
 from .switchable_enum import chain_primitives
 
 
