@@ -13,14 +13,14 @@ from rbclib.consts import HEARTBEAT_COUNTER_QUERY_NAME, RUNNING_SESSIONS_QUERY_N
 class PrometheusExporterRelayer(PrometheusExporter):
     START_TIME = timestamp_msec()
 
-    HEARTBEAT_COUNTER = Counter(HEARTBEAT_COUNTER_QUERY_NAME, "Description")
-    RUNNING_SESSIONS = Gauge(RUNNING_SESSIONS_QUERY_NAME, "Description")
-    INCOMPLETE_SCORE_GAUGE = Gauge(INCOMPLETE_GAUGE_QUERY_NAME, "Description of counter", ['chain'])
+    HEARTBEAT_COUNTER = Counter(HEARTBEAT_COUNTER_QUERY_NAME, 'Description')
+    RUNNING_SESSIONS = Gauge(RUNNING_SESSIONS_QUERY_NAME, 'Description')
+    INCOMPLETE_SCORE_GAUGE = Gauge(INCOMPLETE_GAUGE_QUERY_NAME, 'Description of counter', ['chain'])
 
-    BTC_HEIGHT = Gauge(BTC_HEIGHT_QUERY_NAME, "Description")
-    ASSET_PRICES = Gauge(ASSET_PRICES_QUERY_NAME, "Description", ['symbol'])
+    BTC_HEIGHT = Gauge(BTC_HEIGHT_QUERY_NAME, 'Description')
+    ASSET_PRICES = Gauge(ASSET_PRICES_QUERY_NAME, 'Description', ['symbol'])
 
-    CHAIN_ROUNDS = Gauge(CHAIN_ROUNDS_QUERY_NAME, "Description", ['chain'])
+    CHAIN_ROUNDS = Gauge(CHAIN_ROUNDS_QUERY_NAME, 'Description', ['chain'])
     REQUEST_COUNTERS = Counter(REQUEST_COUNTERS_QUERY_NAME, 'Description of counter', ['status'])
 
     @staticmethod
