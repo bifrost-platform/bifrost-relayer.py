@@ -11,7 +11,7 @@ from chainpy.logger import global_logger
 
 from rbclib.__init__ import __version__
 from rbclib.primitives.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.relay_chain import chain_enum
 from rbclib.utils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
 from relayer.global_config import RelayerRole, relayer_config_global
 
@@ -96,7 +96,7 @@ class Relayer(EventBridge):
 
     def _wait_until_node_sync(self):
         """ Wait node's block synchronization"""
-        chain_manager = self.get_chain_manager_of(chain_primitives.BIFROST.name)
+        chain_manager = self.get_chain_manager_of(chain_enum.BIFROST.name)
         while True:
             try:
                 result = chain_manager.send_request("system_health", [])["isSyncing"]
@@ -123,11 +123,11 @@ class Relayer(EventBridge):
     def _register_relayer_auth(self):
         round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.round_cache)
         for i in range(round_history_limit):
-            relayer_index = fetch_relayer_index(self, chain_primitives.BIFROST, rnd=self.round_cache - i)
+            relayer_index = fetch_relayer_index(self, chain_enum.BIFROST, rnd=self.round_cache - i)
             global_logger.formatted_log(
                 "UpdateAuth",
                 address=self.active_account.address,
-                related_chain_name=chain_primitives.BIFROST.name,
+                related_chain_name=chain_enum.BIFROST.name,
                 msg="round({}):index({})".format(self.round_cache - i, relayer_index)
             )
             self.set_value_by_key(self.round_cache - i, relayer_index)
@@ -138,10 +138,10 @@ class Relayer(EventBridge):
 
         for chain_name in self.supported_chain_list:
             chain_manager = self.get_chain_manager_of(chain_name)
-            if chain_name == chain_primitives.BIFROST.name:
+            if chain_name == chain_enum.BIFROST.name:
                 chain_manager.latest_height = bootstrap_start_height
             else:
-                bootstrap_start_time = self.get_chain_manager_of(chain_primitives.BIFROST.name). \
+                bootstrap_start_time = self.get_chain_manager_of(chain_enum.BIFROST.name). \
                     eth_get_block_by_height(bootstrap_start_height).timestamp
                 chain_manager.latest_height = find_height_by_timestamp(chain_manager, bootstrap_start_time)
 
@@ -156,7 +156,7 @@ class Relayer(EventBridge):
         ))
 
         # store the latest round of the BIFROST network
-        self.round_cache = fetch_latest_round(self, chain_primitives.BIFROST)
+        self.round_cache = fetch_latest_round(self, chain_enum.BIFROST)
 
         # store whether this relayer is a selected relayer in each round.
         self._register_relayer_auth()

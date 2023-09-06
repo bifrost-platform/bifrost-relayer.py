@@ -8,7 +8,7 @@ from chainpy.eth.ethtype.transaction import EthTransaction
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eth.managers.multichainmanager import MultiChainManager
 
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.relay_chain import chain_enum
 from relayer.user_utils import symbol_to_asset
 
 
@@ -177,12 +177,12 @@ class User(MultiChainManager):
         return EthAddress(result[3][2]), (result[0], (result[2], result[3]))
 
     def round_up(self, chain: Chain, is_initial: bool = True):
-        current_bif_round = self.world_call(chain_primitives.BIFROST.name, "relayer_authority", "latest_round", [])[0]
+        current_bif_round = self.world_call(chain_enum.BIFROST.name, "relayer_authority", "latest_round", [])[0]
         current_tar_round = self.world_call(chain.name, "relayer_authority", "latest_round", [])[0]
 
         if current_bif_round == current_tar_round + 1:
             validator_tuple = self.world_call(
-                chain_primitives.BIFROST.name,
+                chain_enum.BIFROST.name,
                 "relayer_authority",
                 "selected_relayers",
                 [is_initial]
@@ -191,7 +191,7 @@ class User(MultiChainManager):
         elif current_bif_round > current_tar_round + 1:
             try:
                 validator_tuple = self.world_call(
-                    chain_primitives.BIFROST.name,
+                    chain_enum.BIFROST.name,
                     "relayer_authority",
                     "previous_selected_relayers",
                     [current_bif_round + 1, is_initial]
@@ -199,7 +199,7 @@ class User(MultiChainManager):
             except Exception as e:
                 if str(e) == '[BFC_TEST] revert Tried to read round_index out of bounds':
                     validator_tuple = self.world_call(
-                        chain_primitives.BIFROST.name,
+                        chain_enum.BIFROST.name,
                         "relayer_authority",
                         "selected_relayers",
                         [is_initial]

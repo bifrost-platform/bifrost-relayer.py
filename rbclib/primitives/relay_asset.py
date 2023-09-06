@@ -130,4 +130,4 @@ class AssetPrimitivesFactory:
         self.UNIFIED_DAI_ON_BIFROST = Asset.UNIFIED_DAI_ON_BFC_TEST
 
 
-asset_primitives = AssetPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])
+asset_enum = AssetPrimitivesFactory('--testnet' in sys.argv[1:] or '-t' in sys.argv[1:])

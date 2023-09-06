@@ -4,7 +4,7 @@ from typing import List
 from bridgeconst.consts import Chain, Oracle
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.relay_chain import chain_enum
 from rbclib.utils import (
     fetch_submitted_oracle_feed,
     fetch_btc_hash_from_oracle,
@@ -59,7 +59,7 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.BALANCES_OF_AUTHORITIES:
             # validator coin balances
-            validator_addr_list = fetch_sorted_relayer_list_lower(operator, chain_primitives.BIFROST)
+            validator_addr_list = fetch_sorted_relayer_list_lower(operator, chain_enum.BIFROST)
             validator_addr_list = [EthAddress(addr) for addr in validator_addr_list]
             print("----------------------------------------------------------------------------------")
             for i, addr in enumerate(validator_addr_list):
@@ -75,7 +75,7 @@ def operator_cmd(is_testnet: bool, ):
 
         elif cmd == SupportedOperatorCmd.GET_LATEST_PRICE_OF:
             # get price from oracle
-            symbols = symbol_list_on(chain_primitives.BIFROST, is_testnet=is_testnet)
+            symbols = symbol_list_on(chain_enum.BIFROST, is_testnet=is_testnet)
             symbol = get_option_from_console("Select Asset Symbol", symbols)
             price = fetch_price_from_oracle(operator, symbol)
             print(">>> Price: {}".format(price.change_decimal(6).float_str))
@@ -89,7 +89,7 @@ def operator_cmd(is_testnet: bool, ):
             print("TODO")
 
         elif cmd == SupportedOperatorCmd.GET_BTC_FEEDS_BY:
-            relayers = fetch_sorted_relayer_list_lower(operator, chain_primitives.BIFROST)
+            relayers = fetch_sorted_relayer_list_lower(operator, chain_enum.BIFROST)
             latest_round = fetch_oracle_latest_round(operator, Oracle.BITCOIN_BLOCK_HASH)
             print("latest_round: {}".format(latest_round))
             for relayer in relayers:
@@ -115,7 +115,7 @@ def operator_cmd(is_testnet: bool, ):
 
             elif input_type == "log_data":
                 log_data = get_typed_item_from_console("enter log_data", EthHashBytes)
-                chain = chain_primitives.BIFROST
+                chain = chain_enum.BIFROST
             else:
                 raise Exception("Invalid input type")
 

@@ -5,9 +5,9 @@ from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
-from rbclib.chain_events import NoneParams
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.consts import NoneParams
+from rbclib.primitives.relay_chain import chain_enum
 from rbclib.utils import is_pulsed_hear_beat
 from relayer.global_config import relayer_config_global
 from relayer.relayer import Relayer
@@ -41,7 +41,7 @@ class RelayerHeartBeat(PeriodicEventABC):
 
     def build_transaction_params(self) -> SendParamTuple:
         if not is_pulsed_hear_beat(self.relayer):
-            return chain_primitives.BIFROST.name, "relayer_authority", "heartbeat", []
+            return chain_enum.BIFROST.name, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
 
@@ -53,7 +53,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="HeartBeat({})".format(True)
         )
         return None
@@ -62,7 +62,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="HeartBeat({})".format(False)
         )
         return None
@@ -71,7 +71,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         global_logger.formatted_log(
             "HeartBeat",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="HeartBeat({})".format(None)
         )
         return None

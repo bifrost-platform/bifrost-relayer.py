@@ -8,9 +8,9 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
-from rbclib.chain_events import NoneParams
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.primitives.relay_chain import chain_primitives
+from rbclib.primitives.consts import NoneParams
+from rbclib.primitives.relay_chain import chain_enum
 from rbclib.utils import is_selected_relayer, log_invalid_flow
 from relayer.global_config import relayer_config_global
 
@@ -51,7 +51,7 @@ class PriceUpOracle(PeriodicEventABC):
     def build_transaction_params(self) -> SendParamTuple:
         # check whether this is current authority
         auth = is_selected_relayer(
-            self.relayer, chain_primitives.BIFROST, relayer_address=self.relayer.active_account.address
+            self.relayer, chain_enum.BIFROST, relayer_address=self.relayer.active_account.address
         )
         if not auth:
             return NoneParams
@@ -69,11 +69,11 @@ class PriceUpOracle(PeriodicEventABC):
         global_logger.formatted_log(
             "PriceUp",
             address=self.relayer.active_account.address,
-            related_chain_name=chain_primitives.BIFROST.name,
+            related_chain_name=chain_enum.BIFROST.name,
             msg="{}:price-feeding".format(self.__class__.__name__)
         )
         return (
-            chain_primitives.BIFROST.name,
+            chain_enum.BIFROST.name,
             "socket",
             "oracle_aggregate_feeding",
             [oid_list, [price.bytes() for price in prices]]
