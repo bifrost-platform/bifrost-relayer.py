@@ -6,9 +6,8 @@ from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 
-from .chain_events import RbcEvent, RoundUpEvent
-
-SigType = Union[list, tuple]
+from .events.rbc_event import RbcEvent
+from .events.roundup_event import RoundUpEvent
 
 
 class SocketSignature:
@@ -21,7 +20,7 @@ class SocketSignature:
      - v_list: concatenated bytes of v
     """
 
-    def __init__(self, decoded_sigs: SigType):
+    def __init__(self, decoded_sigs: Union[list, tuple]):
         decoded_sig_list = recursive_tuple_to_list(decoded_sigs)
         if len(decoded_sig_list) != 3:
             raise Exception("signature type error")

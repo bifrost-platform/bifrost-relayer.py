@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional
+from typing import Optional, List
 
 from bridgeconst.consts import Chain, Oracle, ChainEventStatus, Symbol
 from chainpy.eth.ethtype.amount import EthAmount
@@ -8,6 +8,7 @@ from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
+from rbclib.events.rbc_event import RbcEvent
 from rbclib.primitives.relay_chain import chain_enum
 
 
@@ -190,3 +191,38 @@ def fetch_oracle_history(manager: EventBridge, oracle_id: Oracle, _round: int) -
     params = [oracle_id.formatted_bytes(), _round]
     result = manager.world_call(chain_enum.BIFROST.name, "oracle", "oracle_history", params)[0]
     return EthHashBytes(result)
+
+
+def sort_by_event_status(arr: List["RbcEvent"]) -> List["RbcEvent"]:
+    ret_arr = list()
+    for element in arr:
+        ret_arr.append((element.status.value, element))
+    return [item_tuple[1] for item_tuple in sorted(ret_arr)]
+
+
+def extract_latest_event_status(arr: List["RbcEvent"]):
+    sorted_list = sort_by_event_status(arr)
+    status_list = [element.status for element in sorted_list]
+
+    inbound = sorted_list[0].is_inbound()
+    if inbound:
+        return sorted_list[-1]
+    else:
+        if ChainEventStatus.COMMITTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.COMMITTED)]
+        elif ChainEventStatus.ROLLBACKED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.ROLLBACKED)]
+        elif ChainEventStatus.EXECUTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.EXECUTED)]
+        elif ChainEventStatus.REVERTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REVERTED)]
+        elif ChainEventStatus.ACCEPTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.ACCEPTED)]
+        elif ChainEventStatus.REJECTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REJECTED)]
+        elif ChainEventStatus.REQUESTED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REQUESTED)]
+        elif ChainEventStatus.FAILED in status_list:
+            return sorted_list[status_list.index(ChainEventStatus.REQUESTED)]
+        else:
+            raise Exception("Invalid event status")

@@ -74,7 +74,8 @@ def display_multichain_asset_balances(manager: Manager, addr: EthAddress = None)
 
 def display_multichain_balances_on(
     manager: Manager, chain: Chain,
-    addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False):
+    addr: EthAddress = None, no_print_title: bool = False, coin_only: bool = False
+):
     target_addr = manager.active_account.address if addr is None else addr
     if not no_print_title:
         print("\n<{} balances on {}>".format(target_addr.hex(), chain))
@@ -186,7 +187,8 @@ def get_asset_from_console(chain: Chain = None, token_only: bool = False) -> Ass
 def get_chain_and_symbol_from_console(
     manager: MultiChainManager,
     token_only: bool = False,
-    not_included_bifrost: bool = False) -> Tuple[Chain, Symbol]:
+    not_included_bifrost: bool = False
+) -> Tuple[Chain, Symbol]:
     chain = get_chain_from_console(manager, not_included_bifrost)
     symbol = get_symbol_from_console(chain, token_only)
     return chain, symbol
@@ -216,7 +218,8 @@ def fetch_bridge_amount_config(
 
 
 def fetch_bridge_fee_config(
-    manager: Union[User, Relayer], chain: Chain, asset: Asset) -> Tuple[EthAmount, EthAmount, EthAmount]:
+    manager: Union[User, Relayer], chain: Chain, asset: Asset
+) -> Tuple[EthAmount, EthAmount, EthAmount]:
     decimal = asset.decimal
     config = manager.world_call(chain.name, "vault", "assets_config", [asset.formatted_bytes()])
     return EthAmount(config[0][0], decimal), EthAmount(config[0][1], decimal), EthAmount(config[0][2], decimal)

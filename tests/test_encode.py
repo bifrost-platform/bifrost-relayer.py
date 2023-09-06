@@ -3,7 +3,7 @@ import json
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eventbridge.eventbridge import EventBridge
 
-from rbclib.chain_events import RbcEvent
+from rbclib.events.rbc_event import RbcEvent
 
 REQUESTED1_DETECTED_EVENT_JSON = "./events_json/detected_requested1.json"
 EXECUTED_DETECTED_EVENT_JSON = "./events_json/detected_executed.json"
