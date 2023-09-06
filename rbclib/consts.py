@@ -11,3 +11,16 @@ ROUND_UP_VOTING_FUNCTION_NAME = "round_control_relay"
 AUTHORITY_CONTRACT_NAME = "authority"
 RELAYER_AUTHORITY_CONTRACT_NAME = "relayer_authority"
 GET_ROUND_FUNCTION_NAME = "latest_round"
+
+CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"
+ROUND_UP_FUNCTION_NAME = "round_control_poll"
+
+HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"
+RUNNING_SESSIONS_QUERY_NAME = "relayer_running_sessions"
+INCOMPLETE_GAUGE_QUERY_NAME = "relayer_incomplete_gauge_of_chain"
+
+BTC_HEIGHT_QUERY_NAME = "relayer_btc_height"
+ASSET_PRICES_QUERY_NAME = "relayer_prices_of_symbol"
+
+CHAIN_ROUNDS_QUERY_NAME = "relayer_chain_rounds_of_chain"
+REQUEST_COUNTERS_QUERY_NAME = "relayer_status_counter"
