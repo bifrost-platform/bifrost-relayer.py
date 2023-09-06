@@ -6,12 +6,11 @@ from chainpy.eth.managers.configsanitycheck import is_meaningful
 from chainpy.logger import logger_config_global, global_logger
 
 from rbclib.aggchainevents import ExternalRbcEvents
-from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.chainevents import RbcEvent, RoundUpEvent
-from rbclib.periodicevents import PriceUpOracle, VSPFeed, BtcHashUpOracle
+from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.metric import PrometheusExporterRelayer
+from rbclib.periodicevents import PriceUpOracle, VSPFeed
 from rbclib.switchable_enum import SwitchableChain, SwitchableAsset
-
 from relayer.relayer import Relayer, relayer_config_global, RelayerRole
 
 parser = argparse.ArgumentParser(description="Relayer's launching package.")
@@ -45,8 +44,9 @@ def config_relayer(relayer: Relayer, heart_beat_opt: bool, prometheus_on: bool):
     # event bridge will periodically collect price source from offchain, and relay it to bifrost network.
     relayer.register_offchain_event_obj("price", PriceUpOracle)
 
-    # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
-    relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
+    # TODO: Back to code after fix btc hash oracle
+    # # event bridge will periodically collect bitcoin hash, and relay it to bifrost network.
+    # relayer.register_offchain_event_obj("btc_hash", BtcHashUpOracle)
 
     if heart_beat_opt:
         relayer.register_offchain_event_obj("heart_beat", RelayerHeartBeat)
@@ -81,7 +81,27 @@ def determine_relayer_role(config: dict) -> RelayerRole:
         return RelayerRole.GENERAL_RELAYER
 
 
-def main(config: dict):
+def main():
+    if not sys.argv[1:]:
+        config = {
+            'private_key': None,
+            'config_path': None,
+            'private_config_path': None,
+            'no_heartbeat': False,
+            'prometheus': False,
+            'slow_relayer': True,
+            'fast_relayer': False,
+            'testnet': True,
+            "log_file_name": "console.log"
+        }
+        if config["testnet"]:
+            # When testnet relay is launched via console, enums are automatically switched.
+            SwitchableChain.switch_testnet_config()
+            SwitchableAsset.switch_testnet_config()
+    else:
+        args = parser.parse_args()
+        config = vars(args)
+
     is_test_config = True if config.get("testnet") else False
 
     log_file_name = config.get("log_file_name")
@@ -120,25 +140,4 @@ def main(config: dict):
 
 
 if __name__ == "__main__":
-    if not sys.argv[1:]:
-        _config = {
-            'private_key': None,
-            'config_path': None,
-            'private_config_path': None,
-            'no_heartbeat': False,
-            'prometheus': False,
-            'slow_relayer': True,
-            'fast_relayer': False,
-            'testnet': True,
-            "log_file_name": "console.log"
-        }
-        if _config["testnet"]:
-            # When testnet relay is launched via console, enums are automatically switched.
-            SwitchableChain.switch_testnet_config()
-            SwitchableAsset.switch_testnet_config()
-    else:
-        args = parser.parse_args()
-        _config = vars(args)
-
-    # print(_config)
-    main(_config)
+    main()
