@@ -21,7 +21,8 @@ from .bifrostutils import (
     is_selected_relayer,
     fetch_relayer_index
 )
-from .chainevents import NoneParams, SOCKET_CONTRACT_NAME
+from .chainevents import NoneParams
+from .consts import SOCKET_CONTRACT_NAME
 from .globalconfig import relayer_config_global
 from .relayersubmit import SocketSignature
 from .switchable_enum import chain_primitives
