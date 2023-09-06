@@ -5,9 +5,10 @@ from chainpy.logger import logger_config_global, global_logger
 
 from rbclib.chainevents import RbcEvent, RoundUpEvent
 from rbclib.external_rbc_events import ExternalRbcEvents
-from rbclib.heartbeat import RelayerHeartBeat
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.periodicevents import PriceUpOracle, VSPFeed
+from rbclib.periodic.heartbeat import RelayerHeartBeat
+from rbclib.periodic.oracle_price_up import PriceUpOracle
+from rbclib.periodic.vsp_feed import VSPFeed
 from relayer.relayer import Relayer, relayer_config_global, RelayerRole
 
 DEFAULT_RELAYER_CONFIG_PATH = "configs/entity.relayer.json"
