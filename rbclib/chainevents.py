@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, TYPE_CHECKING, Dict, List
+from typing import Optional, Union, Tuple, Dict, List
 
 import eth_abi
 from bridgeconst.consts import RBCMethodV1, ChainEventStatus, Asset, Chain
@@ -12,6 +12,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
+from relayer.relayer import Relayer
 from .bifrostutils import (
     fetch_socket_vsp_sigs,
     fetch_socket_rbc_sigs,
@@ -28,9 +29,6 @@ from .globalconfig import relayer_config_global, RelayerRole
 from .relayersubmit import PollSubmit, AggregatedRoundUpSubmit
 from .switchable_enum import chain_primitives
 from .utils import log_invalid_flow
-
-if TYPE_CHECKING:
-    from relayer.relayer import Relayer
 
 RangesDict = Dict[Chain, Tuple[int, int]]
 NoneParams = ("", "", "", [])
