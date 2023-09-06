@@ -12,7 +12,6 @@ from rbclib.bifrostutils import (
     fetch_sorted_relayer_list_lower
 )
 from rbclib.switchable_enum import chain_primitives
-
 from .consts import TESTNET_TEAM_RELAYER, MAINNET_TEAM_RELAYER
 from .utils import (
     display_multichain_coins_balances,
@@ -124,9 +123,6 @@ def operator_cmd(is_testnet: bool, ):
                 log_data)
             print(result)
             return
-
-
-
 
         else:
             return

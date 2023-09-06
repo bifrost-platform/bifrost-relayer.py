@@ -828,7 +828,7 @@ class RoundUpEvent(ChainEventABC):
     def is_previous_relayer(self) -> bool:
         if relayer_config_global.is_fast_relayer():
             return True
-        return self.relayer.has_key(self.round - 1)
+        return self.relayer.is_in_cache(self.round - 1)
 
     def is_primary_relayer(self) -> bool:
         if relayer_config_global.is_fast_relayer():

@@ -7,6 +7,6 @@ setup(
     version=__version__,
     packages=["rbclib"],
     install_requires=[
-        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git@0.7.19"
+        "chainpy @ git+https://github.com/bifrost-platform/bifrost-python-lib.git@0.7.20"
     ]
 )
