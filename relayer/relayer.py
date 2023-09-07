@@ -5,6 +5,7 @@ import time
 
 from chainpy.eth.ethtype.account import EthAccount
 from chainpy.eth.managers.configsanitycheck import is_meaningful, ConfigSanityChecker
+from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eth.managers.utils import merge_dict
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
@@ -94,18 +95,15 @@ class Relayer(EventBridge):
 
         return cls(merged_dict)
 
-    def _wait_until_node_sync(self):
-        """ Wait node's block synchronization"""
-        chain_manager = self.get_chain_manager_of(chain_enum.BIFROST.name)
+    def _wait_for_sync(self, chain_manager: EthChainManager):
         while True:
             try:
-                result = chain_manager.send_request("system_health", [])["isSyncing"]
+                result = chain_manager.send_request('eth_syncing', [])
             except Exception as e:
-                # defensive code
                 global_logger.formatted_log(
-                    "WaitNodeSync",
+                    'WaitNodeSync',
                     address=self.active_account.address,
-                    msg="error occurs \"system_health\" rpc-method: {}".format(str(e))
+                    msg=f'Error occurred in "eth_syncing" rpc method: {str(e)}'
                 )
                 time.sleep(10)
                 continue
@@ -116,11 +114,16 @@ class Relayer(EventBridge):
             global_logger.formatted_log(
                 "WaitNodeSync",
                 address=self.active_account.address,
-                msg="BIFROST Node is syncing..."
+                msg=f"{chain_manager.chain_name} Node is syncing..."
             )
             time.sleep(60)
 
-    def _register_relayer_auth(self):
+    def wait_until_node_sync(self):
+        """ Wait node's block synchronization"""
+        bifrost_chain_manager = self.get_chain_manager_of(chain_enum.BIFROST.name)  # TODO: check all supported chain
+        self._wait_for_sync(bifrost_chain_manager)
+
+    def register_relayer_auth(self):
         round_history_limit = min(BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, self.round_cache)
         for i in range(round_history_limit):
             relayer_index = fetch_relayer_index(self, chain_enum.BIFROST, rnd=self.round_cache - i)
@@ -132,7 +135,7 @@ class Relayer(EventBridge):
             )
             self.set_value_by_key(self.round_cache - i, relayer_index)
 
-    def _determine_latest_heights_for_each_chain(self):
+    def determine_latest_heights_for_each_chain(self):
         current_height, _, round_length = fetch_round_info(self)
         bootstrap_start_height = max(current_height - round_length * BOOTSTRAP_OFFSET_ROUNDS, 1)
 
@@ -147,7 +150,7 @@ class Relayer(EventBridge):
 
     def run_relayer(self):
         # Wait until the bifrost node completes the sync.
-        self._wait_until_node_sync()
+        self.wait_until_node_sync()
 
         global_logger.log(logging.INFO, "BIFROST's {}: version({}), address({})".format(
             relayer_config_global.relayer_role.name,
@@ -159,10 +162,10 @@ class Relayer(EventBridge):
         self.round_cache = fetch_latest_round(self, chain_enum.BIFROST)
 
         # store whether this relayer is a selected relayer in each round.
-        self._register_relayer_auth()
+        self.register_relayer_auth()
 
         # determine timestamp from which bootstrap starts
-        self._determine_latest_heights_for_each_chain()
+        self.determine_latest_heights_for_each_chain()
 
         # run relayer
         self.run_eventbridge()
