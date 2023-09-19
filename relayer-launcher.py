@@ -57,12 +57,12 @@ def config_fast_relayer(relayer: Relayer, prometheus_on: bool):
 
 
 def determine_relayer_role(config: dict) -> RelayerRole:
-    if config['fast_relayer'] and config['slow_relayer']:
+    if config.get('fast_relayer') and config.get('slow_relayer'):
         raise Exception("launch relayer with not both options: -f and -s")
 
-    if config['slow_relayer']:
+    if config.get('slow_relayer'):
         return RelayerRole.SLOW_RELAYER
-    elif config['fast_relayer']:
+    elif config.get('fast_relayer'):
         return RelayerRole.FAST_RELAYER
     else:
         return RelayerRole.GENERAL_RELAYER
