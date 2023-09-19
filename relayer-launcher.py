@@ -77,7 +77,7 @@ def setup_logger(log_file_name: str):
 
 def setup_relayer(config: dict) -> Relayer:
     # Secret key handling
-    secret_key = EthHexBytes(config['private_key'])
+    secret_key = EthHexBytes(config.get('private_key'))
 
     # Configuration path handling
     public_config_path = config.get("config_path", DEFAULT_RELAYER_CONFIG_PATH)
@@ -97,7 +97,7 @@ def setup_relayer(config: dict) -> Relayer:
     heart_beat_opt = not config.get("no_heartbeat", False)
     prometheus_on = config.get("prometheus", False)
 
-    if config["fast_relayer"]:
+    if config.get('fast_relayer'):
         config_fast_relayer(relayer, prometheus_on)
     else:
         config_relayer(relayer, heart_beat_opt, prometheus_on)
