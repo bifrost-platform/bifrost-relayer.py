@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional, List
+from typing import Optional
 
 from bridgeconst.consts import Chain, Oracle, ChainEventStatus, Symbol
 from chainpy.eth.ethtype.amount import EthAmount
@@ -8,7 +8,6 @@ from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
-from rbclib.events.rbc_event import RbcEvent
 from rbclib.primitives.relay_chain import chain_enum
 
 
@@ -193,14 +192,14 @@ def fetch_oracle_history(manager: EventBridge, oracle_id: Oracle, _round: int) -
     return EthHashBytes(result)
 
 
-def sort_by_event_status(arr: List["RbcEvent"]) -> List["RbcEvent"]:
+def sort_by_event_status(arr):  # : arr: List["RbcEvent"], return: : List["RbcEvent"]
     ret_arr = list()
     for element in arr:
         ret_arr.append((element.status.value, element))
     return [item_tuple[1] for item_tuple in sorted(ret_arr)]
 
 
-def extract_latest_event_status(arr: List["RbcEvent"]):
+def extract_latest_event_status(arr):  # arr: List["RbcEvent"]
     sorted_list = sort_by_event_status(arr)
     status_list = [element.status for element in sorted_list]
 

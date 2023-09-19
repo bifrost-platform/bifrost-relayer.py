@@ -6,9 +6,6 @@ from chainpy.eth.ethtype.hexbytes import EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list
 from chainpy.eventbridge.chaineventabc import ChainEventABC
 
-from .events.rbc_event import RbcEvent
-from .events.roundup_event import RoundUpEvent
-
 
 class SocketSignature:
     """
@@ -116,7 +113,7 @@ class PollSubmit(SubmitWithSig):
     Data conversion class from "ChainEvent" to transaction parameters for "poll method"
     """
 
-    def __init__(self, event: "RbcEvent"):
+    def __init__(self, event):
         super(PollSubmit, self).__init__(event)
 
     def submit_tuple(self, fail_option: bool = False) -> list:
@@ -137,7 +134,7 @@ class PollSubmit(SubmitWithSig):
 
 
 class AggregatedRoundUpSubmit(SubmitWithSig):
-    def __init__(self, event: "RoundUpEvent"):
+    def __init__(self, event):
         super(AggregatedRoundUpSubmit, self).__init__(event)
 
     @property
@@ -158,7 +155,7 @@ class AggregatedRoundUpSubmit(SubmitWithSig):
             raise Exception("Not initiated sig")
 
         types_str_list = ["uint256", "address[]"]
-        data_to_sig = eth_abi.encode_abi(types_str_list, [self.round, self.validator_list])
+        data_to_sig = eth_abi.encode(types_str_list, [self.round, self.validator_list])
         data_to_sig_obj = EthHexBytes(data_to_sig)
         self._sort_sigs(data_to_sig_obj)
 

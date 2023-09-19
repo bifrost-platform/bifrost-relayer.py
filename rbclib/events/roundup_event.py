@@ -186,7 +186,7 @@ class RoundUpEvent(ChainEventABC):
             sigs.append([r, s, v])
 
         types_str_list = ["uint256", "address[]"]
-        data_to_sig = eth_abi.encode_abi(types_str_list, [self.round, self.sorted_validator_list])
+        data_to_sig = eth_abi.encode(types_str_list, [self.round, self.sorted_validator_list])
         sig_msg = keccak_hash(data_to_sig)
 
         return {

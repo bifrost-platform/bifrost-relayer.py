@@ -76,12 +76,21 @@ def setup_logger(log_file_name: str):
 
 
 def setup_relayer(config: dict) -> Relayer:
+    is_testnet_relayer = config.get('testnet')
+
     # Secret key handling
     secret_key = EthHexBytes(config.get('private_key'))
 
     # Configuration path handling
-    public_config_path = config.get("config_path", DEFAULT_RELAYER_CONFIG_PATH)
-    private_config_path = config.get("private_config_path", DEFAULT_PRIVATE_CONFIG_PATH)
+    if config.get('config_path'):
+        public_config_path = config.get("config_path")
+    else:
+        public_config_path = DEFAULT_TEST_RELAYER_CONFIG_PATH if is_testnet_relayer else DEFAULT_RELAYER_CONFIG_PATH
+
+    if config.get('private_config_path'):
+        private_config_path = config.get("private_config_path")
+    else:
+        private_config_path = DEFAULT_TEST_RELAYER_PRIVATE_CONFIG_PATH if is_testnet_relayer else DEFAULT_PRIVATE_CONFIG_PATH
 
     # Determine relayer role
     role = determine_relayer_role(config)

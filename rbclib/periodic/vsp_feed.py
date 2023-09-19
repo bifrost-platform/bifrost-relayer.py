@@ -119,7 +119,7 @@ class VSPFeed(PeriodicEventABC):
 
         # build VSP feed data with signature
         sorted_validator_list = fetch_sorted_relayer_list_lower(self.relayer, chain_enum.BIFROST)
-        data_to_sig = eth_abi.encode_abi(["uint256", "address[]"], [round_from_bn, sorted_validator_list])
+        data_to_sig = eth_abi.encode(["uint256", "address[]"], [round_from_bn, sorted_validator_list])
         sig = self.relayer.active_account.ecdsa_recoverable_sign(data_to_sig)
         socket_sig = SocketSignature.from_single_sig(sig.r, sig.s, sig.v + 27)
 
