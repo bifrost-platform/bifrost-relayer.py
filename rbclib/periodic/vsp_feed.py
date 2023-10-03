@@ -111,9 +111,9 @@ class VSPFeed(PeriodicEventABC):
 
         # vote for new validator list by only previous validator
         if not is_selected_relayer(
-                self.relayer, chain_enum.BIFROST,
-                relayer_address=self.relayer.active_account.address,
-                rnd=(round_from_bn - 1)
+            self.relayer, chain_enum.BIFROST,
+            relayer_address=self.relayer.active_account.address,
+            rnd=(round_from_bn - 1)
         ):
             return NoneParams
 
