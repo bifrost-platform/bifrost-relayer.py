@@ -1,11 +1,12 @@
 from typing import List
 
-from bridgeconst.consts import ChainEventStatus, Chain
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
 from prometheus_client import Counter, Gauge
 
+from primitives.enums import ChainEventStatus
 from rbclib.primitives.consts import HEARTBEAT_COUNTER_QUERY_NAME, RUNNING_SESSIONS_QUERY_NAME, INCOMPLETE_GAUGE_QUERY_NAME, BTC_HEIGHT_QUERY_NAME, \
     ASSET_PRICES_QUERY_NAME, CHAIN_ROUNDS_QUERY_NAME, REQUEST_COUNTERS_QUERY_NAME
 

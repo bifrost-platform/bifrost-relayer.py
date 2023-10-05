@@ -1,7 +1,7 @@
 from typing import List
 
 import eth_abi
-from bridgeconst.consts import Chain, ChainEventStatus
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash
 from chainpy.eth.managers.eventobj import DetectedEvent
@@ -11,10 +11,11 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.primitives.consts import NoneParams, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME
-from rbclib.primitives.relay_chain import chain_enum
+from rbclib.primitives.enums import chain_enum
 from rbclib.submits import AggregatedRoundUpSubmit
 from rbclib.utils import fetch_sorted_relayer_list_lower, fetch_latest_round, fetch_socket_vsp_sigs, log_invalid_flow
 from relayer.global_config import relayer_config_global
+from ..primitives.enums import ChainEventStatus
 
 
 class RoundUpEvent(ChainEventABC):

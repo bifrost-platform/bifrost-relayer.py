@@ -1,14 +1,14 @@
 import inspect
 from typing import Optional
 
-from bridgeconst.consts import Chain, Oracle, ChainEventStatus, Symbol
-from chainpy.eth.ethtype.amount import EthAmount
+from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
-from rbclib.primitives.relay_chain import chain_enum
+from primitives.enums import ChainEventStatus, Oracle
+from rbclib.primitives.enums import chain_enum
 
 
 def log_invalid_flow(log_id: str, event):
@@ -141,23 +141,10 @@ def fetch_socket_vsp_sigs(manager: EventBridge, rnd: int):
 
 
 def fetch_oracle_latest_round(manager: EventBridge, oracle_id: Oracle):
-    oracle_id_bytes = oracle_id.formatted_bytes()
-    return manager.world_call(chain_enum.BIFROST.name, "oracle", "latest_oracle_round", [oracle_id_bytes])[0]
+    return manager.world_call(chain_enum.BIFROST.name, "oracle", "latest_oracle_round", [oracle_id.value])[0]
 
 
-def fetch_price_from_oracle(manager: EventBridge, symbol: Symbol) -> EthAmount:
-    oid = Oracle.price_oracle_from_symbol(symbol)
-    result = manager.world_call(chain_enum.BIFROST.name, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
-    return EthAmount(result, symbol.decimal)
-
-
-def fetch_btc_hash_from_oracle(manager: EventBridge) -> EthHashBytes:
-    oid = Oracle.BITCOIN_BLOCK_HASH
-    result = manager.world_call(chain_enum.BIFROST.name, "oracle", "latest_oracle_data", [oid.formatted_bytes()])[0]
-    return EthHashBytes(result)
-
-
-def is_pulsed_hear_beat(manager: EventBridge) -> bool:
+def is_heart_beat_pulsed(manager: EventBridge) -> bool:
     """ Check if the relayer has ever sent a heartbeat transaction in this session."""
     relayer_addr = manager.active_account.address
     return manager.world_call(
@@ -165,31 +152,15 @@ def is_pulsed_hear_beat(manager: EventBridge) -> bool:
     )[0]
 
 
-def fetch_submitted_oracle_feed(
-    manager: EventBridge, oracle: Oracle, rnd: int,
-    relayer_address: EthAddress = None
-) -> EthHashBytes:
+def is_submitted_oracle_feed(
+    manager: EventBridge, oracle: Oracle, rnd: int, relayer_address: EthAddress = None
+) -> bool:
+    """ Check whether the external data of the round has been transmitted. Only use in btc hash up """
     relayer_address = manager.active_account.address if relayer_address is None else relayer_address
 
-    oracle_id_bytes = oracle.formatted_bytes()
-    method = "get_consensus_feed" if oracle.oracle_type.EXACT else "get_aggregated_feed"
-    params = [oracle_id_bytes, relayer_address.hex(), rnd]
-    result = manager.world_call(chain_enum.BIFROST.name, "oracle", method, params)[0]
-    return EthHashBytes(result)
-
-
-def is_submitted_oracle_feed(
-    manager: EventBridge, oracle: Oracle, rnd: int, relayer_addr: EthAddress = None
-) -> bool:
-    """ Check whether the external data of the round has been transmitted. """
-    result = fetch_submitted_oracle_feed(manager, oracle, rnd, relayer_addr)
-    return result != 0
-
-
-def fetch_oracle_history(manager: EventBridge, oracle_id: Oracle, _round: int) -> EthHashBytes:
-    params = [oracle_id.formatted_bytes(), _round]
-    result = manager.world_call(chain_enum.BIFROST.name, "oracle", "oracle_history", params)[0]
-    return EthHashBytes(result)
+    params = [oracle.value, relayer_address.hex(), rnd]
+    result = manager.world_call(chain_enum.BIFROST.name, "oracle", "get_consensus_feed", params)[0]
+    return EthHashBytes(result) != 0
 
 
 def sort_by_event_status(arr):  # : arr: List["RbcEvent"], return: : List["RbcEvent"]
