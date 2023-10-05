@@ -7,8 +7,8 @@ from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.primitives.consts import NoneParams
-from rbclib.primitives.relay_chain import chain_enum
-from rbclib.utils import is_pulsed_hear_beat
+from rbclib.primitives.enums import chain_enum
+from rbclib.utils import is_heart_beat_pulsed
 from relayer.global_config import relayer_config_global
 from relayer.relayer import Relayer
 
@@ -40,7 +40,7 @@ class RelayerHeartBeat(PeriodicEventABC):
         return NoneParams
 
     def build_transaction_params(self) -> SendParamTuple:
-        if not is_pulsed_hear_beat(self.relayer):
+        if not is_heart_beat_pulsed(self.relayer):
             return chain_enum.BIFROST.name, "relayer_authority", "heartbeat", []
         else:
             return NoneParams
