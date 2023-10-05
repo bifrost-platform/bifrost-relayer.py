@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union, List
 
-from bridgeconst.consts import ChainEventStatus, Chain, RBCMethodV1, Asset
+from bridgeconst.consts import Chain, RBCMethodV1, Asset
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthHexBytes, EthAddress, EthHashBytes
 from chainpy.eth.ethtype.utils import to_eth_v
@@ -13,11 +13,12 @@ from chainpy.logger import global_logger
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.primitives.consts import RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, NoneParams, \
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, GET_REQ_INFO_FUNCTION_NAME
-from rbclib.primitives.relay_chain import chain_enum
+from rbclib.primitives.enums import chain_enum
 from rbclib.submits import PollSubmit
 from rbclib.utils import fetch_relayer_index, log_invalid_flow, fetch_relayer_num, extract_latest_event_status, fetch_quorum, fetch_socket_rbc_sigs
 from relayer.global_config import relayer_config_global, RelayerRole
 from relayer.relayer import Relayer
+from ..primitives.enums import ChainEventStatus
 
 
 class RbcEvent(ChainEventABC):

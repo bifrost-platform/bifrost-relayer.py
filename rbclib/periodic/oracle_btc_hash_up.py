@@ -1,6 +1,5 @@
 from typing import Optional
 
-from bridgeconst.consts import Oracle
 from chainpy.btc.managers.simplerpccli import SimpleBtcClient
 from chainpy.eth.ethtype.hexbytes import EthHashBytes
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
@@ -11,9 +10,10 @@ from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.primitives.consts import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, NoneParams
-from rbclib.primitives.relay_chain import chain_enum
+from rbclib.primitives.enums import chain_enum
 from rbclib.utils import is_selected_relayer, fetch_oracle_latest_round, is_submitted_oracle_feed, log_invalid_flow
 from relayer.global_config import relayer_config_global
+from ..primitives.enums import Oracle
 
 
 class BtcHashUpOracle(PeriodicEventABC):
@@ -97,7 +97,7 @@ class BtcHashUpOracle(PeriodicEventABC):
                 SOCKET_CONTRACT_NAME,
                 CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME,
                 [
-                    [Oracle.BITCOIN_BLOCK_HASH.formatted_bytes()],
+                    [Oracle.BITCOIN_BLOCK_HASH.value],
                     [feed_target_height],
                     [block_hash.bytes()]
                 ]

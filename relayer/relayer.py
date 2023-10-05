@@ -12,7 +12,7 @@ from chainpy.logger import global_logger
 
 from rbclib.__init__ import __version__
 from rbclib.primitives.consts import BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, BOOTSTRAP_OFFSET_ROUNDS
-from rbclib.primitives.relay_chain import chain_enum
+from rbclib.primitives.enums import chain_enum
 from rbclib.utils import fetch_round_info, fetch_latest_round, find_height_by_timestamp, fetch_relayer_index
 from relayer.global_config import RelayerRole, relayer_config_global
 
@@ -169,18 +169,6 @@ class Relayer(EventBridge):
 
         # run relayer
         self.run_eventbridge()
-
-    @staticmethod
-    def config_sanity_check_from_files(public_config_path: str, private_config_path: str = None):
-        with open(public_config_path, "r") as f:
-            public_config = json.load(f)
-
-        private_config = None
-        if private_config_path is not None:
-            with open(private_config_path, "r") as f:
-                private_config = json.load(f)
-
-        Relayer.config_sanity_check(merge_dict(public_config, private_config))
 
     @staticmethod
     def config_sanity_check(config: dict):

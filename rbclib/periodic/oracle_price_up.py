@@ -1,6 +1,5 @@
 from typing import Optional
 
-from bridgeconst.consts import Asset, Oracle
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
@@ -10,9 +9,10 @@ from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.primitives.consts import NoneParams
-from rbclib.primitives.relay_chain import chain_enum
+from rbclib.primitives.enums import chain_enum
 from rbclib.utils import is_selected_relayer, log_invalid_flow
 from relayer.global_config import relayer_config_global
+from ..primitives.enums import Oracle
 
 
 class PriceUpOracle(PeriodicEventABC):
@@ -57,14 +57,13 @@ class PriceUpOracle(PeriodicEventABC):
             return NoneParams
 
         # dictionary of prices (key: coin id)
-        symbols = [Asset[asset_name].symbol for asset_name in relayer_config_global.price_oracle_assets]
-        symbols_str = [symbol.name for symbol in symbols]
-        collected_prices = self.__cli.get_current_weighted_price(symbols_str)
+        symbols: list[str] = relayer_config_global.price_oracle_assets
+        collected_prices = self.__cli.get_current_weighted_price(symbols)
 
         # build oid list and prices list
-        oid_list = [Oracle.price_oracle_from_symbol(symbol).formatted_bytes() for symbol in symbols]
+        oid_list = [Oracle[symbol].value for symbol in symbols]
         prices = [value for value in collected_prices.values()]
-        PrometheusExporterRelayer.exporting_asset_prices(symbols_str, prices)
+        PrometheusExporterRelayer.exporting_asset_prices(symbols, prices)
 
         global_logger.formatted_log(
             "PriceUp",
