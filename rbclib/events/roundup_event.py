@@ -1,7 +1,6 @@
 from typing import List
 
 import eth_abi
-from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes, EthHexBytes
 from chainpy.eth.ethtype.utils import recursive_tuple_to_list, keccak_hash
 from chainpy.eth.managers.eventobj import DetectedEvent
@@ -11,7 +10,7 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.primitives.consts import NoneParams, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME
-from rbclib.primitives.enums import chain_enum
+from rbclib.primitives.enums import chain_enum, ChainEnum
 from rbclib.submits import AggregatedRoundUpSubmit
 from rbclib.utils import fetch_sorted_relayer_list_lower, fetch_latest_round, fetch_socket_vsp_sigs, log_invalid_flow
 from relayer.global_config import relayer_config_global
@@ -24,9 +23,9 @@ class RoundUpEvent(ChainEventABC):
     def __init__(self, detected_event: DetectedEvent, time_lock: int, manager: EventBridge):
         # ignore inserted time_lock, forced set to zero for handling this event with high priority
         super().__init__(detected_event, time_lock, manager)
-        self.updating_chains = [Chain[chain] for chain in self.relayer.supported_chain_list]
+        self.updating_chains = [chain_enum[chain] for chain in self.relayer.supported_chain_list]
         self.updating_chains.remove(chain_enum.BIFROST)
-        self.selected_chain: Chain = Chain.NONE
+        self.selected_chain: ChainEnum = chain_enum.NONE
         self.aggregated = True
 
     @classmethod
@@ -66,7 +65,7 @@ class RoundUpEvent(ChainEventABC):
         validator_obj_list = [EthAddress(addr) for addr in validator_list]
         return sorted(validator_obj_list)
 
-    def clone(self, selected_chain: Chain):
+    def clone(self, selected_chain: ChainEnum):
         clone_obj = self.__class__(self.detected_event, self.time_lock, self.relayer)
         clone_obj.selected_chain = selected_chain
         return clone_obj
@@ -96,7 +95,7 @@ class RoundUpEvent(ChainEventABC):
             return NoneParams
 
         # split task for each native chain
-        if self.selected_chain == Chain.NONE:
+        if self.selected_chain == chain_enum.NONE:
             for chain in self.updating_chains:
                 self.relayer.queue.enqueue(self.clone(chain))
             return NoneParams
