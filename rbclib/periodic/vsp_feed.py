@@ -1,7 +1,6 @@
 from typing import Optional
 
 import eth_abi
-from bridgeconst.consts import Chain
 from chainpy.eventbridge.chaineventabc import CallParamTuple, SendParamTuple
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.periodiceventabc import PeriodicEventABC
@@ -67,7 +66,7 @@ class VSPFeed(PeriodicEventABC):
 
         # for prometheus exporter
         for chain_name in self.relayer.supported_chain_list:
-            chain = Chain.from_name(chain_name)
+            chain = chain_enum[chain_name]
             rnd = fetch_latest_round(self.relayer, chain)
             PrometheusExporterRelayer.exporting_external_chain_rnd(chain_name, rnd)
 

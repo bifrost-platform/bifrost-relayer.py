@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union, List
 
-from bridgeconst.consts import Chain, RBCMethodV1, Asset
+from bridgeconst.consts import RBCMethodV1, Asset
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eth.ethtype.hexbytes import EthHexBytes, EthAddress, EthHashBytes
 from chainpy.eth.ethtype.utils import to_eth_v
@@ -13,7 +13,7 @@ from chainpy.logger import global_logger
 from rbclib.metric import PrometheusExporterRelayer
 from rbclib.primitives.consts import RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, NoneParams, \
     BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, GET_REQ_INFO_FUNCTION_NAME
-from rbclib.primitives.enums import chain_enum
+from rbclib.primitives.enums import chain_enum, ChainEnum
 from rbclib.submits import PollSubmit
 from rbclib.utils import fetch_relayer_index, log_invalid_flow, fetch_relayer_num, extract_latest_event_status, fetch_quorum, fetch_socket_rbc_sigs
 from relayer.global_config import relayer_config_global, RelayerRole
@@ -201,10 +201,10 @@ class RbcEvent(ChainEventABC):
     def is_outbound(self) -> bool:
         return self.src_chain == chain_enum.BIFROST
 
-    def req_id(self) -> Tuple[Chain, int, int]:
+    def req_id(self) -> Tuple[ChainEnum, int, int]:
         unzipped_decoded_data = self.decoded_data[0]
         req_id_tuple = unzipped_decoded_data[0]
-        return Chain.from_bytes(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
+        return chain_enum.from_bytes(req_id_tuple[0]), req_id_tuple[1], req_id_tuple[2]
 
     @property
     def req_id_concat_bytes(self) -> EthHexBytes:
@@ -212,7 +212,7 @@ class RbcEvent(ChainEventABC):
         return EthHexBytes(chain.formatted_bytes()) + EthHexBytes(rnd, 16) + EthHexBytes(seq, 16)
 
     @property
-    def src_chain(self) -> Chain:
+    def src_chain(self) -> ChainEnum:
         return self.req_id()[0]
 
     @property
@@ -228,13 +228,13 @@ class RbcEvent(ChainEventABC):
         unzipped_decoded_data = self.decoded_data[0]
         return ChainEventStatus(unzipped_decoded_data[1])
 
-    def inst(self) -> Tuple[Union[Chain, int], Union[RBCMethodV1, int]]:
+    def inst(self) -> Tuple[Union[ChainEnum, int], Union[RBCMethodV1, int]]:
         unzipped_decoded_data = self.decoded_data[0]
         inst_id_tuple = unzipped_decoded_data[2]
-        return Chain.from_bytes(inst_id_tuple[0]), RBCMethodV1.from_bytes(inst_id_tuple[1])
+        return chain_enum.from_bytes(inst_id_tuple[0]), RBCMethodV1.from_bytes(inst_id_tuple[1])
 
     @property
-    def dst_chain(self) -> Chain:
+    def dst_chain(self) -> ChainEnum:
         return self.inst()[0]
 
     @property
@@ -405,10 +405,7 @@ class ExternalRbcEvent(RbcEvent):
         status_data = detected_event.data[RBC_EVENT_STATUS_START_DATA_START_INDEX:RBC_EVENT_STATUS_START_DATA_END_INDEX]
         status = ChainEventStatus(status_data.int())
 
-        if status == ChainEventStatus.ACCEPTED \
-            or status == ChainEventStatus.REJECTED \
-            or status == ChainEventStatus.COMMITTED \
-            or status == ChainEventStatus.ROLLBACKED:
+        if status in [ChainEventStatus.ACCEPTED, ChainEventStatus.REJECTED, ChainEventStatus.COMMITTED, ChainEventStatus.ROLLBACKED]:
             casting_type = RbcEvent.select_child(status)
             return casting_type(detected_event, time_lock, relayer)
         else:
@@ -659,7 +656,7 @@ class _AggregatedRelayEvent(RbcEvent):
         return self
 
     def aggregated_relay(
-        self, target_chain: Chain, is_primary_relay: bool, chain_event_status: ChainEventStatus
+        self, target_chain: ChainEnum, is_primary_relay: bool, chain_event_status: ChainEventStatus
     ) -> SendParamTuple:
         relayer_index = self.relayer.get_value_by_key(self.rnd)
         chain, rnd, seq = self.req_id()

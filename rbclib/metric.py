@@ -1,12 +1,11 @@
 from typing import List
 
-from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
 from prometheus_client import Counter, Gauge
 
-from primitives.enums import ChainEventStatus
+from primitives.enums import ChainEventStatus, ChainEnum
 from rbclib.primitives.consts import HEARTBEAT_COUNTER_QUERY_NAME, RUNNING_SESSIONS_QUERY_NAME, INCOMPLETE_GAUGE_QUERY_NAME, BTC_HEIGHT_QUERY_NAME, \
     ASSET_PRICES_QUERY_NAME, CHAIN_ROUNDS_QUERY_NAME, REQUEST_COUNTERS_QUERY_NAME
 
@@ -43,11 +42,11 @@ class PrometheusExporterRelayer(PrometheusExporter):
             PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name).inc(0)
 
     @staticmethod
-    def exporting_request_metric(_chain: Chain, _status: ChainEventStatus):
+    def exporting_request_metric(chain: ChainEnum, status: ChainEventStatus):
         if not PrometheusExporterRelayer.PROMETHEUS_ON:
             return
 
-        PrometheusExporterRelayer.REQUEST_COUNTERS.labels(_status.name).inc()
+        PrometheusExporterRelayer.REQUEST_COUNTERS.labels(status.name).inc()
 
         ignored = [
             ChainEventStatus.NONE,
@@ -56,13 +55,13 @@ class PrometheusExporterRelayer(PrometheusExporter):
             ChainEventStatus.NEXT_AUTHORITY_RELAYED,
             ChainEventStatus.NEXT_AUTHORITY_COMMITTED
         ]
-        if _status in ignored:
+        if status in ignored:
             # do nothing
             pass
-        elif _status == ChainEventStatus.REQUESTED:
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain.name.lower()).inc(2)
+        elif status == ChainEventStatus.REQUESTED:
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain.name.lower()).inc(2)
         else:
-            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(_chain.name.lower()).dec(1)
+            PrometheusExporterRelayer.INCOMPLETE_SCORE_GAUGE.labels(chain.name.lower()).dec(1)
 
     @staticmethod
     def exporting_heartbeat_metric():

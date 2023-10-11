@@ -1,14 +1,12 @@
 import inspect
 from typing import Optional
 
-from bridgeconst.consts import Chain
 from chainpy.eth.ethtype.hexbytes import EthAddress, EthHashBytes
 from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
-from primitives.enums import ChainEventStatus, Oracle
-from rbclib.primitives.enums import chain_enum
+from primitives.enums import chain_enum, ChainEventStatus, Oracle, ChainEnum
 
 
 def log_invalid_flow(log_id: str, event):
@@ -31,7 +29,7 @@ def find_height_by_timestamp(chain_manager: EthChainManager, target_time: int, f
     if front_time >= target_time:
         return front_height
 
-    if Chain[chain_manager.chain_name] != chain_enum.BIFROST:
+    if chain_enum[chain_manager.chain_name] != chain_enum.BIFROST:
         target_time -= 30000
     return binary_search(chain_manager, front_height, front_time, current_height, current_time, target_time)
 
@@ -62,14 +60,14 @@ def binary_search(
         )
 
 
-def fetch_latest_round(manager: EventBridge, target_chain: Chain) -> int:
+def fetch_latest_round(manager: EventBridge, target_chain: ChainEnum) -> int:
     return manager.world_call(target_chain.name, "relayer_authority", "latest_round", [])[0]  # unzip
 
 
 def fetch_bottom_round(manager: EventBridge) -> int:
     bottom_round = 2 ** 256 - 1
     for chain_name in manager.supported_chain_list:
-        chain = Chain[chain_name]
+        chain = chain_enum[chain_name]
         round_num = fetch_latest_round(manager, chain)
         if bottom_round > round_num:
             bottom_round = round_num
@@ -84,7 +82,7 @@ def fetch_round_info(manager: EventBridge) -> (int, int, int):
 
 
 def is_selected_relayer(
-    manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None, is_initial: bool = True
+    manager: EventBridge, chain: ChainEnum, rnd: int = None, relayer_address: EthAddress = None, is_initial: bool = True
 ) -> bool:
     method = "is_selected_relayer" if rnd is None else "is_previous_selected_relayer"
     params = [relayer_address.hex(), is_initial] if rnd is None else [rnd, relayer_address.hex(), is_initial]
@@ -93,7 +91,7 @@ def is_selected_relayer(
 
 
 def fetch_relayer_index(
-    manager: EventBridge, chain: Chain, rnd: int = None, relayer_address: EthAddress = None
+    manager: EventBridge, chain: ChainEnum, rnd: int = None, relayer_address: EthAddress = None
 ) -> Optional[int]:
     """ if rnd is None"""
     sorted_relayer_list = fetch_sorted_relayer_list_lower(manager, chain, rnd, is_initial=True)
@@ -107,7 +105,7 @@ def fetch_relayer_index(
 
 
 def fetch_sorted_relayer_list_lower(
-    manager: EventBridge, chain: Chain, rnd: int = None, is_initial: bool = True
+    manager: EventBridge, chain: ChainEnum, rnd: int = None, is_initial: bool = True
 ) -> list:
     method = "selected_relayers" if rnd is None else "previous_selected_relayers"
     params = [is_initial] if rnd is None else [rnd, is_initial]
@@ -118,12 +116,12 @@ def fetch_sorted_relayer_list_lower(
     return sorted(validator_list_lower)
 
 
-def fetch_relayer_num(manager: EventBridge, target_chain: Chain, is_initial: bool = True) -> int:
+def fetch_relayer_num(manager: EventBridge, target_chain: ChainEnum, is_initial: bool = True) -> int:
     validator_tuple = fetch_sorted_relayer_list_lower(manager, target_chain, is_initial=is_initial)
     return len(validator_tuple)
 
 
-def fetch_quorum(manager: EventBridge, target_chain: Chain, rnd: int = None, is_initial: bool = True) -> int:
+def fetch_quorum(manager: EventBridge, target_chain: ChainEnum, rnd: int = None, is_initial: bool = True) -> int:
     method = "majority" if rnd is None else "previous_majority"
     params = [is_initial] if rnd is None else [rnd, is_initial]
     return manager.world_call(target_chain.name, "relayer_authority", method, params)[0]

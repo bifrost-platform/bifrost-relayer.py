@@ -1,7 +1,6 @@
 import sys
 from enum import Enum
-
-from bridgeconst.consts import Chain
+from typing import Union
 
 
 class Oracle(Enum):
@@ -37,24 +36,40 @@ class ChainEventStatus(Enum):
         return "0x" + self.formatted_bytes().hex()
 
 
-class MainnetPrimitives(Enum):
-    NONE = Chain.NONE
-    BIFROST = Chain.BFC_MAIN
-    ETHEREUM = Chain.ETH_MAIN
-    BINANCE = Chain.BNB_MAIN
-    MATIC = Chain.MATIC_MAIN
-    AVALANCHE = Chain.AVAX_MAIN
-    BASE = Chain.BASE_MAIN
+class ChainPrimitive(Enum):
+    @staticmethod
+    def size():
+        return 4
+
+    @classmethod
+    def from_bytes(cls, value: bytes):
+        if len(value) != cls.size():
+            raise Exception("Not matched size: actual({}), expected({})".format(len(value), cls.size()))
+        return cls(int.from_bytes(value, "big"))
+
+    def formatted_bytes(self) -> bytes:
+        return self.value.to_bytes(self.size(), "big")
 
 
-class TestnetPrimitives(Enum):
-    NONE = Chain.NONE
-    BIFROST = Chain.BFC_TEST
-    ETHEREUM = Chain.ETH_GOERLI
-    BINANCE = Chain.BNB_TEST
-    MATIC = Chain.MATIC_MUMBAI
-    AVALANCHE = Chain.AVAX_FUJI
-    BASE = Chain.BASE_GOERLI
+class MainnetPrimitives(ChainPrimitive):
+    NONE = 0
+    BIFROST = 0x0bfc
+    ETHEREUM = 1
+    BINANCE = 56
+    MATIC = 137
+    AVALANCHE = 43114
+    BASE = 8453
 
 
+class TestnetPrimitives(ChainPrimitive):
+    NONE = 0
+    BIFROST = 0xbfc0
+    ETHEREUM = 5
+    BINANCE = 97
+    MATIC = 80001
+    AVALANCHE = 43113
+    BASE = 84531
+
+
+ChainEnum = Union[MainnetPrimitives, TestnetPrimitives]
 chain_enum = TestnetPrimitives if '--testnet' in sys.argv[1:] or '-t' in sys.argv[1:] else MainnetPrimitives
