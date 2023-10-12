@@ -47,12 +47,6 @@
                 "deploy_height": 1426518
             },
             {
-                "name": "vault",
-                "address": "0x90381bB369D4F8069fdA9246b23637a78c5d1c83",
-                "abi_file": "abi.vault.bifrost.json",
-                "deploy_height": 1426522
-            },
-            {
                 "name": "socket",
                 "address": "0x0218371b18340aBD460961bdF3Bd5F01858dAB53",
                 "abi_file": "abi.socket.bifrost.json",
@@ -63,131 +57,6 @@
                 "address": "0x252a402B80d081F672e7874E94214054FdB78C77",
                 "abi_file": "abi.oracle.bifrost.json",
                 "deploy_height": 2057990
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_BFC_ON_BFC_TEST",
-                "address": "0xfB5D65B8e8784ae3e004e1e476B05d408e6A1f2D",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_ETH_ON_BFC_TEST",
-                "address": "0xD089773D293F43440529e6cfa84639E0498A0277",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_BIFI_ON_BFC_TEST",
-                "address": "0xC4F1CcafCBeB0BE0F1CDBA499696603528655F29",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_USDC_ON_BFC_TEST",
-                "address": "0xa7bb0a2693fb4d1ab9a6C5acCf5C63f12fab1855",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_SAT_ON_BFC_TEST",
-                "address": "0xd2Ae6529057BE0b4Ef44bB4A127ee76B1c2863CB",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_USDT_ON_BNB_TEST",
-                "address": "0x48E13910C4AE9C753AdF036CdBC127CFA4c71373",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_USDT_ON_MATIC_MUMBAI",
-                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_WITCH_ON_BFC_TEST",
-                "address": "0xb8fFfC7111FCCC3ceBeE680c5221bB5E6f9F5935",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_ETH_GOERLI_EGG_ON_BFC_TEST",
-                "address": "0x2E4a76c993CAD19595049fAE0D747E51fa452300",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_BNB_TEST_USDC_ON_BFC_TEST",
-                "address": "0xC67f0b7c01f6888D43B563B3a8B851856BcfAB64",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_BNB_TEST_BNB_ON_BFC_TEST",
-                "address": "0x72D22DF54b86d25D9F9E0C10D516Ab22517b7051",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_BNB_TEST_P2D_ON_BFC_TEST",
-                "address": "0x90848FD52d615f733dCdA8290e9a96152148413e",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_MATIC_MUMBAI_MATIC_ON_BFC_TEST",
-                "address": "0x82c1aD3aF709210F203869a03CdE8C7d0b9841d8",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_MATIC_MUMBAI_USDT_ON_BFC_TEST",
-                "address": "0xC3C12EF3BC5A8914eB3f4C190358ce5A41B19b46",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BRIDGED_MATIC_MUMBAI_USDC_ON_BFC_TEST",
-                "address": "0x6442Fdd287E04e68f0C6f40b4a8e5a375d16482C",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "UNIFIED_BFC_ON_BFC_TEST",
-                "address": "0xB0fF18CB2d0F3f51a9c54Af862ed98f3caa027A1",
-                "abi_file": "abi.unified.coin.json"
-            },
-            {
-                "name": "UNIFIED_BIFI_ON_BFC_TEST",
-                "address": "0x8010a873d59719e895E20f15f9906B5a1F399C3A",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_BNB_ON_BFC_TEST",
-                "address": "0xCd8bf79fA84D551f2465C0a646cABc295d43Be5C",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_ETH_ON_BFC_TEST",
-                "address": "0xc83EEd1bf5464eD5383bc3342b918E08f6815950",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_USDC_ON_BFC_TEST",
-                "address": "0x28661511CDA7119B2185c647F23106a637CC074f",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_MATIC_ON_BFC_TEST",
-                "address": "0xad115F901a1Af99dc83D055C89641031fd1a50Dc",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_SAT_ON_BFC_TEST",
-                "address": "0x3325B631CD1B972628f021c3bB776e21290baB21",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_WITCH_ON_BFC_TEST",
-                "address": "0x97C46701A8599DF99abB306ce8980B5f57D833fB",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_P2D_ON_BFC_TEST",
-                "address": "0xDa007Bea12013Ee90D5DEC4111DBA5bd98314F93",
-                "abi_file": "abi.unified.erc20.json"
-            },
-            {
-                "name": "UNIFIED_EGG_ON_BFC_TEST",
-                "address": "0xc53CE1aA929e9E8B7F9587bbEE2aB0fB530Fe676",
-                "abi_file": "abi.unified.erc20.json"
             }
         ],
         "events": [
@@ -224,51 +93,10 @@
                 "deploy_height": 8052946
             },
             {
-                "name": "vault",
-                "address": "0x7EB02c73349B3De1406e6b433c5bA1a526CBF253",
-                "abi_file": "abi.vault.external.json",
-                "deploy_height": 8052948
-            },
-            {
                 "name": "socket",
                 "address": "0xeF5260Db045200142a6B5DDB297e860099ffd51d",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 8052951
-            },
-            {
-                "name": "BFC_ON_ETH_GOERLI",
-                "address": "0x3A815eBa66EaBE966a6Ae7e5Df9652eca24e9c54",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BIFI_ON_ETH_GOERLI",
-                "address": "0x055ED934c426855caB467FdF8441D4FD6a7D2659",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "USDC_ON_ETH_GOERLI",
-                "address": "0xD978Be30CE95D42DF7067b988f25bCa2b286Fb70",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "USDT_ON_ETH_GOERLI",
-                "address": "0xF26d15E6484e00Af2772b840eb4F2B36F0BD569C",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "SAT_ON_ETH_GOERLI",
-                "address": "0x4a5FC8893Db2Fa06ebe3D7Ec21a1d9466ee54442",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "WITCH_ON_ETH_GOERLI",
-                "address": "0x8d9a156587C4593F34294D6b1DCBc7A5F29e0356",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "EGG_ON_ETH_GOERLI",
-                "address": "0x9225c534403eEAB0B80394F60683F51EF9acD627",
-                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
@@ -300,36 +128,10 @@
                 "deploy_height": 25067012
             },
             {
-                "name": "vault",
-                "address": "0x27C66cb5caa07C9B332939c357c789C606f5054C",
-                "abi_file": "abi.vault.external.json",
-                "deploy_height": 25067016
-            },
-            {
                 "name": "socket",
                 "address": "0x8039c3AD8ED55509fD3f6Daa78867923fDe6E61c",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 25067020
-            },
-            {
-                "name": "USDC_ON_BNB_TEST",
-                "address": "0xC9C0aD3179eE2f4801454926ED5D6A2Da30b56FB",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "BUSD_ON_BNB_TEST",
-                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "USDT_ON_BNB_TEST",
-                "address": "0x66B57c5ea363cFC94033275675C57776F89B06C4",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "P2D_ON_BNB_TEST",
-                "address": "0x018185EB57D6DA77A269EC740e80EF6eBEE793EC",
-                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
@@ -362,26 +164,10 @@
                 "deploy_height": 28954662
             },
             {
-                "name": "vault",
-                "address": "0xB2ba0020560cF6c164DC48D1E29559AbA8472208",
-                "abi_file": "abi.vault.external.json",
-                "deploy_height": 30814945
-            },
-            {
                 "name": "socket",
                 "address": "0xA25357F3C313Bd13885678f935178211f0dF6722",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 30814949
-            },
-            {
-                "name": "USDT_ON_MATIC_TEST",
-                "address": "0x312d92B462492B2D110c7b378a72F6F78B1d6289",
-                "abi_file": "abi.erc20.json"
-            },
-            {
-                "name": "USDC_ON_MATIC_TEST",
-                "address": "0xc508ab50142721A0213A47AaFF4E93C3eDb978E2",
-                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
@@ -414,21 +200,10 @@
                 "deploy_height": 8693872
             },
             {
-                "name": "vault",
-                "address": "0x6EeE91b7c69e3576C13cE7a9C7C0E305dF6996F9",
-                "abi_file": "abi.vault.external.json",
-                "deploy_height": 8693879
-            },
-            {
                 "name": "socket",
                 "address": "0x9c8B701961C20d006cb7c4B5B91c6cb93EdB44Ac",
                 "abi_file": "abi.socket.external.json",
                 "deploy_height": 8693887
-            },
-            {
-                "name": "DAI_ON_BASE_GOERLI",
-                "address": "0x263deEAd49900486A1E9C312BB70CC172E333917",
-                "abi_file": "abi.erc20.json"
             }
         ],
         "events": [
