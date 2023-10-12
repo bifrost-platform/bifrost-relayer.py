@@ -16,19 +16,19 @@
             }
         }
     },
-    "BFC_TEST": {
+    "BIFROST": {
         "url_with_access_key": "http://127.0.0.1:9944"
     },
-    "ETH_GOERLI": {
+    "ETHEREUM": {
         "url_with_access_key": "<ETHEREUM_GOERLI_RPC_ENDPOINT>"
     },
-    "BNB_TEST": {
+    "BINANCE": {
         "url_with_access_key": "<BINANCE_TESTNET_RPC_ENDPOINT>"
     },
-    "MATIC_MUMBAI": {
+    "MATIC": {
         "url_with_access_key": "<POLYGON_MUMBAI_RPC_ENDPOINT>"
     },
-    "BASE_GOERLI": {
+    "BASE": {
         "url_with_access_key": "<BASE_GOERLI_RPC_ENDPOINT>"
     }
 }

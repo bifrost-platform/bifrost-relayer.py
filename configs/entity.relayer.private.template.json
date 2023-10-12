@@ -16,19 +16,19 @@
             }
         }
     },
-    "BFC_MAIN": {
+    "BIFROST": {
         "url_with_access_key": "http://127.0.0.1:9944"
     },
-    "ETH_MAIN": {
+    "ETHEREUM": {
         "url_with_access_key": "<ETHEREUM_MAINNET_RPC_ENDPOINT>"
     },
-    "BNB_MAIN": {
+    "BINANCE": {
         "url_with_access_key": "<BINANCE_MAINNET_RPC_ENDPOINT>"
     },
-    "MATIC_MAIN": {
+    "MATIC": {
         "url_with_access_key": "<POLYGON_MAINNET_RPC_ENDPOINT>"
     },
-    "BASE_MAIN": {
+    "BASE": {
         "url_with_access_key": "<BASE_MAINNET_RPC_ENDPOINT>"
     }
 }

@@ -18,8 +18,8 @@
             "collection_period_sec": 300
         }
     },
-    "BFC_TEST": {
-        "chain_name": "BFC_TEST",
+    "BIFROST": {
+        "chain_name": "BIFROST",
         "block_period_sec": 3,
         "bootstrap_latest_height": 2883,
         "block_aging_period": 2,
@@ -201,8 +201,8 @@
             }
         ]
     },
-    "ETH_GOERLI": {
-        "chain_name": "ETH_GOERLI",
+    "ETHEREUM": {
+        "chain_name": "ETHEREUM",
         "block_period_sec": 13,
         "bootstrap_latest_height": 7749286,
         "block_aging_period": 6,
@@ -278,8 +278,8 @@
             }
         ]
     },
-    "BNB_TEST": {
-        "chain_name": "BNB_TEST",
+    "BINANCE": {
+        "chain_name": "BINANCE",
         "block_period_sec": 3,
         "bootstrap_latest_height": 23601374,
         "block_aging_period": 5,
@@ -339,8 +339,8 @@
             }
         ]
     },
-    "MATIC_MUMBAI": {
-        "chain_name": "MATIC_MUMBAI",
+    "MATIC": {
+        "chain_name": "MATIC",
         "block_period_sec": 2,
         "bootstrap_latest_height": 30814949,
         "block_aging_period": 200,
@@ -391,8 +391,8 @@
             }
         ]
     },
-    "BASE_GOERLI": {
-        "chain_name": "BASE_GOERLI",
+    "BASE": {
+        "chain_name": "BASE",
         "block_period_sec": 2,
         "bootstrap_latest_height": 8693872,
         "block_aging_period": 5,
@@ -443,11 +443,11 @@
         "account_name": "relayer-launched-on-console",
         "slow_relayer_delay_sec": 2000,
         "supporting_chains": [
-            "BFC_TEST",
-            "ETH_GOERLI",
-            "BNB_TEST",
-            "MATIC_MUMBAI",
-            "BASE_GOERLI"
+            "BIFROST",
+            "ETHEREUM",
+            "BINANCE",
+            "MATIC",
+            "BASE"
         ]
     },
     "multichain_config": {
