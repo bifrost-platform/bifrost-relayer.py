@@ -1,9 +1,12 @@
+from typing import List
+
 from chainpy.eth.ethtype.amount import EthAmount
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.prometheus_metric import PrometheusExporter
 from prometheus_client import Counter, Gauge
 
-from primitives import *
+from rbclib.primitives.chain import ChainEventStatus, ChainEnum
+from rbclib.primitives.consts import *
 
 
 class PrometheusExporterRelayer(PrometheusExporter):

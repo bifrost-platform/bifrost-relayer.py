@@ -7,7 +7,8 @@ from chainpy.eth.managers.ethchainmanager import EthChainManager
 from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.logger import global_logger
 
-from primitives import chain_enum, ChainEventStatus, ChainEnum, Oracle
+from rbclib.primitives.chain import chain_enum, ChainEventStatus, ChainEnum
+from rbclib.primitives.oracle import Oracle
 
 
 def log_invalid_flow(log_id: str, event):

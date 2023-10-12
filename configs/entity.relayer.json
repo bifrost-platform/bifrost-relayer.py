@@ -18,8 +18,8 @@
             "collection_period_sec": 300
         }
     },
-    "BFC_MAIN": {
-        "chain_name": "BFC_MAIN",
+    "BIFROST": {
+        "chain_name": "BIFROST",
         "block_period_sec": 3,
         "bootstrap_latest_height": 141648,
         "block_aging_period": 2,
@@ -211,8 +211,8 @@
             }
         ]
     },
-    "ETH_MAIN": {
-        "chain_name": "ETH_MAIN",
+    "ETHEREUM": {
+        "chain_name": "ETHEREUM",
         "block_period_sec": 12,
         "bootstrap_latest_height": 16431054,
         "block_aging_period": 6,
@@ -288,8 +288,8 @@
             }
         ]
     },
-    "BNB_MAIN": {
-        "chain_name": "BNB_MAIN",
+    "BINANCE": {
+        "chain_name": "BINANCE",
         "block_period_sec": 3,
         "bootstrap_latest_height": 0,
         "block_aging_period": 5,
@@ -339,8 +339,8 @@
             }
         ]
     },
-    "MATIC_MAIN": {
-        "chain_name": "MATIC_MAIN",
+    "MATIC": {
+        "chain_name": "MATIC",
         "block_period_sec": 2,
         "bootstrap_latest_height": 0,
         "block_aging_period": 200,
@@ -386,8 +386,8 @@
             }
         ]
     },
-    "BASE_MAIN": {
-        "chain_name": "BASE_MAIN",
+    "BASE": {
+        "chain_name": "BASE",
         "block_period_sec": 2,
         "bootstrap_latest_height": 3003941,
         "block_aging_period": 5,
@@ -438,11 +438,11 @@
         "account_name": "mainnet-relayer-launched-on-console",
         "slow_relayer_delay_sec": 1000,
         "supporting_chains": [
-            "BFC_MAIN",
-            "ETH_MAIN",
-            "BNB_MAIN",
-            "MATIC_MAIN",
-            "BASE_MAIN"
+            "BIFROST",
+            "ETHEREUM",
+            "BINANCE",
+            "MATIC",
+            "BASE"
         ]
     },
     "multichain_config": {

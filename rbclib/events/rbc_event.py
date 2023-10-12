@@ -1,7 +1,6 @@
 from typing import Optional, Tuple, Union, List
 
-from chainpy.eth.ethtype.amount import EthAmount
-from chainpy.eth.ethtype.hexbytes import EthHexBytes, EthAddress, EthHashBytes
+from chainpy.eth.ethtype.hexbytes import EthHexBytes, EthHashBytes
 from chainpy.eth.ethtype.utils import to_eth_v
 from chainpy.eth.managers.eventobj import DetectedEvent
 from chainpy.eventbridge.chaineventabc import ChainEventABC, CallParamTuple, SendParamTuple
@@ -10,12 +9,14 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
+from rbclib.primitives.chain import ChainEventStatus, chain_enum, ChainEnum
+from rbclib.primitives.consts import RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, NoneParams, \
+    BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, GET_REQ_INFO_FUNCTION_NAME
+from rbclib.primitives.method import RBCMethodV1
 from rbclib.submits import PollSubmit
 from rbclib.utils import fetch_relayer_index, log_invalid_flow, fetch_relayer_num, extract_latest_event_status, fetch_quorum, fetch_socket_rbc_sigs
 from relayer.global_config import relayer_config_global, RelayerRole
 from relayer.relayer import Relayer
-from ..primitives import ChainEventStatus, RBCMethodV1, chain_enum, ChainEnum, RBC_EVENT_STATUS_START_DATA_START_INDEX, RBC_EVENT_STATUS_START_DATA_END_INDEX, \
-    NoneParams, BIFROST_VALIDATOR_HISTORY_LIMIT_BLOCKS, SOCKET_CONTRACT_NAME, SUBMIT_FUNCTION_NAME, GET_REQ_INFO_FUNCTION_NAME, Asset
 
 
 class RbcEvent(ChainEventABC):
@@ -237,67 +238,6 @@ class RbcEvent(ChainEventABC):
     @property
     def rbc_method(self) -> RBCMethodV1:
         return self.inst()[1]
-
-    @property
-    def method_params(self) -> Tuple[
-        Asset, Asset, EthAddress, EthAddress, EthAmount, EthHexBytes
-    ]:
-        unzipped_decoded_data = self.decoded_data[0]
-        params_tuple = unzipped_decoded_data[3]
-        return (
-            Asset.from_bytes(params_tuple[0]),
-            Asset.from_bytes(params_tuple[1]),
-            EthAddress(params_tuple[2]),
-            EthAddress(params_tuple[3]),
-            EthAmount(params_tuple[4]),
-            EthHexBytes(params_tuple[5])
-        )
-
-    def decoded_dict(self):
-        method_params = self.method_params
-        return {
-            "req_id": {
-                "src_chain": self.src_chain.name,
-                "round": self.rnd,
-                "seq_num": self.seq
-            },
-            "event_status": self.status,
-            "instruction": {
-                "dst_chain": self.dst_chain.name,
-                "method": self.rbc_method
-            },
-            "action_params": {
-                "asset1": method_params[0],
-                "asset2": method_params[1],
-                "from": method_params[2],
-                "to": method_params[3],
-                "amount": method_params[4],
-                "variants": method_params[5],
-            }
-        }
-
-    def decoded_json(self):
-        method_params = self.method_params
-        return {
-            "req_id": {
-                "src_chain": self.src_chain.name,
-                "round": self.rnd,
-                "seq_num": self.seq
-            },
-            "event_status": self.status.name,
-            "instruction": {
-                "dst_chain": self.dst_chain.name,
-                "method": self.rbc_method.name
-            },
-            "action_params": {
-                "asset1": method_params[0].name,
-                "asset2": method_params[1].name,
-                "from": method_params[2].with_checksum(),
-                "to": method_params[3].with_checksum(),
-                "amount": method_params[4].int(),
-                "variants": method_params[5].hex_without_0x(),
-            }
-        }
 
     @staticmethod
     def bootstrap(manager: "Relayer", detected_events: List[DetectedEvent]) -> List['RbcEvent']:

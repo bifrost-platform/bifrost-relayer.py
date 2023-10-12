@@ -9,10 +9,11 @@ from chainpy.eventbridge.eventbridge import EventBridge
 from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
+from rbclib.primitives.chain import chain_enum, ChainEnum, ChainEventStatus
+from rbclib.primitives.consts import NoneParams, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME
 from rbclib.submits import AggregatedRoundUpSubmit
 from rbclib.utils import fetch_sorted_relayer_list_lower, fetch_latest_round, fetch_socket_vsp_sigs, log_invalid_flow
 from relayer.global_config import relayer_config_global
-from ..primitives import NoneParams, SOCKET_CONTRACT_NAME, ROUND_UP_VOTING_FUNCTION_NAME, chain_enum, ChainEnum, ChainEventStatus
 
 
 class RoundUpEvent(ChainEventABC):
