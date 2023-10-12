@@ -8,11 +8,9 @@ from chainpy.logger import global_logger
 from chainpy.offchain.priceaggregator import PriceOracleAgg
 
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.primitives.consts import NoneParams
-from rbclib.primitives.enums import chain_enum
 from rbclib.utils import is_selected_relayer, log_invalid_flow
 from relayer.global_config import relayer_config_global
-from ..primitives.enums import Oracle
+from ..primitives import NoneParams, chain_enum, Oracle
 
 
 class PriceUpOracle(PeriodicEventABC):

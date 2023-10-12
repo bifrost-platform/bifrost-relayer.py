@@ -9,11 +9,9 @@ from chainpy.eventbridge.utils import timestamp_msec
 from chainpy.logger import global_logger
 
 from rbclib.metric import PrometheusExporterRelayer
-from rbclib.primitives.consts import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, NoneParams
-from rbclib.primitives.enums import chain_enum
 from rbclib.utils import is_selected_relayer, fetch_oracle_latest_round, is_submitted_oracle_feed, log_invalid_flow
 from relayer.global_config import relayer_config_global
-from ..primitives.enums import Oracle
+from ..primitives import SOCKET_CONTRACT_NAME, CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME, NoneParams, chain_enum, Oracle
 
 
 class BtcHashUpOracle(PeriodicEventABC):

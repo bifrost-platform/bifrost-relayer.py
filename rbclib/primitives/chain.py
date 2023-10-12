@@ -3,19 +3,6 @@ from enum import Enum
 from typing import Union
 
 
-class Oracle(Enum):
-    ETH = 0x0100010000000000000000000000000000000000000000000000000000000004.to_bytes(32, 'big')
-    BFC = 0x0100010000000000000000000000000000000000000000000000000000000001.to_bytes(32, 'big')
-    BNB = 0x0100010000000000000000000000000000000000000000000000000000000005.to_bytes(32, 'big')
-    MATIC = 0x0100010000000000000000000000000000000000000000000000000000000006.to_bytes(32, 'big')
-    USDC = 0x0100010000000000000000000000000000000000000000000000000000000008.to_bytes(32, 'big')
-    USDT = 0x010001000000000000000000000000000000000000000000000000000000000a.to_bytes(32, 'big')
-    BIFI = 0x0100010000000000000000000000000000000000000000000000000000000002.to_bytes(32, 'big')
-    DAI = 0x010001000000000000000000000000000000000000000000000000000000000b.to_bytes(32, 'big')
-
-    BITCOIN_BLOCK_HASH = 0x0200020000000000000000000000000000000000000000000000000000000003.to_bytes(32, 'big')
-
-
 class ChainEventStatus(Enum):
     NONE = 0
     REQUESTED = 1
@@ -29,6 +16,12 @@ class ChainEventStatus(Enum):
     NEXT_AUTHORITY_RELAYED = 9
     NEXT_AUTHORITY_COMMITTED = 10
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
     def formatted_bytes(self) -> bytes:
         return self.value.to_bytes(1, 'big')
 
@@ -37,6 +30,12 @@ class ChainEventStatus(Enum):
 
 
 class ChainPrimitive(Enum):
+    def __str__(self):
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
     @staticmethod
     def size():
         return 4
@@ -49,6 +48,10 @@ class ChainPrimitive(Enum):
 
     def formatted_bytes(self) -> bytes:
         return self.value.to_bytes(self.size(), "big")
+
+    @classmethod
+    def str_with_size(cls):
+        return cls.__name__ + "-{}".format(cls.size())
 
 
 class MainnetPrimitives(ChainPrimitive):
