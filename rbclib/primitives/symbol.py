@@ -34,12 +34,3 @@ class Symbol(Enum):
     @staticmethod
     def size():
         return 4
-
-    @property
-    def decimal(self):
-        """ return a decimal of the asset (self) """
-        return 6 if self == Symbol.USDC or self == Symbol.USDT else 18
-
-    @classmethod
-    def str_with_size(cls):
-        return cls.__name__ + "-{}".format(cls.size())

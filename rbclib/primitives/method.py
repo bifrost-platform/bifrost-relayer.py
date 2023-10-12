@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Tuple, cast
+from typing import List, Tuple
 
 from rbclib.utils import to_even_hex, concat_as_int
 
@@ -24,7 +24,6 @@ class OPCode(Enum):
 
     def __repr__(self) -> str:
         return self.name
-
 
     @staticmethod
     def size() -> int:
@@ -127,17 +126,6 @@ class RBCMethodV1(Enum):
     )
 
     @staticmethod
-    def is_composed() -> bool:
-        return True
-
-    @staticmethod
-    def components() -> List[str]:
-        return [
-            "LENGTH-1",
-            RBCMethodDirection.str_with_size(),
-            "DYNAMIC_SIZE_ARRAY[{}]".format(OPCode.str_with_size())]
-
-    @staticmethod
     def size():
         return 16
 
@@ -150,41 +138,7 @@ class RBCMethodV1(Enum):
         zero_pad = "00" * (self.size() - op_num * OPCode.size() - RBC_METHOD_LENGTH_SIZE)
         return "0x" + hex_without_0x + zero_pad
 
-    def formatted_bytes(self) -> bytes:
-        return bytes.fromhex(self.formatted_hex().replace("0x", ""))
-
-    def analyze(self) -> Tuple[int, RBCMethodDirection, List[OPCode]]:
-        self_hex = self.formatted_hex().replace("0x", "")
-        len_op, direction, self_hex = int(self_hex[:2], 16), RBCMethodDirection(int(self_hex[2:4])), self_hex[4:]
-
-        op_code_list = list()
-        for i in range(len_op - 1):
-            parsed_int = int(self_hex[:OPCode.size() * 2], 16)
-            self_hex = self_hex[OPCode.size() * 2:]
-            op_code_list.append(OPCode(parsed_int))
-
-        if self.size() - len_op - 1 - len(self_hex) // 2 != 0:
-            raise Exception("Wrong enum value")
-
-        return len_op, direction, op_code_list
-
-    @property
-    def len_prefix(self) -> int:
-        return self.analyze()[0]
-
-    @property
-    def direction(self) -> RBCMethodDirection:
-        return cast(RBCMethodDirection, self.analyze()[1])
-
-    @property
-    def opcodes(self) -> List[OPCode]:
-        return self.analyze()[2]
-
     @classmethod
     def from_bytes(cls, value: bytes):
         len_op = int.from_bytes(value[:1], "big")
         return cls(int.from_bytes(value[:len_op + 1], "big"))
-
-    @classmethod
-    def from_components(cls, direction: RBCMethodDirection, op_codes: List[OPCode]):
-        return cls(concat_as_int(len(op_codes) + 1, direction, op_codes))

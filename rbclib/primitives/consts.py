@@ -8,11 +8,7 @@ SOCKET_CONTRACT_NAME = "socket"
 SUBMIT_FUNCTION_NAME = "poll"
 GET_REQ_INFO_FUNCTION_NAME = "get_request"
 ROUND_UP_VOTING_FUNCTION_NAME = "round_control_relay"
-AUTHORITY_CONTRACT_NAME = "authority"
-RELAYER_AUTHORITY_CONTRACT_NAME = "relayer_authority"
-GET_ROUND_FUNCTION_NAME = "latest_round"
 
-CONSENSUS_ORACLE_FEEDING_FUNCTION_NAME = "oracle_consensus_feeding"
 ROUND_UP_FUNCTION_NAME = "round_control_poll"
 
 HEARTBEAT_COUNTER_QUERY_NAME = "relayer_heartbeat_sum"

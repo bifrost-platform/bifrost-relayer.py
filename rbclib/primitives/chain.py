@@ -49,10 +49,6 @@ class ChainPrimitive(Enum):
     def formatted_bytes(self) -> bytes:
         return self.value.to_bytes(self.size(), "big")
 
-    @classmethod
-    def str_with_size(cls):
-        return cls.__name__ + "-{}".format(cls.size())
-
 
 class MainnetPrimitives(ChainPrimitive):
     NONE = 0
